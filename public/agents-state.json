@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T09:53:48.718Z",
+  "timestamp": "2026-02-16T09:57:08.743Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "d5e2115d-392d-4f79-baed-c9d1cae3f02c"
     },
     {
       "id": "verify",
@@ -156,7 +156,7 @@
     {
       "id": "US-003",
       "title": "Extract Game.tsx into modular components",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
