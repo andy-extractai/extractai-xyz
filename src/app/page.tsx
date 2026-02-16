@@ -13,6 +13,12 @@ const apps = [
     href: "/clock",
     emoji: "🕐",
   },
+  {
+    name: "Pokémon RPG",
+    description: "Browser-based Pokémon adventure game",
+    href: "/pokemon",
+    emoji: "⚡",
+  },
 ];
 
 export default function Home() {
