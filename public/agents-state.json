@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T16:23:13.264Z",
+  "timestamp": "2026-02-16T16:25:33.298Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -46,24 +46,24 @@
       "name": "Developer",
       "role": "Implementation",
       "emoji": "💻",
-      "status": "active",
-      "statusMessage": "Working on: implement"
+      "status": "done",
+      "statusMessage": "Completed: implement"
     },
     {
       "id": "verifier",
       "name": "Verifier",
       "role": "QA / Sanity Check",
       "emoji": "✅",
-      "status": "active",
-      "statusMessage": "Working on: verify"
+      "status": "done",
+      "statusMessage": "Completed: verify"
     },
     {
       "id": "tester",
       "name": "Tester",
       "role": "Integration & E2E",
       "emoji": "🧪",
-      "status": "idle",
-      "statusMessage": "Waiting for tasks"
+      "status": "active",
+      "statusMessage": "Working on: test"
     },
     {
       "id": "reviewer",
@@ -102,7 +102,7 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "running",
+      "status": "done",
       "retries": 0,
       "type": "loop",
       "currentStory": null
@@ -110,7 +110,7 @@
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "running",
+      "status": "done",
       "retries": 2,
       "type": "single",
       "currentStory": null
@@ -118,7 +118,7 @@
     {
       "id": "test",
       "agent": "tester",
-      "status": "waiting",
+      "status": "pending",
       "retries": 0,
       "type": "single",
       "currentStory": null
