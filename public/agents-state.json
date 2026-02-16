@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T11:22:13.078Z",
+  "timestamp": "2026-02-16T11:24:43.103Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -54,8 +54,8 @@
       "name": "Verifier",
       "role": "QA / Sanity Check",
       "emoji": "✅",
-      "status": "idle",
-      "statusMessage": "Waiting for tasks"
+      "status": "active",
+      "statusMessage": "Working on: verify"
     },
     {
       "id": "tester",
@@ -105,12 +105,12 @@
       "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": "a5c4aea3-620a-4851-bec1-50dd8aa32c56"
+      "currentStory": null
     },
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "waiting",
+      "status": "pending",
       "retries": 0,
       "type": "single",
       "currentStory": null
@@ -204,7 +204,7 @@
     {
       "id": "US-011",
       "title": "Implement rival battle encounters at story points",
-      "status": "running",
+      "status": "done",
       "retries": 0
     },
     {
