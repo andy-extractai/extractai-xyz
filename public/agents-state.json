@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T09:21:38.484Z",
+  "timestamp": "2026-02-16T09:25:08.506Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -78,7 +78,7 @@
     {
       "id": "plan",
       "agent": "planner",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "single",
       "currentStory": null
