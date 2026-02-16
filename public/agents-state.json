@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T11:44:23.268Z",
+  "timestamp": "2026-02-16T15:13:12.787Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -54,8 +54,8 @@
       "name": "Verifier",
       "role": "QA / Sanity Check",
       "emoji": "✅",
-      "status": "idle",
-      "statusMessage": "Waiting for tasks"
+      "status": "active",
+      "statusMessage": "Working on: verify"
     },
     {
       "id": "tester",
@@ -102,16 +102,16 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "ff174763-d2cd-4e28-a4ea-99f09e483969"
     },
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "waiting",
-      "retries": 0,
+      "status": "running",
+      "retries": 1,
       "type": "single",
       "currentStory": null
     },
@@ -216,20 +216,20 @@
     {
       "id": "US-013",
       "title": "Implement item usage in battle and bag improvements",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-014",
       "title": "Implement Pokémart with expanded inventory per city",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-015",
       "title": "Polish overworld rendering: building interiors, fade transitions, signs",
-      "status": "pending",
-      "retries": 0
+      "status": "running",
+      "retries": 1
     },
     {
       "id": "US-016",
