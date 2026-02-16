@@ -3,7 +3,8 @@
 // Run via cron or watch loop
 
 import Database from "better-sqlite3";
-import { writeFileSync } from "fs";
+import { writeFileSync, readFileSync } from "fs";
+import { execSync } from "child_process";
 import { join } from "path";
 import { homedir } from "os";
 import { fileURLToPath } from "url";
@@ -128,7 +129,7 @@ if (watch) {
   let lastStatusKey = "";
   console.log(`Watching (10s sync${shouldPush ? " + auto-push on status change" : ""})...`);
 
-  setInterval(async () => {
+  setInterval(() => {
     try {
       sync();
 
@@ -141,7 +142,6 @@ if (watch) {
 
         if (statusKey !== lastStatusKey) {
           lastStatusKey = statusKey;
-          const { execSync } = await import("child_process");
           const repoDir = join(__dirname, "..");
           try {
             execSync(
