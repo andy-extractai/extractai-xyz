@@ -20,6 +20,7 @@ import { renderIntroScreen, renderNamingScreen, renderStarterSelect } from './co
 import { renderEvolution } from './components/EvolutionScreen';
 import { renderPCScreen, depositPokemon, withdrawPokemon } from './components/PCScreen';
 import { getHmAction, cutTreeFlag, isTreeCut, shouldExitSurf, teamKnowsMove } from './engine/hm';
+import { renderCreditsScreen, advanceCredits, getCreditsLines } from './components/CreditsScreen';
 
 const MAPS = getAllMaps();
 
@@ -73,6 +74,16 @@ export default function PokemonGame() {
         if (e.key === ' ' || e.key === 'Enter' || e.key === 'z') completeEvolution();
         return;
       }
+      if (s.phase === 'credits' && s.credits?.done) {
+        if (e.key === ' ' || e.key === 'Enter' || e.key === 'z') {
+          setState(prev => ({
+            ...prev, phase: 'overworld', credits: null,
+            player: { ...prev.player, mapId: 'pallet_town', x: 10, y: 10 },
+          }));
+        }
+        return;
+      }
+      if (s.phase === 'credits') return;
     };
 
     const handleKeyUp = (e: KeyboardEvent) => { keysRef.current.delete(e.key.toLowerCase()); };
@@ -140,6 +151,15 @@ export default function PokemonGame() {
           keysRef.current.delete(' ');
           interact();
         }
+      }
+
+      // Auto-scroll credits
+      if (s.phase === 'credits' && s.credits && !s.credits.done) {
+        const lineCount = getCreditsLines(s).length;
+        setState(prev => {
+          if (!prev.credits || prev.credits.done) return prev;
+          return { ...prev, credits: advanceCredits(prev.credits, lineCount) };
+        });
       }
 
       const canvas = canvasRef.current;
@@ -777,6 +797,7 @@ export default function PokemonGame() {
 
     if (s.phase === 'battle' && s.battle) renderBattleScreen(ctx, s, w, h, frame);
     if (s.phase === 'evolution' && s.evolution) renderEvolution(ctx, s.evolution, w, h, frame);
+    if (s.phase === 'credits' && s.credits) renderCreditsScreen(ctx, s, w, h, frame, s.credits);
     if (s.dialog) renderDialog(ctx, s.dialog, w, h);
     if (s.phase === 'menu' && s.menu) renderMenu(ctx, s, w, h);
     if (s.phase === 'shop' && s.shop) renderShop(ctx, s, w, h);

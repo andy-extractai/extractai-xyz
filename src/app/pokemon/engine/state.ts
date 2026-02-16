@@ -34,6 +34,7 @@ export interface GameState {
   shop: ShopState | null;
   pcUI: PCUIState | null;
   evolution: EvolutionState | null;
+  credits: { scrollY: number; done: boolean } | null;
   transition: { type: 'fade' | 'battle'; progress: number; callback?: () => void } | null;
   lastPokecenterMap: string;
   lastPokecenterX: number;
@@ -207,6 +208,7 @@ export function createInitialState(): GameState {
     shop: null,
     pcUI: null,
     evolution: null,
+    credits: null,
     transition: null,
     lastPokecenterMap: 'player_house',
     lastPokecenterX: 3,
@@ -233,6 +235,7 @@ export function saveGame(state: GameState): void {
     shop: null,
     pcUI: null,
     evolution: null,
+    credits: null,
     transition: null,
   };
   try {

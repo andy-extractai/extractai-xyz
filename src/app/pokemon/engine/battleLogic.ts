@@ -65,6 +65,16 @@ export function handleBattleVictory(prev: GameState): GameState {
     }
   }
 
+  // Champion Gary defeat → credits
+  if (b.trainerId === 'champion_gary') {
+    newPlayer.storyFlags = new Set(newPlayer.storyFlags);
+    newPlayer.storyFlags.add('champion');
+    return {
+      ...prev, phase: 'credits', battle: null, player: newPlayer,
+      credits: { scrollY: 0, done: false },
+    };
+  }
+
   for (const poke of newPlayer.team) {
     const evoTarget = checkEvolution(poke);
     if (evoTarget) {

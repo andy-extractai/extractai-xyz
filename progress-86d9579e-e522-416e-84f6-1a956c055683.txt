@@ -72,3 +72,17 @@ Started: 2026-02-16
 - All 102 tests pass, tsc clean, build succeeds
 - **Learnings:** Generic cities created with createGenericCity have empty npcs array - use IIFE to mutate before insertion into maps record
 ---
+
+## 2026-02-16 02:35 - US-006: Implement bicycle toggle and key items
+- Created engine/bicycle.ts with pure logic: isIndoorMap, canToggleBicycle, toggleBicycle, getPlayerKeyItems
+- Press B in overworld toggles bicycle on/off (only if hasBicycle, not indoors, not surfing)
+- Bicycle NPC added to Vermilion City (Bike Shop Owner at 16,12) - gives bicycle via dialog
+- Bicycle auto-dismounts when entering indoor maps (pokecenter, gym, etc.)
+- Bicycle visual: green tint overlay + spinning wheel effect on player sprite
+- Key Items section added to bag menu showing Bicycle when owned
+- Movement speed already handled (80ms vs 160ms in existing onBicycle check)
+- 19 new tests in engine/__tests__/bicycle.test.ts covering all logic
+- Files: engine/bicycle.ts, engine/__tests__/bicycle.test.ts, data/maps.ts, engine/renderer.ts, Game.tsx, components/MenuScreen.ts
+- All 121 tests pass, tsc clean, build succeeds
+- **Learnings:** Indoor maps identified by id: pokecenter, pokemart, oak_lab, elite4, gym_* prefix
+---
