@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T09:43:48.646Z",
+  "timestamp": "2026-02-16T09:47:08.675Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "634cf69b-f2c3-45fa-97fc-b4667338d95b"
     },
     {
       "id": "verify",
@@ -150,7 +150,7 @@
     {
       "id": "US-002",
       "title": "Test battle engine core mechanics",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
