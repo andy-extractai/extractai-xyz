@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T11:17:43.037Z",
+  "timestamp": "2026-02-16T11:18:13.041Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -110,7 +110,7 @@
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "single",
       "currentStory": null
