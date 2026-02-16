@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:02:08.770Z",
+  "timestamp": "2026-02-16T10:22:02.673Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "running",
+      "status": "pending",
       "retries": 0,
       "type": "loop",
-      "currentStory": "d5e2115d-392d-4f79-baed-c9d1cae3f02c"
+      "currentStory": null
     },
     {
       "id": "verify",
@@ -156,13 +156,13 @@
     {
       "id": "US-003",
       "title": "Extract Game.tsx into modular components",
-      "status": "running",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-004",
       "title": "Implement PC Storage UI",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
