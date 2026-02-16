@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T16:15:43.207Z",
+  "timestamp": "2026-02-16T16:17:13.213Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "cc97fcc7-9d53-4c6d-be5c-969a9889ec9b"
     },
     {
       "id": "verify",
@@ -258,7 +258,7 @@
     {
       "id": "US-020",
       "title": "Commit, push, and deploy to production",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     }
   ],
