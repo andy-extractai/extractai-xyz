@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T11:09:12.978Z",
+  "timestamp": "2026-02-16T11:12:13.000Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "35f76748-3e03-48a6-a77c-8aa58a696e71"
     },
     {
       "id": "verify",
@@ -198,7 +198,7 @@
     {
       "id": "US-010",
       "title": "Implement remaining gym interiors with trainers",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
