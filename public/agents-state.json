@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T09:36:08.589Z",
+  "timestamp": "2026-02-16T10:02:08.770Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -38,16 +38,16 @@
       "name": "Setup",
       "role": "Environment Prep",
       "emoji": "⚙️",
-      "status": "active",
-      "statusMessage": "Working on: setup"
+      "status": "done",
+      "statusMessage": "Completed: setup"
     },
     {
       "id": "developer",
       "name": "Developer",
       "role": "Implementation",
       "emoji": "💻",
-      "status": "idle",
-      "statusMessage": "Waiting for tasks"
+      "status": "active",
+      "statusMessage": "Working on: implement"
     },
     {
       "id": "verifier",
@@ -94,7 +94,7 @@
     {
       "id": "setup",
       "agent": "setup",
-      "status": "running",
+      "status": "done",
       "retries": 0,
       "type": "single",
       "currentStory": null
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "waiting",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "d5e2115d-392d-4f79-baed-c9d1cae3f02c"
     },
     {
       "id": "verify",
@@ -144,19 +144,19 @@
     {
       "id": "US-001",
       "title": "Set up test framework with Vitest and initial data tests",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-002",
       "title": "Test battle engine core mechanics",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-003",
       "title": "Extract Game.tsx into modular components",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
