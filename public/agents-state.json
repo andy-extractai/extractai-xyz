@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:08:58.821Z",
+  "timestamp": "2026-02-16T10:12:08.846Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "47e53874-a45e-4366-9f49-336606e72cf8"
     },
     {
       "id": "verify",
@@ -162,7 +162,7 @@
     {
       "id": "US-004",
       "title": "Implement PC Storage UI",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
