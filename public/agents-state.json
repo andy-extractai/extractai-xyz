@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T15:38:52.967Z",
+  "timestamp": "2026-02-16T15:42:12.986Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "23eb2214-6f9a-4ce5-a0ea-a739d195da78"
     },
     {
       "id": "verify",
@@ -246,7 +246,7 @@
     {
       "id": "US-018",
       "title": "Implement Professor Oak intro sequence and starter selection polish",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
