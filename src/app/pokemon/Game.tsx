@@ -230,6 +230,11 @@ export default function PokemonGame() {
         else if (dx > 0) edge = 'east';
         const conn = MAP_CONNECTIONS.find(c => c.from === prev.player.mapId && c.fromEdge === edge);
         if (conn && MAPS[conn.to]) {
+          // Require 8 badges to enter Victory Road
+          if (conn.to === 'victory_road' && prev.player.badges.length < 8) {
+            return { ...prev, phase: 'dialog', player: { ...prev.player, direction: dir },
+              dialog: { lines: ['You need all 8 badges to enter Victory Road!'], currentLine: 0, charIndex: 0, done: false } };
+          }
           return { ...prev, player: { ...prev.player, x: conn.toX, y: conn.toY, mapId: conn.to, direction: dir, steps: prev.player.steps + 1 } };
         }
         return { ...prev, player: { ...prev.player, direction: dir } };
