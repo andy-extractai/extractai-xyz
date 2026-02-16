@@ -1,3 +1,14 @@
+import Link from "next/link";
+
+const apps = [
+  {
+    name: "World Clock",
+    description: "Live time across EST, PST, UTC & ART",
+    href: "/clock",
+    emoji: "🕐",
+  },
+];
+
 export default function Home() {
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
@@ -11,16 +22,23 @@ export default function Home() {
             AI-powered tools that extract signal from noise.
             Built by Kyle &amp; Andy 🐾
           </p>
-          <div className="pt-4">
-            <span className="inline-block px-4 py-2 rounded-full border border-zinc-700 text-sm text-zinc-500">
-              Coming soon — apps will appear here
-            </span>
-          </div>
         </div>
 
-        {/* App Grid (placeholder for future apps) */}
+        {/* App Grid */}
         <div className="mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 max-w-4xl w-full">
-          {/* Future app cards go here */}
+          {apps.map((app) => (
+            <Link
+              key={app.href}
+              href={app.href}
+              className="group border border-zinc-800 rounded-xl p-6 hover:border-emerald-400/50 hover:bg-zinc-900/50 transition-all"
+            >
+              <div className="text-3xl mb-3">{app.emoji}</div>
+              <h2 className="text-lg font-semibold group-hover:text-emerald-400 transition-colors">
+                {app.name}
+              </h2>
+              <p className="text-sm text-zinc-500 mt-1">{app.description}</p>
+            </Link>
+          ))}
         </div>
       </main>
 
