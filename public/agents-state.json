@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:58:52.880Z",
+  "timestamp": "2026-02-16T11:02:12.911Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "de1f7fea-66f0-4f70-9f15-75f70143ef88"
     },
     {
       "id": "verify",
@@ -192,7 +192,7 @@
     {
       "id": "US-009",
       "title": "Add remaining towns and routes with unique layouts",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
