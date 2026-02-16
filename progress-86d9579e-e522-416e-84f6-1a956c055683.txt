@@ -23,3 +23,18 @@ Started: 2026-02-16
 - Files: src/app/pokemon/engine/__tests__/battle.test.ts, src/app/pokemon/engine/__tests__/state.test.ts
 - **Learnings:** Use fixedIvs for deterministic stat tests; mock Math.random for all RNG-dependent functions
 ---
+
+## 2026-02-16 02:06 - US-003: Extract Game.tsx into modular components
+- Extracted rendering functions into 5 component modules + utils
+- components/BattleScreen.ts: renderBattleScreen (battle UI overlay)
+- components/MenuScreen.ts: renderMenu (all menu screens: main, pokemon, bag, pokedex, map)
+- components/ShopScreen.ts: renderShop (shop overlay)
+- components/IntroScreens.ts: renderIntroScreen, renderNamingScreen, renderStarterSelect
+- components/EvolutionScreen.ts: renderEvolution
+- components/utils.ts: shared utilities (drawHPBar, getStatusColor, roundRectPath, findFirstAlive)
+- engine/battleLogic.ts: extracted battle state machine functions (executeBattleAction, handlePostMessage, handleBattleVictory, handlePostExp, handleLearnMove, useBattleItem, handleCatchResult)
+- Game.tsx reduced from 2067 to 790 lines (orchestrator only)
+- 13 new tests in components/__tests__/components.test.ts (file existence, exports, line count, imports)
+- All 69 tests pass, build succeeds
+- **Learnings:** Component files use .ts not .tsx since they're canvas render functions, not React components. The game uses imperative canvas rendering so "components" are pure render functions taking ctx/state/dimensions.
+---

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { GameState, createInitialState, createPokemon, saveGame, loadGame, calcStats } from './engine/state';
+import { GameState, createInitialState, createPokemon, saveGame, loadGame, calcStats, PCUIState } from './engine/state';
 import { rollWildEncounter, evolvePokemon } from './engine/battle';
 import { renderMap } from './engine/renderer';
 import { executeBattleAction, handlePostMessage, handleBattleVictory, handlePostExp, handleLearnMove, useBattleItem, handleCatchResult } from './engine/battleLogic';
@@ -17,6 +17,7 @@ import { renderMenu } from './components/MenuScreen';
 import { renderShop } from './components/ShopScreen';
 import { renderIntroScreen, renderNamingScreen, renderStarterSelect } from './components/IntroScreens';
 import { renderEvolution } from './components/EvolutionScreen';
+import { renderPCScreen, depositPokemon, withdrawPokemon } from './components/PCScreen';
 
 const MAPS = getAllMaps();
 
@@ -56,6 +57,7 @@ export default function PokemonGame() {
       if (s.phase === 'menu' && s.menu) { handleMenuInput(e.key.toLowerCase()); return; }
       if (s.phase === 'battle' && s.battle) { handleBattleInput(e.key.toLowerCase()); return; }
       if (s.phase === 'shop' && s.shop) { handleShopInput(e.key.toLowerCase()); return; }
+      if (s.phase === 'pc' && s.pcUI) { handlePCInput(e.key.toLowerCase()); return; }
       if (s.phase === 'evolution') {
         if (e.key === ' ' || e.key === 'Enter' || e.key === 'z') completeEvolution();
         return;
@@ -248,7 +250,7 @@ export default function PokemonGame() {
       return;
     }
     if (tileType === 14) {
-      setState(prev => ({ ...prev, phase: 'menu', menu: { screen: 'pokemon', selectedIndex: 0, subIndex: 0 } }));
+      setState(prev => ({ ...prev, phase: 'pc', pcUI: { mode: 'main', selectedIndex: 0 } }));
       return;
     }
     if (tileType === 15) {
@@ -465,6 +467,59 @@ export default function PokemonGame() {
     });
   }, []);
 
+  // ===== PC INPUT =====
+  const handlePCInput = useCallback((key: string) => {
+    setState(prev => {
+      if (!prev.pcUI) return prev;
+      const pc = { ...prev.pcUI };
+
+      if (pc.mode === 'main') {
+        const options = 3; // deposit, withdraw, close
+        if (key === 'arrowup' || key === 'w') pc.selectedIndex = Math.max(0, pc.selectedIndex - 1);
+        if (key === 'arrowdown' || key === 's') pc.selectedIndex = Math.min(options - 1, pc.selectedIndex + 1);
+        if (key === 'z' || key === ' ' || key === 'enter') {
+          if (pc.selectedIndex === 0) { pc.mode = 'deposit'; pc.selectedIndex = 0; }
+          else if (pc.selectedIndex === 1) { pc.mode = 'withdraw'; pc.selectedIndex = 0; }
+          else return { ...prev, phase: 'overworld', pcUI: null };
+        }
+        if (key === 'x' || key === 'backspace' || key === 'escape') return { ...prev, phase: 'overworld', pcUI: null };
+        return { ...prev, pcUI: pc };
+      }
+
+      if (pc.mode === 'deposit') {
+        const team = prev.player.team;
+        if (key === 'arrowup' || key === 'w') pc.selectedIndex = Math.max(0, pc.selectedIndex - 1);
+        if (key === 'arrowdown' || key === 's') pc.selectedIndex = Math.min(team.length - 1, pc.selectedIndex + 1);
+        if (key === 'z' || key === ' ' || key === 'enter') {
+          const result = depositPokemon(team, prev.player.pc, pc.selectedIndex);
+          if (result) {
+            const newPc = { ...pc, selectedIndex: Math.min(pc.selectedIndex, result.team.length - 1) };
+            return { ...prev, player: { ...prev.player, team: result.team, pc: result.pc }, pcUI: newPc };
+          }
+        }
+        if (key === 'x' || key === 'backspace' || key === 'escape') { pc.mode = 'main'; pc.selectedIndex = 0; }
+        return { ...prev, pcUI: pc };
+      }
+
+      if (pc.mode === 'withdraw') {
+        const storage = prev.player.pc;
+        if (key === 'arrowup' || key === 'w') pc.selectedIndex = Math.max(0, pc.selectedIndex - 1);
+        if (key === 'arrowdown' || key === 's') pc.selectedIndex = Math.min(storage.length - 1, pc.selectedIndex + 1);
+        if (key === 'z' || key === ' ' || key === 'enter') {
+          const result = withdrawPokemon(prev.player.team, storage, pc.selectedIndex);
+          if (result) {
+            const newPc = { ...pc, selectedIndex: Math.min(pc.selectedIndex, result.pc.length - 1) };
+            return { ...prev, player: { ...prev.player, team: result.team, pc: result.pc }, pcUI: newPc };
+          }
+        }
+        if (key === 'x' || key === 'backspace' || key === 'escape') { pc.mode = 'main'; pc.selectedIndex = 1; }
+        return { ...prev, pcUI: pc };
+      }
+
+      return prev;
+    });
+  }, []);
+
   // ===== STARTER SELECTION =====
   const selectStarter = useCallback((speciesId: string) => {
     const rivalStarters: Record<string, string> = { emberon: 'aqualing', aqualing: 'sproutley', sproutley: 'emberon' };
@@ -588,7 +643,7 @@ export default function PokemonGame() {
     if (s.phase === 'naming') { renderNamingScreen(ctx, w, h, inputName); return; }
     if (s.phase === 'starter_select') { renderStarterSelect(ctx, w, h, frame, selectedStarter); return; }
 
-    if (s.phase === 'overworld' || s.phase === 'menu' || s.phase === 'shop') {
+    if (s.phase === 'overworld' || s.phase === 'menu' || s.phase === 'shop' || s.phase === 'pc') {
       const map = MAPS[s.player.mapId];
       if (map) {
         renderMap(ctx, map, s.player.x, s.player.y, s.player.direction, w, h, frame, map.npcs);
@@ -608,6 +663,7 @@ export default function PokemonGame() {
     if (s.dialog) renderDialog(ctx, s.dialog, w, h);
     if (s.phase === 'menu' && s.menu) renderMenu(ctx, s, w, h);
     if (s.phase === 'shop' && s.shop) renderShop(ctx, s, w, h);
+    if (s.phase === 'pc' && s.pcUI) renderPCScreen(ctx, s, w, h);
     renderMobileControls(ctx, w, h);
   }, [inputName, selectedStarter]);
 

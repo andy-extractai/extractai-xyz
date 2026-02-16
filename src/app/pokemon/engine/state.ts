@@ -31,6 +31,7 @@ export interface GameState {
   dialog: DialogState | null;
   menu: MenuState | null;
   shop: ShopState | null;
+  pcUI: PCUIState | null;
   evolution: EvolutionState | null;
   transition: { type: 'fade' | 'battle'; progress: number; callback?: () => void } | null;
   lastPokecenterMap: string;
@@ -101,6 +102,11 @@ export interface ShopState {
   mode: 'buy' | 'sell' | 'select';
   quantity: number;
   mapId: string;
+}
+
+export interface PCUIState {
+  mode: 'main' | 'deposit' | 'withdraw';
+  selectedIndex: number;
 }
 
 export interface EvolutionState {
@@ -197,6 +203,7 @@ export function createInitialState(): GameState {
     dialog: null,
     menu: null,
     shop: null,
+    pcUI: null,
     evolution: null,
     transition: null,
     lastPokecenterMap: 'player_house',
@@ -222,6 +229,7 @@ export function saveGame(state: GameState): void {
     dialog: null,
     menu: null,
     shop: null,
+    pcUI: null,
     evolution: null,
     transition: null,
   };
@@ -241,6 +249,8 @@ export function loadGame(): GameState | null {
     };
     data.player.defeatedTrainers = new Set(data.player.defeatedTrainers);
     data.player.storyFlags = new Set(data.player.storyFlags);
+    if (!data.player.pc) data.player.pc = [];
+    data.pcUI = null;
     return data as GameState;
   } catch {
     return null;
