@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T15:19:22.808Z",
+  "timestamp": "2026-02-16T15:22:12.830Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "4ef840d9-c360-4703-8b94-c9e91de25826"
     },
     {
       "id": "verify",
@@ -234,7 +234,7 @@
     {
       "id": "US-016",
       "title": "Implement Victory Road and Elite 4 sequential battles",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
