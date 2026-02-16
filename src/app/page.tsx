@@ -2,6 +2,12 @@ import Link from "next/link";
 
 const apps = [
   {
+    name: "Agent Status",
+    description: "Live dashboard of all AI agents",
+    href: "/agents",
+    emoji: "🤖",
+  },
+  {
     name: "World Clock",
     description: "Live time across EST, PST, UTC & ART",
     href: "/clock",
