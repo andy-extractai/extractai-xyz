@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T09:35:18.580Z",
+  "timestamp": "2026-02-16T09:35:38.585Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -30,16 +30,16 @@
       "name": "Architect",
       "role": "Plan Review",
       "emoji": "🏗️",
-      "status": "active",
-      "statusMessage": "Working on: plan_review"
+      "status": "done",
+      "statusMessage": "Completed: plan_review"
     },
     {
       "id": "setup",
       "name": "Setup",
       "role": "Environment Prep",
       "emoji": "⚙️",
-      "status": "idle",
-      "statusMessage": "Waiting for tasks"
+      "status": "active",
+      "statusMessage": "Working on: setup"
     },
     {
       "id": "developer",
@@ -86,7 +86,7 @@
     {
       "id": "plan_review",
       "agent": "architect",
-      "status": "running",
+      "status": "done",
       "retries": 1,
       "type": "single",
       "currentStory": null
@@ -94,7 +94,7 @@
     {
       "id": "setup",
       "agent": "setup",
-      "status": "waiting",
+      "status": "pending",
       "retries": 0,
       "type": "single",
       "currentStory": null
