@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T09:25:08.506Z",
+  "timestamp": "2026-02-16T09:29:28.539Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -22,16 +22,16 @@
       "name": "Planner",
       "role": "Task Decomposition",
       "emoji": "📋",
-      "status": "active",
-      "statusMessage": "Working on: plan"
+      "status": "done",
+      "statusMessage": "Completed: plan"
     },
     {
       "id": "architect",
       "name": "Architect",
       "role": "Plan Review",
       "emoji": "🏗️",
-      "status": "idle",
-      "statusMessage": "Waiting for tasks"
+      "status": "active",
+      "statusMessage": "Working on: plan_review"
     },
     {
       "id": "setup",
@@ -78,7 +78,7 @@
     {
       "id": "plan",
       "agent": "planner",
-      "status": "running",
+      "status": "done",
       "retries": 0,
       "type": "single",
       "currentStory": null
@@ -86,7 +86,7 @@
     {
       "id": "plan_review",
       "agent": "architect",
-      "status": "waiting",
+      "status": "pending",
       "retries": 0,
       "type": "single",
       "currentStory": null
@@ -140,7 +140,128 @@
       "currentStory": null
     }
   ],
-  "stories": [],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Set up test framework with Vitest and initial data tests",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-002",
+      "title": "Test battle engine core mechanics",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-003",
+      "title": "Extract Game.tsx into modular components",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-004",
+      "title": "Implement PC Storage UI",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-005",
+      "title": "Implement HM Cut and Surf mechanics",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-006",
+      "title": "Implement bicycle toggle and key items",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-007",
+      "title": "Implement credits screen and game completion flow",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-008",
+      "title": "Improve mobile controls with virtual D-pad and action buttons",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-009",
+      "title": "Add remaining towns and routes with unique layouts",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-010",
+      "title": "Implement remaining gym interiors with trainers",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-011",
+      "title": "Implement rival battle encounters at story points",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-012",
+      "title": "Add battle animations and transition effects",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-013",
+      "title": "Implement item usage in battle and bag improvements",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-014",
+      "title": "Implement Pokémart with expanded inventory per city",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-015",
+      "title": "Polish overworld rendering: building interiors, fade transitions, signs",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-016",
+      "title": "Implement Victory Road and Elite 4 sequential battles",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-017",
+      "title": "Add Pokédex detail screen with sprite and stats",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-018",
+      "title": "Implement Professor Oak intro sequence and starter selection polish",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-019",
+      "title": "Final integration: build verification, save/load robustness, edge cases",
+      "status": "pending",
+      "retries": 0
+    },
+    {
+      "id": "US-020",
+      "title": "Commit, push, and deploy to production",
+      "status": "pending",
+      "retries": 0
+    }
+  ],
   "runs": [
     {
       "id": "86d9579e-e522-416e-84f6-1a956c055683",
