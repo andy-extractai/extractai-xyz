@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:49:02.795Z",
+  "timestamp": "2026-02-16T10:52:12.822Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "890be65a-58a5-4ccd-b76a-abcf515a43d9"
     },
     {
       "id": "verify",
@@ -186,7 +186,7 @@
     {
       "id": "US-008",
       "title": "Improve mobile controls with virtual D-pad and action buttons",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
