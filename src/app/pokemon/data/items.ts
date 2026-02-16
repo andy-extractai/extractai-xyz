@@ -50,7 +50,33 @@ export const MART_INVENTORY: Record<string, ShopInventory> = {
   celadon: {
     items: [
       { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
-      { itemId: 'revive' },
+      { itemId: 'revive' }, { itemId: 'repel' },
+    ],
+  },
+  lavender: {
+    items: [
+      { itemId: 'greatball' }, { itemId: 'superPotion' }, { itemId: 'antidote' },
+      { itemId: 'paralyzeHeal' }, { itemId: 'awakening' }, { itemId: 'revive' },
+      { itemId: 'repel' },
+    ],
+  },
+  fuchsia: {
+    items: [
+      { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
+      { itemId: 'revive' }, { itemId: 'antidote' }, { itemId: 'repel' },
+    ],
+  },
+  saffron: {
+    items: [
+      { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
+      { itemId: 'revive' }, { itemId: 'paralyzeHeal' }, { itemId: 'awakening' },
+      { itemId: 'repel' },
+    ],
+  },
+  cinnabar: {
+    items: [
+      { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
+      { itemId: 'revive' }, { itemId: 'repel' },
     ],
   },
 };

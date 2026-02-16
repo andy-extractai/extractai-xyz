@@ -9,6 +9,7 @@ export const MOVES: Record<string, MoveData> = {
   bodySlam:   { name: 'Body Slam', type: 'Normal', power: 85, accuracy: 100, pp: 15, category: 'physical', effect: 'paralyze', effectChance: 30 },
   hyperBeam:  { name: 'Hyper Beam', type: 'Normal', power: 150, accuracy: 90, pp: 5, category: 'special' },
   slash:      { name: 'Slash', type: 'Normal', power: 70, accuracy: 100, pp: 20, category: 'physical' },
+  cut:        { name: 'Cut', type: 'Normal', power: 50, accuracy: 95, pp: 30, category: 'physical' },
   bite:       { name: 'Bite', type: 'Normal', power: 60, accuracy: 100, pp: 25, category: 'physical', effect: 'flinch', effectChance: 30 },
   headbutt:   { name: 'Headbutt', type: 'Normal', power: 70, accuracy: 100, pp: 15, category: 'physical' },
   

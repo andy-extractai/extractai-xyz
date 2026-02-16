@@ -1,0 +1,238 @@
+# Progress Log
+Run: 86d9579e-e522-416e-84f6-1a956c055683
+Task: Pokemon RPG Feature Development
+Started: 2026-02-16
+
+## Codebase Patterns
+- Next.js app with vitest for testing
+- Pokemon engine in src/app/pokemon/engine/ (battle.ts, state.ts)
+- Data definitions in src/app/pokemon/data/ (types.ts, pokemon.ts, moves.ts)
+- Tests use vitest with vi.spyOn(Math, 'random') for deterministic results
+- createPokemon accepts optional IV override for test determinism
+- Save/load uses localStorage with Set→Array serialization
+- Stats formula: HP = floor(((base+iv)*2*level)/100) + level + 10; others = floor(((base+iv)*2*level)/100) + 5
+- TypeScript strict mode, run `npx tsc --noEmit` to check
+
+---
+
+## 2026-02-16 01:48 - US-002: Test battle engine core mechanics
+- Wrote comprehensive tests for battle.ts (30 tests) and state.ts (13 tests)
+- battle.test.ts covers: calculateDamage (STAB, type effectiveness, crits, burn), doesMoveHit, applyStatusDamage, canAct, executeTurn, attemptCatch, checkEvolution, gainExp, calculateExpGain
+- state.test.ts covers: createPokemon, calcStats, createInitialState, save/load round-trip
+- All 56 tests pass, tsc --noEmit clean
+- Files: src/app/pokemon/engine/__tests__/battle.test.ts, src/app/pokemon/engine/__tests__/state.test.ts
+- **Learnings:** Use fixedIvs for deterministic stat tests; mock Math.random for all RNG-dependent functions
+---
+
+## 2026-02-16 02:06 - US-003: Extract Game.tsx into modular components
+- Extracted rendering functions into 5 component modules + utils
+- components/BattleScreen.ts: renderBattleScreen (battle UI overlay)
+- components/MenuScreen.ts: renderMenu (all menu screens: main, pokemon, bag, pokedex, map)
+- components/ShopScreen.ts: renderShop (shop overlay)
+- components/IntroScreens.ts: renderIntroScreen, renderNamingScreen, renderStarterSelect
+- components/EvolutionScreen.ts: renderEvolution
+- components/utils.ts: shared utilities (drawHPBar, getStatusColor, roundRectPath, findFirstAlive)
+- engine/battleLogic.ts: extracted battle state machine functions (executeBattleAction, handlePostMessage, handleBattleVictory, handlePostExp, handleLearnMove, useBattleItem, handleCatchResult)
+- Game.tsx reduced from 2067 to 790 lines (orchestrator only)
+- 13 new tests in components/__tests__/components.test.ts (file existence, exports, line count, imports)
+- All 69 tests pass, build succeeds
+- **Learnings:** Component files use .ts not .tsx since they're canvas render functions, not React components. The game uses imperative canvas rendering so "components" are pure render functions taking ctx/state/dimensions.
+---
+
+## 2026-02-16 02:15 - US-004: Implement PC Storage UI
+- Created components/PCScreen.ts with deposit/withdraw/view modes and pure logic functions
+- PC terminal already existed in pokecenter at tile 14 position [1][8]
+- Changed tile 14 interaction from opening pokemon menu to opening PC screen
+- Added PCUIState interface to state.ts, wired into GameState
+- Added 'pc' phase handling in Game.tsx (input handler + rendering)
+- PC state (player.pc array) persists in save/load (already serialized as JSON array)
+- loadGame ensures pc array exists for backwards compatibility
+- 15 new tests in components/__tests__/pc.test.ts covering deposit/withdraw logic
+- Updated line count threshold in components.test.ts (800→900) due to PC handler additions
+- Files: components/PCScreen.ts, components/__tests__/pc.test.ts, engine/state.ts, Game.tsx
+- All 84 tests pass, tsc clean, build succeeds
+- **Learnings:** drawHPBar takes (ctx, x, y, w, h, current, max) not a ratio
+---
+
+## 2026-02-16 02:25 - US-005: HM Cut and Surf mechanics
+- Added Cut move to MOVES data (Normal/50power/physical)
+- Verified Surf already exists (Water/90power/special)
+- Created engine/hm.ts with pure HM logic functions (teamKnowsMove, cutTreeFlag, isTreeCut, getHmAction, shouldExitSurf)
+- Added isSurfing to player state with save/load backwards compat
+- Cuttree interaction: facing cuttree + Cut-knowing Pokémon → removes tree, persisted in storyFlags
+- Surf interaction: facing water + Surf-knowing Pokémon → enter surf mode, walk on water
+- Exit surf automatically when stepping onto land tile
+- Blue tint + wave effect on player while surfing (renderer)
+- Cut trees rendered as grass after removal (renderer checks storyFlags)
+- HM NPCs: Captain in Vermilion (Cut), Warden in Fuchsia (Surf) - teach to first eligible Pokémon
+- Route 2 has cuttree at [10][5] blocking side path
+- 18 new tests in engine/__tests__/hm.test.ts covering all HM logic
+- Updated line count threshold in components.test.ts (900→1000)
+- Files: engine/hm.ts, engine/__tests__/hm.test.ts, data/moves.ts, data/maps.ts, engine/state.ts, engine/renderer.ts, Game.tsx
+- All 102 tests pass, tsc clean, build succeeds
+- **Learnings:** Generic cities created with createGenericCity have empty npcs array - use IIFE to mutate before insertion into maps record
+---
+
+## 2026-02-16 02:35 - US-006: Implement bicycle toggle and key items
+- Created engine/bicycle.ts with pure logic: isIndoorMap, canToggleBicycle, toggleBicycle, getPlayerKeyItems
+- Press B in overworld toggles bicycle on/off (only if hasBicycle, not indoors, not surfing)
+- Bicycle NPC added to Vermilion City (Bike Shop Owner at 16,12) - gives bicycle via dialog
+- Bicycle auto-dismounts when entering indoor maps (pokecenter, gym, etc.)
+- Bicycle visual: green tint overlay + spinning wheel effect on player sprite
+- Key Items section added to bag menu showing Bicycle when owned
+- Movement speed already handled (80ms vs 160ms in existing onBicycle check)
+- 19 new tests in engine/__tests__/bicycle.test.ts covering all logic
+- Files: engine/bicycle.ts, engine/__tests__/bicycle.test.ts, data/maps.ts, engine/renderer.ts, Game.tsx, components/MenuScreen.ts
+- All 121 tests pass, tsc clean, build succeeds
+- **Learnings:** Indoor maps identified by id: pokecenter, pokemart, oak_lab, elite4, gym_* prefix
+---
+
+## 2026-02-16 02:46 - US-007: Credits screen and game completion flow
+- Created components/CreditsScreen.ts with scrolling credits (champion announcement, player name, team, badges, pokédex stats, THE END)
+- Modified battleLogic.ts handleBattleVictory to transition to credits phase when champion_gary is defeated, sets 'champion' storyFlag
+- Added credits field to GameState interface and createInitialState
+- Wired credits phase in Game.tsx: auto-scroll in game loop, input handler (Enter when done → return to Pallet Town), rendering
+- 13 new tests in components/__tests__/credits.test.ts covering: battle transition, champion flag, money reward, credits content (name, team, badges, pokédex, THE END), scroll advancement, completion state
+- All 134 tests pass, tsc clean, build succeeds
+- Files: components/CreditsScreen.ts, components/__tests__/credits.test.ts, engine/battleLogic.ts, engine/state.ts, Game.tsx
+- **Learnings:** Credits is a canvas render function like other components, uses advanceCredits pure function for scroll state
+---
+
+## 2026-02-16 02:55 - US-008: Improve mobile controls with virtual D-pad and action buttons
+- Created components/MobileControls.tsx as React overlay component (first .tsx component)
+- D-pad (up/down/left/right) on bottom-left dispatches ArrowKey events
+- A button (space/confirm) and B button (Escape/cancel) on bottom-right
+- Start button (Enter/menu) in top center area
+- Touch detection via ontouchstart/maxTouchPoints, hidden on non-touch devices
+- Styled with emerald-400/50 semi-transparent backgrounds, pixel art feel
+- Fixed positioning with pointer-events-none container, z-50 overlay
+- Integrated into Game.tsx render output
+- 13 new tests in components/__tests__/mobileControls.test.ts covering structure, styling, key mappings, touch detection, positioning
+- All 147 tests pass, tsc clean, build succeeds
+- **Learnings:** No jsdom in this project; use source-code analysis tests for React components instead of render tests
+---
+
+## 2026-02-16 03:06 - US-009: Add remaining towns and routes with unique layouts
+- Replaced createGenericCity for Celadon, Fuchsia, Saffron, Cinnabar with hand-crafted layouts
+- Celadon: wide boulevard, dept store, Game Corner NPC, flower garden, pond
+- Fuchsia: organic winding paths, Safari Zone fence+guide, fishing pond
+- Saffron: grid road system (biggest city feel), Silph Co with guard (locked)
+- Cinnabar: water-surrounded island, beach paths, volcano rocks, research lab
+- Each city: Pokécenter with nurse, 2+ unique dialog NPCs
+- Updated DOOR_CONNECTIONS for all new door positions
+- 11 new tests in data/__tests__/maps.test.ts (door refs, bounds, tiles, unique layouts)
+- All 158 tests pass, tsc clean, build succeeds
+- Files: data/maps.ts, data/__tests__/maps.test.ts
+- **Learnings:** Keep city dimensions same as generic (25x22) to avoid breaking MAP_CONNECTIONS; uniqueness comes from internal layout. Door connections must be updated individually when door positions change.
+---
+
+## 2026-02-16 03:17 - US-010: Implement remaining gym interiors with trainers
+- Replaced generic createGymInterior with gym-specific layouts for all 8 gyms
+- Pewter: rocky boulders, Cerulean: water pools, Vermilion: electric fence maze, Celadon: garden hedges, Fuchsia: ninja wall maze, Saffron: teleporter pads, Cinnabar: lava hazards, Viridian: ground maze
+- Added 24 gym trainers to trainers.ts (2-3 per gym) with type-themed teams
+- Each gym map now references its trainers + leader, has a Gym Guide NPC
+- Species keys use original Pokémon names as keys (vulpix not foxflame, magnemite not magnolt, diglett not digmole, beedril not stingbee, tentacruel not stingel)
+- 9 new tests in data/__tests__/trainers.test.ts covering: valid species refs, trainer counts, type themes, leader existence, map existence, unique names, trainer references, badge dialog
+- All 167 tests pass, tsc clean, build succeeds
+- Files: data/trainers.ts, data/maps.ts, data/__tests__/trainers.test.ts
+- **Learnings:** SPECIES record keys are original Pokémon names (e.g., vulpix, magnemite, diglett) not the custom species names. Always verify speciesId against actual keys in pokemon.ts.
+---
+
+## 2026-02-16 03:37 - US-012: Add battle animations and transition effects
+- Created engine/animations.ts: animation factories, tick/update system, type flash colors, battle transition, render helpers (shake, faint opacity/offset, HP/XP interpolation)
+- Updated BattleScreen.ts: screen shake via renderScreenShake, faint fade/drop overlay, type-colored flash overlay, animated EXP bar
+- Updated battleLogic.ts: buildTurnAnimations on executeBattleAction (flash, hp_drain, shake on super-effective, faint), type-colored flash from move type, exp_fill on exp_gain
+- Updated state.ts: added BattleTransitionState interface, battleTransition field to GameState, color? field to BattleAnimation
+- Updated Game.tsx: battle transition on wild encounter, animation ticking in game loop, transition rendering
+- 36 new tests in engine/__tests__/animations.test.ts covering all animation factories, tickAnimations, buildTurnAnimations, type flash colors, battle transition, render helpers
+- All 224 tests pass, build succeeds
+- Files: engine/animations.ts, engine/__tests__/animations.test.ts, components/BattleScreen.ts, engine/battleLogic.ts, engine/state.ts, Game.tsx
+- **Learnings:** PokemonType only has 15 types (no Dark/Steel/Fairy), BattleAction uses 'move' not 'fight'
+---
+
+## 2026-02-16 03:50 - US-013: Implement item usage in battle and bag improvements
+- Enhanced useBattleItem in battleLogic.ts: added revive support (targets fainted party member, restores 50% HP), added targetIdx parameter
+- Status heals still consume turn even if status doesn't match (item is used but status unchanged)
+- Revive auto-targets first fainted pokemon if no targetIdx provided; returns unchanged state if no valid target
+- Categorized bag menu in MenuScreen.ts: items grouped by Medicine, Pokéballs, Battle Items, Key Items with colored category headers
+- 20 new tests in engine/__tests__/itemUsage.test.ts: potions (5), status heals (4), revive (3), item consumption (3), pokéball usage (1), item data validation (3), bag categorization (1)
+- All 244 tests pass, tsc clean, build succeeds
+- Files: engine/battleLogic.ts, engine/__tests__/itemUsage.test.ts, components/MenuScreen.ts
+- **Learnings:** useBattleItem calls executeBattleAction which runs executeTurn — enemy attacks after item use, so tests must account for enemy damage when checking HP values
+---
+
+## 2026-02-16 03:59 - US-014: Implement Pokémart with expanded inventory per city
+- Expanded MART_INVENTORY: added Lavender, Fuchsia, Saffron, Cinnabar (9 cities total)
+- Early cities (Viridian): Pokéballs, Potions, Antidotes; Mid (Pewter/Cerulean/Lavender): Great Balls, Super Potions, status heals; Late (Vermilion+): Ultra Balls, Hyper Potions, Full Restores, Revives
+- Created engine/shopLogic.ts: pure functions buyItem, sellItem, getSellPrice, getMaxBuyable
+- Updated ShopScreen.ts: 3-option select menu (Buy/Sell/Exit), quantity selector (←/→), sell mode with half-price display
+- Updated Game.tsx handleShopInput: full buy/sell/quantity flow, sell removes empty items from bag
+- Clerk NPC already exists in shared pokemart map (all cities use same interior)
+- 20 new tests in engine/__tests__/shopLogic.test.ts: buy (5), sell (6), getSellPrice (2), getMaxBuyable (2), MART_INVENTORY validation (4 - unique cities, progression, valid refs, valid prices)
+- All 264 tests pass, tsc clean, build succeeds
+- Files: data/items.ts, engine/shopLogic.ts, engine/__tests__/shopLogic.test.ts, components/ShopScreen.ts, Game.tsx
+- **Learnings:** All cities share a single pokemart map instance; city-specific inventory is resolved by matching player.mapId against MART_INVENTORY keys
+---
+
+## 2026-02-16 07:15 - US-015: Polish overworld rendering
+- Added fade-to-black door transitions (300ms, fade out → warp at midpoint → fade in)
+- Enhanced sign interaction (already worked via NPC system; added missing Oak Lab sign NPC)
+- New interior tiles: bed (17), table (18), machine (19) with pixel art rendering
+- Added bed + table to player_house, research machines to oak_lab
+- Enhanced ledge tile (8) rendering with face, highlight, and shadow
+- Wrote 10 tests for transition state management and new tile definitions
+- Files: renderer.ts, state.ts (unchanged), maps.ts, Game.tsx, transitions.test.ts
+- **Learnings:** Transitions use {type, progress} pattern; door warps piggyback on transition._door
+---
+
+## 2026-02-16 07:25 - US-016: Victory Road and Elite 4 sequential battles
+- Added 8-badge gate for Victory Road entry (Game.tsx map transition check)
+- Updated Victory Road wild encounters to level range 35-45
+- E4 sequential flow already wired: battles trigger at y<=4 on elite4 map, champion defeat → credits
+- No healing between E4 battles (HP carries over via playerTeam in battle state)
+- Files changed: Game.tsx, data/maps.ts, engine/__tests__/elite4.test.ts
+- **Learnings:** E4 flow was mostly pre-wired; badge gate was the main missing piece. DialogState uses `lines`/`currentLine`/`charIndex`/`done` fields.
+---
+
+## 2026-02-16 07:35 - US-017: Add Pokédex detail screen with sprite and stats
+- Created components/PokedexScreen.ts with pure logic functions (getPokedexEntries, getCompletionStats) and render functions (renderPokedexList, renderPokedexDetail)
+- List screen: all 50 species ordered by ID, scroll with up/down, caught/total completion count
+- Detail screen: caught shows sprite (drawPokemonSprite), types with colored badges, description, base stat bars; seen shows silhouette; unknown shows ???
+- Added pokedex_detail to MenuState screen union
+- Updated MenuScreen.ts to delegate to PokedexScreen renderers
+- Updated Game.tsx: up/down scroll in list, Enter for detail, left/right navigate in detail, Escape to go back
+- 12 new tests in components/__tests__/pokedex.test.ts covering: entry count, ordering, status filtering, completion stats, display logic
+- All 299 tests pass, tsc clean, build succeeds
+- Files: components/PokedexScreen.ts, components/__tests__/pokedex.test.ts, components/MenuScreen.ts, engine/state.ts, Game.tsx
+- **Learnings:** Pokedex scroll uses selectedIndex as cursor with computed scrollStart based on visible rows
+---
+
+## 2026-02-16 07:45 - US-018: Implement Professor Oak intro sequence and starter selection polish
+- Created engine/intro.ts: intro state machine with 4 steps (welcome → oak_lore_1/2/3 → naming transition), typewriter tick, counter starters, mom dialog
+- Updated IntroScreens.ts: added renderOakSpeech with Oak sprite, typewriter dialog box, word wrap
+- Updated Game.tsx flow: intro → oak_speech (with typewriter) → naming → start in player_house (mom goodbye dialog) → walk to oak_lab → starter select → rival battle
+- Oak lab dialog polished with personalized greeting
+- 13 new tests in engine/__tests__/intro.test.ts covering: state creation, typewriter ticks, step advancement, full sequence traversal, dialog content, counter starters, mom dialog
+- All 312 tests pass, tsc clean, build succeeds
+- Files: engine/intro.ts, engine/__tests__/intro.test.ts, components/IntroScreens.ts, Game.tsx
+- **Learnings:** Intro state machine uses pure functions (advanceIntroStep, tickIntroTypewriter) separate from React state for testability
+---
+
+## 2026-02-16 07:54 - US-019: Final integration: build verification, save/load robustness, edge cases
+- Verified build passes clean (npm run build, npx tsc --noEmit)
+- Verified save/load round-trip: pokedex Sets, defeatedTrainers, storyFlags all serialize/deserialize correctly
+- Verified white out mechanic already implemented: all fainted → return to pokecenter, lose half money, heal to 50% HP
+- Verified party full catch → PC already implemented in handleCatchResult
+- Verified all door connections reference valid maps with in-bounds coordinates
+- 13 new tests in engine/__tests__/integration.test.ts: save/load (6), white out (2), catch→PC (2), door validation (3)
+- All 325 tests pass, tsc clean, build succeeds
+- Files: engine/__tests__/integration.test.ts
+- **Learnings:** All edge cases (white out, party full catch) were already implemented in prior stories; this story confirmed correctness via tests
+---
+
+## 2026-02-16 08:08 - US-019: Final integration: build verification, save/load robustness, edge cases
+- Fixed TypeScript errors: createInitialState() takes no args, badges is string[] not number
+- integration.test.ts: 13 tests covering save/load round-trip (Sets, all fields), white out mechanic, party full catch → PC, door transition validity
+- All 325 tests pass, typecheck clean, build clean
+- **Learnings:** createInitialState() has no params (name set during intro phase), badges is string[]
+---

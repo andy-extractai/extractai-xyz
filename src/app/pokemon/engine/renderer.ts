@@ -229,6 +229,7 @@ export function renderMap(
   canvasWidth: number, canvasHeight: number,
   frameCount: number,
   npcs: NPCData[],
+  options?: { isSurfing?: boolean; onBicycle?: boolean; cutTrees?: Set<string> },
 ) {
   const camX = playerX - Math.floor(VIEWPORT_TILES_X / 2);
   const camY = playerY - Math.floor(VIEWPORT_TILES_Y / 2);
@@ -259,7 +260,11 @@ export function renderMap(
         continue;
       }
       
-      const tileType = map.tiles[ty][tx];
+      let tileType = map.tiles[ty][tx];
+      // If this cuttree was removed, render as grass
+      if (tileType === 16 && options?.cutTrees?.has(`cut_${map.id}_${tx}_${ty}`)) {
+        tileType = 0;
+      }
       const tileDef = TILE_DEFS[tileType];
       
       ctx.fillStyle = tileDef?.color || '#000';
@@ -301,6 +306,14 @@ export function renderMap(
         drawCutTree(ctx, screenX, screenY, TILE_SIZE);
       } else if (tileType === 7) {
         drawWall(ctx, screenX, screenY, TILE_SIZE);
+      } else if (tileType === 8) {
+        drawLedge(ctx, screenX, screenY, TILE_SIZE);
+      } else if (tileType === 17) {
+        drawBed(ctx, screenX, screenY, TILE_SIZE);
+      } else if (tileType === 18) {
+        drawTable(ctx, screenX, screenY, TILE_SIZE);
+      } else if (tileType === 19) {
+        drawMachine(ctx, screenX, screenY, TILE_SIZE, frameCount);
       } else if (tileType === 1) {
         // Path - add subtle texture
         ctx.fillStyle = '#b8965a';
@@ -354,6 +367,34 @@ export function renderMap(
   
   drawSprite(ctx, animatedSprite, PLAYER_COLORS, playerScreenX, playerScreenY, TILE_SIZE);
   
+  // Bicycle visual indicator - green tint overlay on player
+  if (options?.onBicycle) {
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
+    ctx.fillRect(playerScreenX, playerScreenY, TILE_SIZE, TILE_SIZE);
+    // Draw wheel effect under player
+    const spin = frameCount * 0.15;
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(playerScreenX + TILE_SIZE / 2 - 4, playerScreenY + TILE_SIZE - 4, 3, spin, spin + Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(playerScreenX + TILE_SIZE / 2 + 4, playerScreenY + TILE_SIZE - 4, 3, spin + Math.PI, spin + Math.PI * 2);
+    ctx.stroke();
+  }
+
+  // Surfing visual indicator - blue tint overlay on player
+  if (options?.isSurfing) {
+    ctx.fillStyle = 'rgba(52, 152, 219, 0.35)';
+    ctx.fillRect(playerScreenX, playerScreenY, TILE_SIZE, TILE_SIZE);
+    // Draw wave effect under player
+    const wave = Math.sin(frameCount * 0.08) * 3;
+    ctx.fillStyle = 'rgba(52, 152, 219, 0.5)';
+    ctx.beginPath();
+    ctx.ellipse(playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE - 4 + wave, TILE_SIZE / 2 + 2, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 
@@ -520,6 +561,83 @@ function drawCutTree(ctx: CanvasRenderingContext2D, x: number, y: number, s: num
   ctx.fill();
   ctx.fillStyle = '#5d4037';
   ctx.fillRect(x + s * 0.4, y + s * 0.4, s * 0.2, s * 0.2);
+}
+
+function drawLedge(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+  // Grass base
+  ctx.fillStyle = '#4a7c3f';
+  ctx.fillRect(x, y, s, s);
+  // Ledge face (darker strip at bottom)
+  ctx.fillStyle = '#6d5a3a';
+  ctx.fillRect(x, y + s * 0.6, s, s * 0.4);
+  // Ledge top edge highlight
+  ctx.fillStyle = '#a89060';
+  ctx.fillRect(x, y + s * 0.55, s, s * 0.1);
+  // Shadow underneath
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.fillRect(x, y + s * 0.95, s, s * 0.05);
+}
+
+function drawBed(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+  ctx.fillStyle = '#c4a86b'; // floor
+  ctx.fillRect(x, y, s, s);
+  // Bed frame
+  ctx.fillStyle = '#5d4037';
+  ctx.fillRect(x + 2, y + 2, s - 4, s - 4);
+  // Pillow
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(x + 4, y + 4, s * 0.4, s * 0.3);
+  // Blanket
+  ctx.fillStyle = '#e53935';
+  ctx.fillRect(x + 4, y + s * 0.4, s - 8, s * 0.5);
+  // Blanket fold line
+  ctx.fillStyle = '#c62828';
+  ctx.fillRect(x + 4, y + s * 0.4, s - 8, 2);
+}
+
+function drawTable(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {
+  ctx.fillStyle = '#c4a86b'; // floor
+  ctx.fillRect(x, y, s, s);
+  // Table top
+  ctx.fillStyle = '#8d6e63';
+  ctx.fillRect(x + 2, y + s * 0.2, s - 4, s * 0.6);
+  // Table surface highlight
+  ctx.fillStyle = '#a1887f';
+  ctx.fillRect(x + 3, y + s * 0.22, s - 6, s * 0.15);
+  // Legs
+  ctx.fillStyle = '#5d4037';
+  ctx.fillRect(x + 4, y + s * 0.75, 3, s * 0.2);
+  ctx.fillRect(x + s - 7, y + s * 0.75, 3, s * 0.2);
+}
+
+function drawMachine(ctx: CanvasRenderingContext2D, x: number, y: number, s: number, frame: number) {
+  ctx.fillStyle = '#c4a86b'; // floor
+  ctx.fillRect(x, y, s, s);
+  // Machine body
+  ctx.fillStyle = '#455a64';
+  ctx.fillRect(x + 2, y + 2, s - 4, s - 4);
+  // Screen
+  const glow = 0.6 + Math.sin(frame * 0.07) * 0.3;
+  ctx.fillStyle = `rgba(76, 175, 80, ${glow})`;
+  ctx.fillRect(x + 4, y + 4, s - 8, s * 0.35);
+  // Buttons/indicators
+  ctx.fillStyle = '#f44336';
+  ctx.beginPath();
+  ctx.arc(x + s * 0.3, y + s * 0.65, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffeb3b';
+  ctx.beginPath();
+  ctx.arc(x + s * 0.5, y + s * 0.65, 2, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#4caf50';
+  ctx.beginPath();
+  ctx.arc(x + s * 0.7, y + s * 0.65, 2, 0, Math.PI * 2);
+  ctx.fill();
+  // Vent lines
+  ctx.fillStyle = '#37474f';
+  for (let i = 0; i < 3; i++) {
+    ctx.fillRect(x + 5, y + s * 0.75 + i * 3, s - 10, 1);
+  }
 }
 
 function drawWall(ctx: CanvasRenderingContext2D, x: number, y: number, s: number) {

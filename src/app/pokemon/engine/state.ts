@@ -21,6 +21,7 @@ export interface GameState {
     repelSteps: number;
     hasBicycle: boolean;
     onBicycle: boolean;
+    isSurfing: boolean;
     defeatedTrainers: Set<string>;
     storyFlags: Set<string>;
   };
@@ -31,8 +32,11 @@ export interface GameState {
   dialog: DialogState | null;
   menu: MenuState | null;
   shop: ShopState | null;
+  pcUI: PCUIState | null;
   evolution: EvolutionState | null;
+  credits: { scrollY: number; done: boolean } | null;
   transition: { type: 'fade' | 'battle'; progress: number; callback?: () => void } | null;
+  battleTransition: BattleTransitionState | null;
   lastPokecenterMap: string;
   lastPokecenterX: number;
   lastPokecenterY: number;
@@ -65,6 +69,13 @@ export interface BattleAnimation {
   target: 'player' | 'enemy';
   progress: number;
   duration: number;
+  color?: string; // for type-colored flash
+}
+
+export interface BattleTransitionState {
+  type: 'flash_wipe';
+  progress: number;
+  duration: number;
 }
 
 export interface TurnResult {
@@ -89,7 +100,7 @@ export interface DialogState {
 }
 
 export interface MenuState {
-  screen: 'main' | 'pokemon' | 'bag' | 'pokedex' | 'save' | 'options' | 'pokemon_detail' | 'map';
+  screen: 'main' | 'pokemon' | 'bag' | 'pokedex' | 'save' | 'options' | 'pokemon_detail' | 'map' | 'pokedex_detail';
   selectedIndex: number;
   subIndex: number;
   selectedPokemon?: number;
@@ -101,6 +112,11 @@ export interface ShopState {
   mode: 'buy' | 'sell' | 'select';
   quantity: number;
   mapId: string;
+}
+
+export interface PCUIState {
+  mode: 'main' | 'deposit' | 'withdraw';
+  selectedIndex: number;
 }
 
 export interface EvolutionState {
@@ -189,6 +205,7 @@ export function createInitialState(): GameState {
       repelSteps: 0,
       hasBicycle: false,
       onBicycle: false,
+      isSurfing: false,
       defeatedTrainers: new Set(),
       storyFlags: new Set(),
     },
@@ -197,8 +214,11 @@ export function createInitialState(): GameState {
     dialog: null,
     menu: null,
     shop: null,
+    pcUI: null,
     evolution: null,
+    credits: null,
     transition: null,
+    battleTransition: null,
     lastPokecenterMap: 'player_house',
     lastPokecenterX: 3,
     lastPokecenterY: 5,
@@ -222,7 +242,9 @@ export function saveGame(state: GameState): void {
     dialog: null,
     menu: null,
     shop: null,
+    pcUI: null,
     evolution: null,
+    credits: null,
     transition: null,
   };
   try {
@@ -241,6 +263,10 @@ export function loadGame(): GameState | null {
     };
     data.player.defeatedTrainers = new Set(data.player.defeatedTrainers);
     data.player.storyFlags = new Set(data.player.storyFlags);
+    if (!data.player.pc) data.player.pc = [];
+    if (data.player.isSurfing === undefined) data.player.isSurfing = false;
+    data.pcUI = null;
+    data.battleTransition = null;
     return data as GameState;
   } catch {
     return null;

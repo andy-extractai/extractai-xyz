@@ -144,13 +144,24 @@ if (watch) {
           lastStatusKey = statusKey;
           const repoDir = join(__dirname, "..");
           try {
+            // Copy the JSON, switch to main, commit, push, switch back
+            const jsonPath = join(repoDir, "public", "agents-state.json");
+            const tmpPath = "/tmp/agents-state.json";
+            execSync(`cp "${jsonPath}" "${tmpPath}"`, { stdio: "pipe" });
+            // Use git worktree to push to main without switching branches
+            const worktreePath = "/tmp/extractai-main-worktree";
+            try {
+              execSync(`cd "${repoDir}" && git worktree add "${worktreePath}" main --quiet 2>/dev/null || true`, { stdio: "pipe", timeout: 10000 });
+            } catch {}
+            execSync(`cp "${tmpPath}" "${worktreePath}/public/agents-state.json"`, { stdio: "pipe" });
             execSync(
-              `cd "${repoDir}" && git add public/agents-state.json && git diff --cached --quiet || (git commit -m "sync: agent state update" --no-verify && git push origin main)`,
+              `cd "${worktreePath}" && git add public/agents-state.json && git diff --cached --quiet || (git commit -m "sync: agent state" --no-verify && git push origin main)`,
               { stdio: "pipe", timeout: 15000 }
             );
             console.log(`[${new Date().toLocaleTimeString()}] Pushed state update`);
           } catch (e) {
-            console.error("Git push error:", e.message?.substring(0, 100));
+            // Worktree approach — no branch switching needed, nothing to recover
+            console.error("Git push error:", e.message?.substring(0, 200));
           }
         }
       }
