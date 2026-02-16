@@ -46,6 +46,154 @@ export const TRAINERS: Record<string, TrainerData> = {
     defeatDialog: ['Good luck with the Elite Four...'],
   },
 
+  // GYM TRAINERS - Pewter (Rock)
+  pewter_trainer1: {
+    id: 'pewter_trainer1', name: 'Camper Liam', spriteType: 'youngster', reward: 200,
+    team: [{ speciesId: 'geodon', level: 10 }],
+    preDialog: ['Rocks are super tough!'],
+    defeatDialog: ['My rocks crumbled...'],
+  },
+  pewter_trainer2: {
+    id: 'pewter_trainer2', name: 'Hiker Marcos', spriteType: 'hiker', reward: 250,
+    team: [{ speciesId: 'geodon', level: 9 }, { speciesId: 'geodon', level: 11 }],
+    preDialog: ['I train with boulders every day!'],
+    defeatDialog: ['You shattered my defense!'],
+  },
+
+  // GYM TRAINERS - Cerulean (Water)
+  cerulean_trainer1: {
+    id: 'cerulean_trainer1', name: 'Swimmer Diana', spriteType: 'lass', reward: 350,
+    team: [{ speciesId: 'goldish', level: 16 }, { speciesId: 'goldish', level: 16 }],
+    preDialog: ['The water is my domain!'],
+    defeatDialog: ['I\'m all washed up...'],
+  },
+  cerulean_trainer2: {
+    id: 'cerulean_trainer2', name: 'Swimmer Tyler', spriteType: 'youngster', reward: 350,
+    team: [{ speciesId: 'tentacruel', level: 17 }, { speciesId: 'goldish', level: 17 }],
+    preDialog: ['Ready to make a splash?'],
+    defeatDialog: ['You made waves over me!'],
+  },
+  cerulean_trainer3: {
+    id: 'cerulean_trainer3', name: 'Swimmer Rosa', spriteType: 'beauty', reward: 400,
+    team: [{ speciesId: 'aqualing', level: 18 }, { speciesId: 'slowpox', level: 18 }],
+    preDialog: ['My water team flows with grace!'],
+    defeatDialog: ['The tide turned against me...'],
+  },
+
+  // GYM TRAINERS - Vermilion (Electric)
+  vermilion_trainer1: {
+    id: 'vermilion_trainer1', name: 'Sailor Chuck', spriteType: 'hiker', reward: 500,
+    team: [{ speciesId: 'zaprat', level: 22 }, { speciesId: 'magnemite', level: 22 }],
+    preDialog: ['Lt. Surge taught me everything!'],
+    defeatDialog: ['I got short-circuited!'],
+  },
+  vermilion_trainer2: {
+    id: 'vermilion_trainer2', name: 'Engineer Pat', spriteType: 'scientist', reward: 550,
+    team: [{ speciesId: 'magnemite', level: 23 }, { speciesId: 'voltorex', level: 23 }],
+    preDialog: ['Electric types power up my life!'],
+    defeatDialog: ['Power failure!'],
+  },
+
+  // GYM TRAINERS - Celadon (Grass)
+  celadon_trainer1: {
+    id: 'celadon_trainer1', name: 'Lass Lily', spriteType: 'lass', reward: 600,
+    team: [{ speciesId: 'oddling', level: 27 }, { speciesId: 'sproutley', level: 27 }],
+    preDialog: ['Flowers are my passion!'],
+    defeatDialog: ['My flowers wilted...'],
+  },
+  celadon_trainer2: {
+    id: 'celadon_trainer2', name: 'Beauty Daisy', spriteType: 'beauty', reward: 650,
+    team: [{ speciesId: 'thornox', level: 28 }, { speciesId: 'oddling', level: 28 }],
+    preDialog: ['Nature\'s beauty is unmatched!'],
+    defeatDialog: ['I\'ve been uprooted!'],
+  },
+  celadon_trainer3: {
+    id: 'celadon_trainer3', name: 'Lass Violet', spriteType: 'lass', reward: 700,
+    team: [{ speciesId: 'sproutley', level: 28 }, { speciesId: 'thornox', level: 29 }],
+    preDialog: ['Grass types grow stronger every day!'],
+    defeatDialog: ['Cut down to size...'],
+  },
+
+  // GYM TRAINERS - Fuchsia (Poison)
+  fuchsia_trainer1: {
+    id: 'fuchsia_trainer1', name: 'Juggler Niko', spriteType: 'youngster', reward: 750,
+    team: [{ speciesId: 'snekil', level: 32 }, { speciesId: 'ghoulby', level: 32 }],
+    preDialog: ['Poison is an art form!'],
+    defeatDialog: ['My toxins weren\'t enough...'],
+  },
+  fuchsia_trainer2: {
+    id: 'fuchsia_trainer2', name: 'Tamer Edgar', spriteType: 'hiker', reward: 800,
+    team: [{ speciesId: 'cobrix', level: 33 }, { speciesId: 'beedril', level: 33 }],
+    preDialog: ['Koga\'s training made me strong!'],
+    defeatDialog: ['The venom faded!'],
+  },
+  fuchsia_trainer3: {
+    id: 'fuchsia_trainer3', name: 'Ninja Kai', spriteType: 'youngster', reward: 850,
+    team: [{ speciesId: 'snekil', level: 33 }, { speciesId: 'cobrix', level: 34 }, { speciesId: 'ghoulby', level: 33 }],
+    preDialog: ['You can\'t see a ninja coming!'],
+    defeatDialog: ['Defeated... impossible!'],
+  },
+
+  // GYM TRAINERS - Saffron (Psychic)
+  saffron_trainer1: {
+    id: 'saffron_trainer1', name: 'Psychic Johan', spriteType: 'scientist', reward: 900,
+    team: [{ speciesId: 'psydux', level: 36 }, { speciesId: 'slowpox', level: 36 }],
+    preDialog: ['I can read your every thought!'],
+    defeatDialog: ['I didn\'t see that coming...'],
+  },
+  saffron_trainer2: {
+    id: 'saffron_trainer2', name: 'Channeler Mara', spriteType: 'beauty', reward: 950,
+    team: [{ speciesId: 'psyclops', level: 37 }, { speciesId: 'jinxia', level: 37 }],
+    preDialog: ['The spirits guide my power!'],
+    defeatDialog: ['My concentration broke!'],
+  },
+  saffron_trainer3: {
+    id: 'saffron_trainer3', name: 'Psychic Tyron', spriteType: 'scientist', reward: 1000,
+    team: [{ speciesId: 'psydux', level: 37 }, { speciesId: 'psyclops', level: 38 }],
+    preDialog: ['Sabrina\'s training unlocked my potential!'],
+    defeatDialog: ['My mind... overwhelmed!'],
+  },
+
+  // GYM TRAINERS - Cinnabar (Fire)
+  cinnabar_trainer1: {
+    id: 'cinnabar_trainer1', name: 'Burglar Quinn', spriteType: 'hiker', reward: 1100,
+    team: [{ speciesId: 'growlith', level: 40 }, { speciesId: 'vulpix', level: 40 }],
+    preDialog: ['Fire burns everything in its path!'],
+    defeatDialog: ['I got burned out!'],
+  },
+  cinnabar_trainer2: {
+    id: 'cinnabar_trainer2', name: 'Super Nerd Zach', spriteType: 'scientist', reward: 1200,
+    team: [{ speciesId: 'emberon', level: 40 }, { speciesId: 'blazeron', level: 41 }],
+    preDialog: ['I\'ve studied fire theory extensively!'],
+    defeatDialog: ['Back to the drawing board!'],
+  },
+  cinnabar_trainer3: {
+    id: 'cinnabar_trainer3', name: 'Burglar Arson', spriteType: 'hiker', reward: 1200,
+    team: [{ speciesId: 'vulpix', level: 41 }, { speciesId: 'growlith', level: 41 }, { speciesId: 'blazeron', level: 42 }],
+    preDialog: ['The heat is on!'],
+    defeatDialog: ['Extinguished...'],
+  },
+
+  // GYM TRAINERS - Viridian (Ground)
+  viridian_trainer1: {
+    id: 'viridian_trainer1', name: 'Cooltrainer Samuel', spriteType: 'youngster', reward: 1300,
+    team: [{ speciesId: 'diglett', level: 42 }, { speciesId: 'geodon', level: 42 }],
+    preDialog: ['Giovanni\'s gym is no joke!'],
+    defeatDialog: ['The ground shook beneath me!'],
+  },
+  viridian_trainer2: {
+    id: 'viridian_trainer2', name: 'Cooltrainer Alexa', spriteType: 'beauty', reward: 1400,
+    team: [{ speciesId: 'boulderox', level: 43 }, { speciesId: 'diglett', level: 43 }],
+    preDialog: ['Only the worthy pass through here!'],
+    defeatDialog: ['You\'re worthy indeed!'],
+  },
+  viridian_trainer3: {
+    id: 'viridian_trainer3', name: 'Blackbelt Takeshi', spriteType: 'hiker', reward: 1500,
+    team: [{ speciesId: 'diglett', level: 43 }, { speciesId: 'boulderox', level: 44 }, { speciesId: 'geodon', level: 43 }],
+    preDialog: ['The earth itself fights with me!'],
+    defeatDialog: ['Grounded... by a kid!'],
+  },
+
   // GYM LEADERS
   gym_brock: {
     id: 'gym_brock', name: 'Leader Brock', spriteType: 'gymleader', reward: 1500,
@@ -62,7 +210,7 @@ export const TRAINERS: Record<string, TrainerData> = {
   gym_surge: {
     id: 'gym_surge', name: 'Leader Lt. Surge', spriteType: 'gymleader', reward: 2500,
     team: [
-      { speciesId: 'magnolt', level: 24 }, { speciesId: 'zaprat', level: 24 },
+      { speciesId: 'magnemite', level: 24 }, { speciesId: 'zaprat', level: 24 },
       { speciesId: 'voltorex', level: 28 },
     ],
     preDialog: ['I\'m Lt. Surge, the Lightning American!', 'Electric Pokémon saved me during the war!'],
@@ -81,7 +229,7 @@ export const TRAINERS: Record<string, TrainerData> = {
     id: 'gym_koga', name: 'Leader Koga', spriteType: 'gymleader', reward: 3500,
     team: [
       { speciesId: 'snekil', level: 34 }, { speciesId: 'cobrix', level: 36 },
-      { speciesId: 'stingbee', level: 35 }, { speciesId: 'cobrix', level: 38 },
+      { speciesId: 'beedril', level: 35 }, { speciesId: 'cobrix', level: 38 },
     ],
     preDialog: ['Fwahaha! Poison is the way of the ninja!', 'Face the invisible toxic threat!'],
     defeatDialog: ['Hmph! You have proven your worth!', 'The Soul Badge is yours!'],
@@ -98,7 +246,7 @@ export const TRAINERS: Record<string, TrainerData> = {
   gym_blaine: {
     id: 'gym_blaine', name: 'Leader Blaine', spriteType: 'gymleader', reward: 4500,
     team: [
-      { speciesId: 'growlith', level: 42 }, { speciesId: 'foxflame', level: 42 },
+      { speciesId: 'growlith', level: 42 }, { speciesId: 'vulpix', level: 42 },
       { speciesId: 'blazeron', level: 44 }, { speciesId: 'infernox', level: 47 },
     ],
     preDialog: ['Hah! The hot-headed quiz master is here!', 'My flames will consume you!'],
@@ -108,7 +256,7 @@ export const TRAINERS: Record<string, TrainerData> = {
     id: 'gym_giovanni', name: 'Leader Giovanni', spriteType: 'gymleader', reward: 5000,
     team: [
       { speciesId: 'cobrix', level: 45 }, { speciesId: 'boulderox', level: 45 },
-      { speciesId: 'digmole', level: 44 }, { speciesId: 'draconix', level: 50 },
+      { speciesId: 'diglett', level: 44 }, { speciesId: 'draconix', level: 50 },
     ],
     preDialog: ['So, you\'ve made it this far...', 'I am Giovanni, the strongest Gym Leader!'],
     defeatDialog: ['What?! Defeated by a child?!', 'Fine... take the Earth Badge.'],

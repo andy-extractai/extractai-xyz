@@ -484,22 +484,145 @@ function createGymInterior(gymId: string): GameMap {
   const w = 12, h = 14;
   const tiles = fillMap(w, h, 1);
   
-  setRect(tiles, 0, 0, w, 1, 7);
-  setRect(tiles, 0, 0, 1, h, 7);
-  setRect(tiles, w-1, 0, 1, h, 7);
-  
-  // Arena markings
-  setRect(tiles, 3, 3, 6, 1, 11);
-  setRect(tiles, 3, 8, 6, 1, 11);
-  setCol(tiles, 3, 3, 8, 11);
-  setCol(tiles, 8, 3, 8, 11);
-  
-  // Path to leader
-  setCol(tiles, 5, 8, h-1, 1);
-  setCol(tiles, 6, 8, h-1, 1);
+  setRect(tiles, 0, 0, w, 1, 7); // top wall
+  setRect(tiles, 0, 0, 1, h, 7); // left wall
+  setRect(tiles, w-1, 0, 1, h, 7); // right wall
   
   // Door
   tiles[h-1][5] = 6; tiles[h-1][6] = 6;
+
+  // Gym-specific layouts, trainers, and NPCs
+  const gymConfigs: Record<string, { name: string; trainers: string[]; setupLayout: () => void; npcs: NPCData[] }> = {
+    gym_pewter: {
+      name: 'Pewter Gym',
+      trainers: ['pewter_trainer1', 'pewter_trainer2', 'gym_brock'],
+      npcs: [{ id: 'pewter_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Pewter City Gym!', 'Brock uses Rock-type Pokémon.', 'Water and Grass types work well here!'] }],
+      setupLayout: () => {
+        // Rocky terrain - scattered boulders
+        setRect(tiles, 2, 3, 3, 1, 11); setRect(tiles, 7, 3, 3, 1, 11);
+        tiles[5][2] = 7; tiles[5][9] = 7; // side boulders
+        tiles[7][3] = 7; tiles[7][8] = 7;
+        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
+        setCol(tiles, 5, 4, h-1, 1); setCol(tiles, 6, 4, h-1, 1); // center path
+      },
+    },
+    gym_cerulean: {
+      name: 'Cerulean Gym',
+      trainers: ['cerulean_trainer1', 'cerulean_trainer2', 'cerulean_trainer3', 'gym_misty'],
+      npcs: [{ id: 'cerulean_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Cerulean City Gym!', 'Misty uses Water-type Pokémon.', 'Electric and Grass types are super effective!'] }],
+      setupLayout: () => {
+        // Pool layout - water tiles around path
+        setRect(tiles, 1, 4, 4, 4, 3); setRect(tiles, 7, 4, 4, 4, 3); // water pools
+        setRect(tiles, 2, 9, 3, 2, 3); setRect(tiles, 7, 9, 3, 2, 3); // lower pools
+        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
+        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1); // center walkway
+      },
+    },
+    gym_vermilion: {
+      name: 'Vermilion Gym',
+      trainers: ['vermilion_trainer1', 'vermilion_trainer2', 'gym_surge'],
+      npcs: [{ id: 'vermilion_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Vermilion City Gym!', 'Lt. Surge uses Electric-type Pokémon.', 'Ground types are immune to Electric moves!'] }],
+      setupLayout: () => {
+        // Electric fence maze
+        setRow(tiles, 4, 1, 4, 7); setRow(tiles, 4, 7, 10, 7); // horizontal barriers
+        setRow(tiles, 7, 2, 6, 7); setRow(tiles, 7, 8, 10, 7);
+        setRow(tiles, 10, 1, 5, 7); setRow(tiles, 10, 7, 10, 7);
+        tiles[4][5] = 1; tiles[7][7] = 1; tiles[10][6] = 1; // gaps
+        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
+        setCol(tiles, 5, 2, h-1, 1); setCol(tiles, 6, 2, h-1, 1);
+      },
+    },
+    gym_celadon: {
+      name: 'Celadon Gym',
+      trainers: ['celadon_trainer1', 'celadon_trainer2', 'celadon_trainer3', 'gym_erika'],
+      npcs: [{ id: 'celadon_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Celadon City Gym!', 'Erika uses Grass-type Pokémon.', 'Fire, Ice, and Flying types are effective!'] }],
+      setupLayout: () => {
+        // Garden layout - trees/hedges forming winding path
+        setRect(tiles, 1, 3, 3, 1, 4); setRect(tiles, 8, 3, 3, 1, 4); // hedges
+        setRect(tiles, 3, 5, 2, 3, 4); setRect(tiles, 7, 5, 2, 3, 4);
+        setRect(tiles, 1, 9, 3, 1, 4); setRect(tiles, 8, 9, 3, 1, 4);
+        tiles[6][5] = 2; tiles[6][6] = 2; // decorative grass
+        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
+        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
+      },
+    },
+    gym_fuchsia: {
+      name: 'Fuchsia Gym',
+      trainers: ['fuchsia_trainer1', 'fuchsia_trainer2', 'fuchsia_trainer3', 'gym_koga'],
+      npcs: [{ id: 'fuchsia_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Fuchsia City Gym!', 'Koga uses Poison-type Pokémon.', 'Ground and Psychic types are super effective!'] }],
+      setupLayout: () => {
+        // Invisible walls / ninja maze
+        setRect(tiles, 2, 3, 1, 4, 7); setRect(tiles, 4, 5, 1, 4, 7);
+        setRect(tiles, 6, 3, 1, 3, 7); setRect(tiles, 8, 5, 1, 5, 7);
+        setRect(tiles, 9, 3, 2, 1, 7); setRect(tiles, 3, 10, 5, 1, 7);
+        tiles[3][3] = 1; tiles[8][5] = 1; tiles[10][5] = 1; // passages
+        setRect(tiles, 4, 1, 4, 2, 11);
+        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
+      },
+    },
+    gym_saffron: {
+      name: 'Saffron Gym',
+      trainers: ['saffron_trainer1', 'saffron_trainer2', 'saffron_trainer3', 'gym_sabrina'],
+      npcs: [{ id: 'saffron_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Saffron City Gym!', 'Sabrina uses Psychic-type Pokémon.', 'Bug, Ghost, and Dark types work well!'] }],
+      setupLayout: () => {
+        // Teleporter pad layout (decorative tiles)
+        tiles[4][2] = 11; tiles[4][9] = 11; // warp pads (visual only)
+        tiles[7][3] = 11; tiles[7][8] = 11;
+        tiles[10][2] = 11; tiles[10][9] = 11;
+        setRect(tiles, 3, 5, 2, 1, 7); setRect(tiles, 7, 5, 2, 1, 7); // barriers
+        setRect(tiles, 2, 8, 3, 1, 7); setRect(tiles, 7, 8, 3, 1, 7);
+        setRect(tiles, 4, 1, 4, 2, 11);
+        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
+      },
+    },
+    gym_cinnabar: {
+      name: 'Cinnabar Gym',
+      trainers: ['cinnabar_trainer1', 'cinnabar_trainer2', 'cinnabar_trainer3', 'gym_blaine'],
+      npcs: [{ id: 'cinnabar_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Cinnabar Island Gym!', 'Blaine uses Fire-type Pokémon.', 'Water, Ground, and Rock types are effective!'] }],
+      setupLayout: () => {
+        // Lava/fire theme - hazard tiles around edges
+        setRect(tiles, 1, 3, 2, 2, 11); setRect(tiles, 9, 3, 2, 2, 11);
+        setRect(tiles, 1, 7, 2, 2, 11); setRect(tiles, 9, 7, 2, 2, 11);
+        setRect(tiles, 3, 10, 2, 2, 11); setRect(tiles, 7, 10, 2, 2, 11);
+        setRect(tiles, 4, 1, 4, 2, 11);
+        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
+      },
+    },
+    gym_viridian: {
+      name: 'Viridian Gym',
+      trainers: ['viridian_trainer1', 'viridian_trainer2', 'viridian_trainer3', 'gym_giovanni'],
+      npcs: [{ id: 'viridian_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Viridian City Gym!', 'Giovanni uses Ground-type Pokémon.', 'Water, Grass, and Ice types are super effective!'] }],
+      setupLayout: () => {
+        // Ground/earth maze with spinning arrows (decorative)
+        setRect(tiles, 1, 3, 4, 1, 7); setRect(tiles, 7, 3, 4, 1, 7);
+        setRect(tiles, 3, 5, 1, 3, 7); setRect(tiles, 8, 5, 1, 3, 7);
+        setRect(tiles, 1, 9, 3, 1, 7); setRect(tiles, 8, 9, 3, 1, 7);
+        tiles[5][5] = 11; tiles[5][6] = 11; tiles[8][5] = 11; tiles[8][6] = 11;
+        setRect(tiles, 4, 1, 4, 2, 11);
+        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
+      },
+    },
+  };
+
+  const config = gymConfigs[gymId];
+  if (config) {
+    config.setupLayout();
+    return {
+      id: gymId,
+      name: config.name,
+      width: w, height: h,
+      tiles,
+      encounters: [],
+      encounterRate: 0,
+      npcs: config.npcs,
+      trainers: config.trainers,
+    };
+  }
+
+  // Fallback for unknown gym IDs
+  setRect(tiles, 3, 3, 6, 1, 11);
+  setRect(tiles, 3, 8, 6, 1, 11);
+  setCol(tiles, 5, 8, h-1, 1); setCol(tiles, 6, 8, h-1, 1);
 
   return {
     id: gymId,
