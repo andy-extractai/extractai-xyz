@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:18:58.892Z",
+  "timestamp": "2026-02-16T10:25:42.613Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "34da54bb-5fb3-45a4-9e37-8a68956fa740"
     },
     {
       "id": "verify",
@@ -168,7 +168,7 @@
     {
       "id": "US-005",
       "title": "Implement HM Cut and Surf mechanics",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {

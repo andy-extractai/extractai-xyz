@@ -229,6 +229,7 @@ export function renderMap(
   canvasWidth: number, canvasHeight: number,
   frameCount: number,
   npcs: NPCData[],
+  options?: { isSurfing?: boolean; cutTrees?: Set<string> },
 ) {
   const camX = playerX - Math.floor(VIEWPORT_TILES_X / 2);
   const camY = playerY - Math.floor(VIEWPORT_TILES_Y / 2);
@@ -259,7 +260,11 @@ export function renderMap(
         continue;
       }
       
-      const tileType = map.tiles[ty][tx];
+      let tileType = map.tiles[ty][tx];
+      // If this cuttree was removed, render as grass
+      if (tileType === 16 && options?.cutTrees?.has(`cut_${map.id}_${tx}_${ty}`)) {
+        tileType = 0;
+      }
       const tileDef = TILE_DEFS[tileType];
       
       ctx.fillStyle = tileDef?.color || '#000';
@@ -354,6 +359,18 @@ export function renderMap(
   
   drawSprite(ctx, animatedSprite, PLAYER_COLORS, playerScreenX, playerScreenY, TILE_SIZE);
   
+  // Surfing visual indicator - blue tint overlay on player
+  if (options?.isSurfing) {
+    ctx.fillStyle = 'rgba(52, 152, 219, 0.35)';
+    ctx.fillRect(playerScreenX, playerScreenY, TILE_SIZE, TILE_SIZE);
+    // Draw wave effect under player
+    const wave = Math.sin(frameCount * 0.08) * 3;
+    ctx.fillStyle = 'rgba(52, 152, 219, 0.5)';
+    ctx.beginPath();
+    ctx.ellipse(playerScreenX + TILE_SIZE / 2, playerScreenY + TILE_SIZE - 4 + wave, TILE_SIZE / 2 + 2, 4, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 

@@ -38,3 +38,18 @@ Started: 2026-02-16
 - All 69 tests pass, build succeeds
 - **Learnings:** Component files use .ts not .tsx since they're canvas render functions, not React components. The game uses imperative canvas rendering so "components" are pure render functions taking ctx/state/dimensions.
 ---
+
+## 2026-02-16 02:15 - US-004: Implement PC Storage UI
+- Created components/PCScreen.ts with deposit/withdraw/view modes and pure logic functions
+- PC terminal already existed in pokecenter at tile 14 position [1][8]
+- Changed tile 14 interaction from opening pokemon menu to opening PC screen
+- Added PCUIState interface to state.ts, wired into GameState
+- Added 'pc' phase handling in Game.tsx (input handler + rendering)
+- PC state (player.pc array) persists in save/load (already serialized as JSON array)
+- loadGame ensures pc array exists for backwards compatibility
+- 15 new tests in components/__tests__/pc.test.ts covering deposit/withdraw logic
+- Updated line count threshold in components.test.ts (800→900) due to PC handler additions
+- Files: components/PCScreen.ts, components/__tests__/pc.test.ts, engine/state.ts, Game.tsx
+- All 84 tests pass, tsc clean, build succeeds
+- **Learnings:** drawHPBar takes (ctx, x, y, w, h, current, max) not a ratio
+---

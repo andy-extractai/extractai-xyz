@@ -18,6 +18,7 @@ import { renderShop } from './components/ShopScreen';
 import { renderIntroScreen, renderNamingScreen, renderStarterSelect } from './components/IntroScreens';
 import { renderEvolution } from './components/EvolutionScreen';
 import { renderPCScreen, depositPokemon, withdrawPokemon } from './components/PCScreen';
+import { getHmAction, cutTreeFlag, isTreeCut, shouldExitSurf, teamKnowsMove } from './engine/hm';
 
 const MAPS = getAllMaps();
 
@@ -164,9 +165,16 @@ export default function PokemonGame() {
         return { ...prev, player: { ...prev.player, direction: dir } };
       }
 
-      const tileType = map.tiles[newY]?.[newX];
+      let tileType = map.tiles[newY]?.[newX];
+      // Treat cut trees as walkable grass
+      if (tileType === 16 && prev.player.storyFlags.has(cutTreeFlag(prev.player.mapId, newX, newY))) {
+        tileType = 0;
+      }
       const tileDef = TILE_DEFS[tileType];
-      if (!tileDef?.walkable) return { ...prev, player: { ...prev.player, direction: dir } };
+      // Allow walking on water when surfing
+      const isWater = tileType === 3;
+      const canWalk = tileDef?.walkable || (isWater && prev.player.isSurfing);
+      if (!canWalk) return { ...prev, player: { ...prev.player, direction: dir } };
 
       const npcBlocking = map.npcs.find(n => n.x === newX && n.y === newY);
       if (npcBlocking && npcBlocking.spriteType !== 'sign') return { ...prev, player: { ...prev.player, direction: dir } };
@@ -176,7 +184,9 @@ export default function PokemonGame() {
         return { ...prev, player: { ...prev.player, x: doorConn.toX, y: doorConn.toY, mapId: doorConn.toMap, direction: dir, steps: prev.player.steps + 1 } };
       }
 
-      const newState = { ...prev, player: { ...prev.player, x: newX, y: newY, direction: dir, steps: prev.player.steps + 1 } };
+      // Exit surf when stepping onto land
+      const exitSurf = shouldExitSurf(tileType, prev.player.isSurfing);
+      const newState = { ...prev, player: { ...prev.player, x: newX, y: newY, direction: dir, steps: prev.player.steps + 1, isSurfing: exitSurf ? false : prev.player.isSurfing } };
 
       if (tileDef.encounter && prev.player.team.length > 0 && prev.player.repelSteps <= 0) {
         const encounter = rollWildEncounter(map.encounters, map.encounterRate);
@@ -239,11 +249,96 @@ export default function PokemonGame() {
           return;
         }
       }
+      // HM NPCs - teach Cut or Surf to first eligible Pokémon
+      if (npc.id === 'hm_cut_npc' && !s.player.storyFlags.has('got_hm_cut')) {
+        showDialog(npc.dialog, () => {
+          setState(prev => {
+            const newFlags = new Set(prev.player.storyFlags);
+            newFlags.add('got_hm_cut');
+            // Teach Cut to first team Pokémon that doesn't already know it
+            const team = [...prev.player.team];
+            const target = team.find(p => p.currentHp > 0 && p.moves.length < 4 && !p.moves.some(m => m.moveId === 'cut'));
+            if (target) {
+              target.moves = [...target.moves, { moveId: 'cut', currentPp: 30 }];
+            } else if (team.length > 0) {
+              // Replace last move of first Pokémon
+              const p = team[0];
+              if (!p.moves.some(m => m.moveId === 'cut')) {
+                p.moves = [...p.moves.slice(0, 3), { moveId: 'cut', currentPp: 30 }];
+              }
+            }
+            return { ...prev, player: { ...prev.player, team, storyFlags: newFlags } };
+          });
+        }, npc.name);
+        return;
+      }
+      if (npc.id === 'hm_surf_npc' && !s.player.storyFlags.has('got_hm_surf')) {
+        showDialog(npc.dialog, () => {
+          setState(prev => {
+            const newFlags = new Set(prev.player.storyFlags);
+            newFlags.add('got_hm_surf');
+            const team = [...prev.player.team];
+            const target = team.find(p => p.currentHp > 0 && p.moves.length < 4 && !p.moves.some(m => m.moveId === 'surf'));
+            if (target) {
+              target.moves = [...target.moves, { moveId: 'surf', currentPp: 15 }];
+            } else if (team.length > 0) {
+              const p = team[0];
+              if (!p.moves.some(m => m.moveId === 'surf')) {
+                p.moves = [...p.moves.slice(0, 3), { moveId: 'surf', currentPp: 15 }];
+              }
+            }
+            return { ...prev, player: { ...prev.player, team, storyFlags: newFlags } };
+          });
+        }, npc.name);
+        return;
+      }
+      // Already got HM - show different dialog
+      if (npc.id === 'hm_cut_npc' && s.player.storyFlags.has('got_hm_cut')) {
+        showDialog(['You already have Cut! Use it on small trees!'], undefined, npc.name);
+        return;
+      }
+      if (npc.id === 'hm_surf_npc' && s.player.storyFlags.has('got_hm_surf')) {
+        showDialog(['You already have Surf! Use it near water!'], undefined, npc.name);
+        return;
+      }
+
       showDialog(npc.dialog, undefined, npc.name);
       return;
     }
 
-    const tileType = map.tiles[targetY]?.[targetX];
+    let tileType = map.tiles[targetY]?.[targetX];
+    // If this cuttree was already cut, treat as grass
+    if (tileType === 16 && s.player.storyFlags.has(cutTreeFlag(s.player.mapId, targetX, targetY))) {
+      tileType = 0;
+    }
+
+    const hmAction = tileType !== undefined ? getHmAction(tileType, s.player.team, s.player.isSurfing) : null;
+    if (hmAction === 'cut') {
+      const flag = cutTreeFlag(s.player.mapId, targetX, targetY);
+      showDialog(['Used Cut!', 'The tree was cut down!'], () => {
+        setState(prev => {
+          const newFlags = new Set(prev.player.storyFlags);
+          newFlags.add(flag);
+          return { ...prev, player: { ...prev.player, storyFlags: newFlags } };
+        });
+      });
+      return;
+    }
+    if (hmAction === 'surf') {
+      showDialog(['Used Surf!'], () => {
+        setState(prev => ({
+          ...prev,
+          player: {
+            ...prev.player,
+            isSurfing: true,
+            x: targetX,
+            y: targetY,
+          },
+        }));
+      });
+      return;
+    }
+
     if (tileType === 9) {
       const sign = map.npcs.find(n => n.x === targetX && n.y === targetY && n.spriteType === 'sign');
       if (sign) showDialog(sign.dialog);
@@ -646,7 +741,7 @@ export default function PokemonGame() {
     if (s.phase === 'overworld' || s.phase === 'menu' || s.phase === 'shop' || s.phase === 'pc') {
       const map = MAPS[s.player.mapId];
       if (map) {
-        renderMap(ctx, map, s.player.x, s.player.y, s.player.direction, w, h, frame, map.npcs);
+        renderMap(ctx, map, s.player.x, s.player.y, s.player.direction, w, h, frame, map.npcs, { isSurfing: s.player.isSurfing, cutTrees: s.player.storyFlags });
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(0, 0, w, 28);
         ctx.fillStyle = '#4ade80';

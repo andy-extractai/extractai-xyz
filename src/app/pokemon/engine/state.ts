@@ -21,6 +21,7 @@ export interface GameState {
     repelSteps: number;
     hasBicycle: boolean;
     onBicycle: boolean;
+    isSurfing: boolean;
     defeatedTrainers: Set<string>;
     storyFlags: Set<string>;
   };
@@ -195,6 +196,7 @@ export function createInitialState(): GameState {
       repelSteps: 0,
       hasBicycle: false,
       onBicycle: false,
+      isSurfing: false,
       defeatedTrainers: new Set(),
       storyFlags: new Set(),
     },
@@ -250,6 +252,7 @@ export function loadGame(): GameState | null {
     data.player.defeatedTrainers = new Set(data.player.defeatedTrainers);
     data.player.storyFlags = new Set(data.player.storyFlags);
     if (!data.player.pc) data.player.pc = [];
+    if (data.player.isSurfing === undefined) data.player.isSurfing = false;
     data.pcUI = null;
     return data as GameState;
   } catch {

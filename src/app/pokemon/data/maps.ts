@@ -678,6 +678,9 @@ function createVermilionCity(): GameMap {
       { id: 'vermilion_npc', name: 'Sailor', x: 14, y: 12, direction: 'left',
         dialog: ['Lt. Surge runs the gym here!', 'His Electric-types will shock you!'],
         spriteType: 'man' },
+      { id: 'hm_cut_npc', name: 'Captain', x: 10, y: 12, direction: 'down',
+        dialog: ['I\'m the S.S. Anne captain!', 'Here, take this HM for Cut!', 'Teach it to a Pokémon to chop down small trees!'],
+        spriteType: 'man' },
     ],
     trainers: [],
   };
@@ -974,7 +977,15 @@ export function getAllMaps(): Record<string, GameMap> {
       { speciesId: 'frostkit', minLevel: 23, maxLevel: 27, weight: 20 },
       { speciesId: 'ghoulby', minLevel: 24, maxLevel: 27, weight: 20 },
     ]),
-    fuchsia_city: createGenericCity('fuchsia_city', 'Fuchsia City'),
+    fuchsia_city: (() => {
+      const m = createGenericCity('fuchsia_city', 'Fuchsia City');
+      m.npcs.push(
+        { id: 'hm_surf_npc', name: 'Warden', x: 10, y: 8, direction: 'down',
+          dialog: ['I\'m the Safari Zone Warden!', 'Here, take this HM for Surf!', 'Teach it to a Pokémon to cross water!'],
+          spriteType: 'man' },
+      );
+      return m;
+    })(),
     gym_fuchsia: createGymInterior('gym_fuchsia'),
     route7: createGenericRoute('route7', 'Route 7', [
       { speciesId: 'cobrix', minLevel: 28, maxLevel: 32, weight: 20 },
