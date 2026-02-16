@@ -38,6 +38,12 @@ export default function PokemonGame() {
   const lastMoveRef = useRef(0);
   const stateRef = useRef(state);
   stateRef.current = state;
+  const introStateRef = useRef(introState);
+  introStateRef.current = introState;
+  const inputNameRef = useRef(inputName);
+  inputNameRef.current = inputName;
+  const selectedStarterRef = useRef(selectedStarter);
+  selectedStarterRef.current = selectedStarter;
 
   // ===== INPUT HANDLING =====
   useEffect(() => {
@@ -895,9 +901,9 @@ export default function PokemonGame() {
     ctx.clearRect(0, 0, w, h);
 
     if (s.phase === 'intro') { renderIntroScreen(ctx, w, h, frame); return; }
-    if (s.phase === 'oak_speech') { renderOakSpeech(ctx, w, h, introState); return; }
-    if (s.phase === 'naming') { renderNamingScreen(ctx, w, h, inputName); return; }
-    if (s.phase === 'starter_select') { renderStarterSelect(ctx, w, h, frame, selectedStarter); return; }
+    if (s.phase === 'oak_speech') { renderOakSpeech(ctx, w, h, introStateRef.current); return; }
+    if (s.phase === 'naming') { renderNamingScreen(ctx, w, h, inputNameRef.current); return; }
+    if (s.phase === 'starter_select') { renderStarterSelect(ctx, w, h, frame, selectedStarterRef.current); return; }
 
     if (s.phase === 'overworld' || s.phase === 'menu' || s.phase === 'shop' || s.phase === 'pc') {
       const map = MAPS[s.player.mapId];
@@ -930,7 +936,7 @@ export default function PokemonGame() {
     if (s.phase === 'shop' && s.shop) renderShop(ctx, s, w, h);
     if (s.phase === 'pc' && s.pcUI) renderPCScreen(ctx, s, w, h);
     renderMobileControls(ctx, w, h);
-  }, [inputName, selectedStarter]);
+  }, []);
 
   function renderDialog(ctx: CanvasRenderingContext2D, dialog: NonNullable<GameState['dialog']>, w: number, h: number) {
     const boxH = 70;
