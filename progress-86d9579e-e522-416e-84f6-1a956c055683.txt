@@ -53,3 +53,22 @@ Started: 2026-02-16
 - All 84 tests pass, tsc clean, build succeeds
 - **Learnings:** drawHPBar takes (ctx, x, y, w, h, current, max) not a ratio
 ---
+
+## 2026-02-16 02:25 - US-005: HM Cut and Surf mechanics
+- Added Cut move to MOVES data (Normal/50power/physical)
+- Verified Surf already exists (Water/90power/special)
+- Created engine/hm.ts with pure HM logic functions (teamKnowsMove, cutTreeFlag, isTreeCut, getHmAction, shouldExitSurf)
+- Added isSurfing to player state with save/load backwards compat
+- Cuttree interaction: facing cuttree + Cut-knowing Pokémon → removes tree, persisted in storyFlags
+- Surf interaction: facing water + Surf-knowing Pokémon → enter surf mode, walk on water
+- Exit surf automatically when stepping onto land tile
+- Blue tint + wave effect on player while surfing (renderer)
+- Cut trees rendered as grass after removal (renderer checks storyFlags)
+- HM NPCs: Captain in Vermilion (Cut), Warden in Fuchsia (Surf) - teach to first eligible Pokémon
+- Route 2 has cuttree at [10][5] blocking side path
+- 18 new tests in engine/__tests__/hm.test.ts covering all HM logic
+- Updated line count threshold in components.test.ts (900→1000)
+- Files: engine/hm.ts, engine/__tests__/hm.test.ts, data/moves.ts, data/maps.ts, engine/state.ts, engine/renderer.ts, Game.tsx
+- All 102 tests pass, tsc clean, build succeeds
+- **Learnings:** Generic cities created with createGenericCity have empty npcs array - use IIFE to mutate before insertion into maps record
+---
