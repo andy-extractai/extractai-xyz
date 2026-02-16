@@ -606,22 +606,68 @@ export default function PokemonGame() {
       if (!prev.shop) return prev;
       const s = { ...prev.shop };
       if (s.mode === 'select') {
-        if (key === 'z' || key === ' ' || key === 'enter') s.mode = 'buy';
+        if (key === 'arrowup' || key === 'w') s.selectedIndex = Math.max(0, s.selectedIndex - 1);
+        if (key === 'arrowdown' || key === 's') s.selectedIndex = Math.min(2, s.selectedIndex + 1);
+        if (key === 'z' || key === ' ' || key === 'enter') {
+          if (s.selectedIndex === 0) { s.mode = 'buy'; s.selectedIndex = 0; s.quantity = 1; }
+          else if (s.selectedIndex === 1) { s.mode = 'sell'; s.selectedIndex = 0; s.quantity = 1; }
+          else return { ...prev, phase: 'overworld', shop: null };
+        }
         if (key === 'x' || key === 'backspace' || key === 'escape') return { ...prev, phase: 'overworld', shop: null };
         return { ...prev, shop: s };
       }
-      if (key === 'arrowup' || key === 'w') s.selectedIndex = Math.max(0, s.selectedIndex - 1);
-      if (key === 'arrowdown' || key === 's') s.selectedIndex = Math.min(s.items.length - 1, s.selectedIndex + 1);
-      if (key === 'z' || key === ' ' || key === 'enter') {
-        const itemId = s.items[s.selectedIndex].itemId;
-        const item = ITEMS[itemId];
-        if (item && prev.player.money >= item.price) {
-          const newBag = { ...prev.player.bag };
-          newBag[itemId] = (newBag[itemId] || 0) + 1;
-          return { ...prev, player: { ...prev.player, bag: newBag, money: prev.player.money - item.price }, shop: s };
+      if (s.mode === 'buy') {
+        if (key === 'arrowup' || key === 'w') { s.selectedIndex = Math.max(0, s.selectedIndex - 1); s.quantity = 1; }
+        if (key === 'arrowdown' || key === 's') { s.selectedIndex = Math.min(s.items.length - 1, s.selectedIndex + 1); s.quantity = 1; }
+        if (key === 'arrowright' || key === 'd') {
+          const itemId = s.items[s.selectedIndex].itemId;
+          const item = ITEMS[itemId];
+          if (item && item.price > 0) {
+            const maxQty = Math.floor(prev.player.money / item.price);
+            s.quantity = Math.min(99, s.quantity + 1, maxQty);
+          }
         }
+        if (key === 'arrowleft' || key === 'a') s.quantity = Math.max(1, s.quantity - 1);
+        if (key === 'z' || key === ' ' || key === 'enter') {
+          const itemId = s.items[s.selectedIndex].itemId;
+          const item = ITEMS[itemId];
+          if (item && prev.player.money >= item.price * s.quantity) {
+            const newBag = { ...prev.player.bag };
+            newBag[itemId] = (newBag[itemId] || 0) + s.quantity;
+            return { ...prev, player: { ...prev.player, bag: newBag, money: prev.player.money - item.price * s.quantity }, shop: { ...s, quantity: 1 } };
+          }
+        }
+        if (key === 'x' || key === 'backspace' || key === 'escape') { s.mode = 'select'; s.selectedIndex = 0; s.quantity = 1; }
+        return { ...prev, shop: s };
       }
-      if (key === 'x' || key === 'backspace' || key === 'escape') return { ...prev, phase: 'overworld', shop: null };
+      if (s.mode === 'sell') {
+        const sellableItems = Object.entries(prev.player.bag)
+          .filter(([id, qty]) => qty > 0 && ITEMS[id] && ITEMS[id].category !== 'key')
+          .map(([id]) => id);
+        if (key === 'arrowup' || key === 'w') { s.selectedIndex = Math.max(0, s.selectedIndex - 1); s.quantity = 1; }
+        if (key === 'arrowdown' || key === 's') { s.selectedIndex = Math.min(sellableItems.length - 1, s.selectedIndex + 1); s.quantity = 1; }
+        if (key === 'arrowright' || key === 'd') {
+          const itemId = sellableItems[s.selectedIndex];
+          if (itemId) s.quantity = Math.min(prev.player.bag[itemId] || 0, s.quantity + 1);
+        }
+        if (key === 'arrowleft' || key === 'a') s.quantity = Math.max(1, s.quantity - 1);
+        if (key === 'z' || key === ' ' || key === 'enter') {
+          const itemId = sellableItems[s.selectedIndex];
+          if (itemId) {
+            const item = ITEMS[itemId];
+            const owned = prev.player.bag[itemId] || 0;
+            if (item && owned >= s.quantity) {
+              const sellPrice = Math.floor(item.price / 2) * s.quantity;
+              const newBag = { ...prev.player.bag };
+              newBag[itemId] = owned - s.quantity;
+              if (newBag[itemId] === 0) delete newBag[itemId];
+              return { ...prev, player: { ...prev.player, bag: newBag, money: prev.player.money + sellPrice }, shop: { ...s, quantity: 1, selectedIndex: Math.min(s.selectedIndex, sellableItems.length - 2) } };
+            }
+          }
+        }
+        if (key === 'x' || key === 'backspace' || key === 'escape') { s.mode = 'select'; s.selectedIndex = 1; s.quantity = 1; }
+        return { ...prev, shop: s };
+      }
       return { ...prev, shop: s };
     });
   }, []);

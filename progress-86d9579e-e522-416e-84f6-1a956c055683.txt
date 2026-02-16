@@ -111,3 +111,52 @@ Started: 2026-02-16
 - All 147 tests pass, tsc clean, build succeeds
 - **Learnings:** No jsdom in this project; use source-code analysis tests for React components instead of render tests
 ---
+
+## 2026-02-16 03:06 - US-009: Add remaining towns and routes with unique layouts
+- Replaced createGenericCity for Celadon, Fuchsia, Saffron, Cinnabar with hand-crafted layouts
+- Celadon: wide boulevard, dept store, Game Corner NPC, flower garden, pond
+- Fuchsia: organic winding paths, Safari Zone fence+guide, fishing pond
+- Saffron: grid road system (biggest city feel), Silph Co with guard (locked)
+- Cinnabar: water-surrounded island, beach paths, volcano rocks, research lab
+- Each city: Pokécenter with nurse, 2+ unique dialog NPCs
+- Updated DOOR_CONNECTIONS for all new door positions
+- 11 new tests in data/__tests__/maps.test.ts (door refs, bounds, tiles, unique layouts)
+- All 158 tests pass, tsc clean, build succeeds
+- Files: data/maps.ts, data/__tests__/maps.test.ts
+- **Learnings:** Keep city dimensions same as generic (25x22) to avoid breaking MAP_CONNECTIONS; uniqueness comes from internal layout. Door connections must be updated individually when door positions change.
+---
+
+## 2026-02-16 03:17 - US-010: Implement remaining gym interiors with trainers
+- Replaced generic createGymInterior with gym-specific layouts for all 8 gyms
+- Pewter: rocky boulders, Cerulean: water pools, Vermilion: electric fence maze, Celadon: garden hedges, Fuchsia: ninja wall maze, Saffron: teleporter pads, Cinnabar: lava hazards, Viridian: ground maze
+- Added 24 gym trainers to trainers.ts (2-3 per gym) with type-themed teams
+- Each gym map now references its trainers + leader, has a Gym Guide NPC
+- Species keys use original Pokémon names as keys (vulpix not foxflame, magnemite not magnolt, diglett not digmole, beedril not stingbee, tentacruel not stingel)
+- 9 new tests in data/__tests__/trainers.test.ts covering: valid species refs, trainer counts, type themes, leader existence, map existence, unique names, trainer references, badge dialog
+- All 167 tests pass, tsc clean, build succeeds
+- Files: data/trainers.ts, data/maps.ts, data/__tests__/trainers.test.ts
+- **Learnings:** SPECIES record keys are original Pokémon names (e.g., vulpix, magnemite, diglett) not the custom species names. Always verify speciesId against actual keys in pokemon.ts.
+---
+
+## 2026-02-16 03:37 - US-012: Add battle animations and transition effects
+- Created engine/animations.ts: animation factories, tick/update system, type flash colors, battle transition, render helpers (shake, faint opacity/offset, HP/XP interpolation)
+- Updated BattleScreen.ts: screen shake via renderScreenShake, faint fade/drop overlay, type-colored flash overlay, animated EXP bar
+- Updated battleLogic.ts: buildTurnAnimations on executeBattleAction (flash, hp_drain, shake on super-effective, faint), type-colored flash from move type, exp_fill on exp_gain
+- Updated state.ts: added BattleTransitionState interface, battleTransition field to GameState, color? field to BattleAnimation
+- Updated Game.tsx: battle transition on wild encounter, animation ticking in game loop, transition rendering
+- 36 new tests in engine/__tests__/animations.test.ts covering all animation factories, tickAnimations, buildTurnAnimations, type flash colors, battle transition, render helpers
+- All 224 tests pass, build succeeds
+- Files: engine/animations.ts, engine/__tests__/animations.test.ts, components/BattleScreen.ts, engine/battleLogic.ts, engine/state.ts, Game.tsx
+- **Learnings:** PokemonType only has 15 types (no Dark/Steel/Fairy), BattleAction uses 'move' not 'fight'
+---
+
+## 2026-02-16 03:50 - US-013: Implement item usage in battle and bag improvements
+- Enhanced useBattleItem in battleLogic.ts: added revive support (targets fainted party member, restores 50% HP), added targetIdx parameter
+- Status heals still consume turn even if status doesn't match (item is used but status unchanged)
+- Revive auto-targets first fainted pokemon if no targetIdx provided; returns unchanged state if no valid target
+- Categorized bag menu in MenuScreen.ts: items grouped by Medicine, Pokéballs, Battle Items, Key Items with colored category headers
+- 20 new tests in engine/__tests__/itemUsage.test.ts: potions (5), status heals (4), revive (3), item consumption (3), pokéball usage (1), item data validation (3), bag categorization (1)
+- All 244 tests pass, tsc clean, build succeeds
+- Files: engine/battleLogic.ts, engine/__tests__/itemUsage.test.ts, components/MenuScreen.ts
+- **Learnings:** useBattleItem calls executeBattleAction which runs executeTurn — enemy attacks after item use, so tests must account for enemy damage when checking HP values
+---

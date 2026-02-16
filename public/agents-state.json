@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:25:42.613Z",
+  "timestamp": "2026-02-16T11:46:13.283Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "running",
+      "status": "pending",
       "retries": 0,
       "type": "loop",
-      "currentStory": "34da54bb-5fb3-45a4-9e37-8a68956fa740"
+      "currentStory": null
     },
     {
       "id": "verify",
@@ -168,49 +168,49 @@
     {
       "id": "US-005",
       "title": "Implement HM Cut and Surf mechanics",
-      "status": "running",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-006",
       "title": "Implement bicycle toggle and key items",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-007",
       "title": "Implement credits screen and game completion flow",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-008",
       "title": "Improve mobile controls with virtual D-pad and action buttons",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-009",
       "title": "Add remaining towns and routes with unique layouts",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-010",
       "title": "Implement remaining gym interiors with trainers",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-011",
       "title": "Implement rival battle encounters at story points",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-012",
       "title": "Add battle animations and transition effects",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
