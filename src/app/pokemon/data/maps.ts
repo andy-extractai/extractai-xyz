@@ -689,39 +689,301 @@ function createVermilionCity(): GameMap {
   };
 }
 
-// Subsequent cities follow similar patterns - creating simplified versions
-function createGenericCity(id: string, name: string): GameMap {
+// ===== CELADON CITY =====
+// Large city with department store (expanded mart), Game Corner
+function createCeladonCity(): GameMap {
   const w = 25, h = 22;
   const tiles = fillMap(w, h, 0);
   
+  // Border trees
   setRect(tiles, 0, 0, 2, h, 4);
   setRect(tiles, w-2, 0, 2, h, 4);
   setRect(tiles, 0, 0, w, 2, 4);
   setRect(tiles, 0, h-2, w, 2, 4);
   
+  // Main roads - wider central boulevard
   setRow(tiles, 10, 2, w-3, 1);
+  setRow(tiles, 11, 2, w-3, 1);
   setCol(tiles, 12, 2, h-3, 1);
+  setCol(tiles, 13, 2, h-3, 1);
   
-  // Pokecenter
-  setRect(tiles, 4, 4, 5, 4, 5);
-  tiles[7][6] = 6;
+  // Pokécenter (top-left)
+  setRect(tiles, 3, 3, 5, 4, 5);
+  tiles[6][5] = 6; // door at 5,6
   
-  // Gym
-  setRect(tiles, 15, 4, 6, 5, 5);
-  tiles[8][18] = 6;
+  // Gym (top-right)
+  setRect(tiles, 16, 3, 6, 5, 5);
+  tiles[7][19] = 6; // door at 19,7
   
-  // Mart
-  setRect(tiles, 4, 12, 5, 4, 5);
-  tiles[15][6] = 6;
+  // Department Store (large building, bottom-left) - bigger than normal mart
+  setRect(tiles, 3, 13, 7, 5, 5);
+  tiles[17][6] = 6; // door at 6,17
+  
+  // Game Corner building (bottom-right)
+  setRect(tiles, 16, 13, 5, 4, 5);
+  tiles[16][18] = 6; // door (decorative - no interior)
+  
+  // Flower garden (center park)
+  setRect(tiles, 7, 5, 4, 3, 10);
+  tiles[6][8] = 0; tiles[6][9] = 0; // paths through garden
+  
+  // Decorative pond
+  setRect(tiles, 17, 9, 3, 2, 3);
+  
+  // Signs
+  tiles[10][4] = 9; // pokecenter sign
+  tiles[12][16] = 9; // game corner sign
   
   // Exits
-  tiles[h-2][12] = 1; tiles[h-1][12] = 1;
-  tiles[0][12] = 1; tiles[1][12] = 1;
+  tiles[h-2][12] = 1; tiles[h-1][12] = 1; tiles[h-2][13] = 1; tiles[h-1][13] = 1;
+  tiles[0][12] = 1; tiles[1][12] = 1; tiles[0][13] = 1; tiles[1][13] = 1;
+  // East exit
+  tiles[10][w-2] = 1; tiles[10][w-1] = 1; tiles[11][w-2] = 1; tiles[11][w-1] = 1;
 
   return {
-    id, name, width: w, height: h, tiles,
-    encounters: [], encounterRate: 0,
-    npcs: [], trainers: [],
+    id: 'celadon_city',
+    name: 'Celadon City',
+    width: w, height: h,
+    tiles,
+    encounters: [],
+    encounterRate: 0,
+    npcs: [
+      { id: 'celadon_nurse', name: 'Nurse Joy', x: 5, y: 5, direction: 'down',
+        dialog: ['Welcome to Celadon Pokémon Center!', 'Your Pokémon look tired from the journey.'],
+        spriteType: 'nurse', stationary: true },
+      { id: 'celadon_dept', name: 'Dept. Store Clerk', x: 8, y: 15, direction: 'right',
+        dialog: ['Welcome to the Celadon Department Store!', 'We have the largest selection of items in Kanto!', 'TMs, evolution stones, you name it!'],
+        spriteType: 'clerk' },
+      { id: 'celadon_gamecorner', name: 'Suspicious Man', x: 18, y: 12, direction: 'left',
+        dialog: ['Psst... the Game Corner has great prizes!', 'But watch out... Team Rocket runs it behind the scenes.', 'I didn\'t tell you that, though!'],
+        spriteType: 'man' },
+      { id: 'celadon_gardener', name: 'Gardener', x: 9, y: 8, direction: 'down',
+        dialog: ['I tend the flower gardens here in Celadon.', 'This city is known for its beautiful nature!'],
+        spriteType: 'woman' },
+    ],
+    trainers: [],
+  };
+}
+
+// ===== FUCHSIA CITY =====
+// Southern city, Safari Zone entrance, tropical feel
+function createFuchsiaCity(): GameMap {
+  const w = 25, h = 22;
+  const tiles = fillMap(w, h, 0);
+  
+  // Border trees (thicker on south for tropical feel)
+  setRect(tiles, 0, 0, 2, h, 4);
+  setRect(tiles, w-2, 0, 2, h, 4);
+  setRect(tiles, 0, 0, w, 2, 4);
+  setRect(tiles, 0, h-3, w, 3, 4);
+  
+  // Winding paths (not grid-like, more organic)
+  setRow(tiles, 9, 2, 10, 1);
+  setRow(tiles, 9, 14, w-3, 1);
+  setCol(tiles, 10, 2, 18, 1);
+  setRow(tiles, 14, 3, 8, 1);
+  setCol(tiles, 18, 5, 14, 1);
+  
+  // Pokécenter (left side)
+  setRect(tiles, 3, 4, 5, 4, 5);
+  tiles[7][5] = 6; // door at 5,7
+  
+  // Gym (right side, further back)
+  setRect(tiles, 14, 3, 6, 5, 5);
+  tiles[7][17] = 6; // door at 17,7
+  
+  // Pokémart (bottom area)
+  setRect(tiles, 3, 11, 5, 4, 5);
+  tiles[14][5] = 6; // door at 5,14
+  
+  // Safari Zone entrance (large fenced area, top-right)
+  setRect(tiles, 19, 3, 3, 4, 11); // fence
+  tiles[6][20] = 6; // gate door (decorative)
+  
+  // Tall grass patches (safari feel)
+  setRect(tiles, 12, 10, 3, 3, 2);
+  setRect(tiles, 6, 16, 3, 2, 2);
+  
+  // Small pond
+  setRect(tiles, 15, 14, 2, 2, 3);
+  
+  // Flowers
+  setRect(tiles, 11, 5, 2, 2, 10);
+  
+  // Exits - north
+  tiles[0][12] = 1; tiles[1][12] = 1;
+  // West exit (row 10 to match route connections)
+  tiles[10][0] = 1; tiles[10][1] = 1;
+
+  return {
+    id: 'fuchsia_city',
+    name: 'Fuchsia City',
+    width: w, height: h,
+    tiles,
+    encounters: [],
+    encounterRate: 0,
+    npcs: [
+      { id: 'fuchsia_nurse', name: 'Nurse Joy', x: 5, y: 5, direction: 'down',
+        dialog: ['Welcome to Fuchsia Pokémon Center!', 'Rest up after your Safari Zone adventure!'],
+        spriteType: 'nurse', stationary: true },
+      { id: 'hm_surf_npc', name: 'Warden', x: 12, y: 8, direction: 'down',
+        dialog: ['I\'m the Safari Zone Warden!', 'Here, take this HM for Surf!', 'Teach it to a Pokémon to cross water!'],
+        spriteType: 'man' },
+      { id: 'fuchsia_safari', name: 'Safari Guide', x: 20, y: 8, direction: 'left',
+        dialog: ['The Safari Zone is home to rare Pokémon!', 'Unfortunately, it\'s closed for renovations right now.', 'Come back another time!'],
+        spriteType: 'man' },
+      { id: 'fuchsia_fisher', name: 'Fisherman', x: 15, y: 16, direction: 'up',
+        dialog: ['I love fishing in this pond!', 'Fuchsia has the best spots in Kanto.', 'The Warden knows all about rare Pokémon here.'],
+        spriteType: 'man' },
+    ],
+    trainers: [],
+  };
+}
+
+// ===== SAFFRON CITY =====
+// Biggest city in Kanto, Silph Co headquarters
+function createSaffronCity(): GameMap {
+  const w = 25, h = 22;
+  const tiles = fillMap(w, h, 0);
+  
+  // Border trees
+  setRect(tiles, 0, 0, 2, h, 4);
+  setRect(tiles, w-2, 0, 2, h, 4);
+  setRect(tiles, 0, 0, w, 2, 4);
+  setRect(tiles, 0, h-2, w, 2, 4);
+  
+  // Grid-like road system (big city feel)
+  setRow(tiles, 7, 2, w-3, 1);
+  setRow(tiles, 14, 2, w-3, 1);
+  setCol(tiles, 7, 2, h-3, 1);
+  setCol(tiles, 12, 2, h-3, 1);
+  setCol(tiles, 17, 2, h-3, 1);
+  
+  // Pokécenter (top-left block)
+  setRect(tiles, 3, 3, 4, 3, 5);
+  tiles[5][5] = 6; // door at 5,5
+  
+  // Gym (top-right block)
+  setRect(tiles, 18, 3, 4, 3, 5);
+  tiles[5][20] = 6; // door at 20,5
+  
+  // Silph Co (large central building)
+  setRect(tiles, 8, 8, 9, 5, 5);
+  tiles[12][12] = 6; // main entrance (locked)
+  
+  // Pokémart (bottom-left)
+  setRect(tiles, 3, 15, 4, 3, 5);
+  tiles[17][5] = 6; // door at 5,17
+  
+  // Houses/buildings filling city blocks
+  setRect(tiles, 13, 3, 3, 3, 5);
+  setRect(tiles, 18, 9, 4, 4, 5);
+  setRect(tiles, 3, 9, 3, 4, 5);
+  setRect(tiles, 13, 15, 4, 3, 5);
+  setRect(tiles, 18, 15, 4, 3, 5);
+  
+  // Signs
+  tiles[7][10] = 9; // Silph Co sign
+  tiles[14][4] = 9;
+  
+  // Exits
+  tiles[h-2][12] = 1; tiles[h-1][12] = 1; // south
+  tiles[0][12] = 1; tiles[1][12] = 1; // north
+  // East exit (row 10 to match route connections)
+  tiles[10][w-2] = 1; tiles[10][w-1] = 1;
+  // Also make row 10 path connect to east
+  setRow(tiles, 10, 17, w-3, 1);
+
+  return {
+    id: 'saffron_city',
+    name: 'Saffron City',
+    width: w, height: h,
+    tiles,
+    encounters: [],
+    encounterRate: 0,
+    npcs: [
+      { id: 'saffron_nurse', name: 'Nurse Joy', x: 4, y: 4, direction: 'down',
+        dialog: ['Welcome to Saffron Pokémon Center!', 'Saffron is the biggest city in Kanto!'],
+        spriteType: 'nurse', stationary: true },
+      { id: 'saffron_silph', name: 'Silph Employee', x: 12, y: 13, direction: 'up',
+        dialog: ['Silph Co. is the biggest company in Kanto!', 'They develop Poké Balls and other items.', 'The building is closed to visitors right now...'],
+        spriteType: 'man' },
+      { id: 'saffron_psychic', name: 'Psychic', x: 15, y: 7, direction: 'left',
+        dialog: ['I sense great power in you...', 'The Gym Leader here uses Psychic-type Pokémon.', 'Dark and Ghost types resist psychic powers!'],
+        spriteType: 'woman' },
+      { id: 'saffron_guard', name: 'Guard', x: 11, y: 12, direction: 'down',
+        dialog: ['Silph Co. is on lockdown!', 'No one is allowed inside right now.'],
+        spriteType: 'man', stationary: true },
+    ],
+    trainers: [],
+  };
+}
+
+// ===== CINNABAR ISLAND =====
+// Island surrounded by water
+function createCinnabarIsland(): GameMap {
+  const w = 25, h = 22;
+  const tiles = fillMap(w, h, 3); // Start with all water!
+  
+  // Island landmass in the center
+  setRect(tiles, 4, 4, 17, 14, 0); // grass land
+  
+  // Beach/path border around island
+  setRow(tiles, 4, 4, 20, 1);
+  setRow(tiles, 17, 4, 20, 1);
+  setCol(tiles, 4, 4, 17, 1);
+  setCol(tiles, 20, 4, 17, 1);
+  
+  // Internal paths
+  setRow(tiles, 10, 5, 19, 1);
+  setCol(tiles, 12, 5, 16, 1);
+  
+  // Pokécenter (top area)
+  setRect(tiles, 6, 5, 5, 4, 5);
+  tiles[8][8] = 6; // door at 8,8
+  
+  // Gym (right area)
+  setRect(tiles, 14, 5, 5, 4, 5);
+  tiles[8][17] = 6; // door at 17,8
+  
+  // Pokémart (bottom area)
+  setRect(tiles, 6, 12, 5, 4, 5);
+  tiles[15][8] = 6; // door at 8,15
+  
+  // Lab/Research building
+  setRect(tiles, 14, 12, 5, 4, 5);
+  tiles[15][16] = 6; // decorative door
+  
+  // Volcano hint (rocky area)
+  setRect(tiles, 9, 6, 3, 2, 7);
+  
+  // Flowers
+  setRect(tiles, 10, 13, 3, 2, 10);
+  
+  // West exit - path through water for connection (player arrives at x:3,y:10)
+  tiles[10][0] = 1; tiles[10][1] = 1; tiles[10][2] = 1; tiles[10][3] = 1;
+  // North exit - path through water
+  tiles[0][12] = 1; tiles[1][12] = 1; tiles[2][12] = 1; tiles[3][12] = 1;
+
+  return {
+    id: 'cinnabar_island',
+    name: 'Cinnabar Island',
+    width: w, height: h,
+    tiles,
+    encounters: [],
+    encounterRate: 0,
+    npcs: [
+      { id: 'cinnabar_nurse', name: 'Nurse Joy', x: 8, y: 6, direction: 'down',
+        dialog: ['Welcome to Cinnabar Pokémon Center!', 'You must be exhausted from crossing the sea!'],
+        spriteType: 'nurse', stationary: true },
+      { id: 'cinnabar_scientist', name: 'Scientist', x: 16, y: 14, direction: 'left',
+        dialog: ['We research fossil Pokémon here on Cinnabar!', 'The volcano on this island has been dormant for years.', 'But who knows when it might erupt again...'],
+        spriteType: 'man' },
+      { id: 'cinnabar_surfer', name: 'Surfer', x: 10, y: 9, direction: 'down',
+        dialog: ['Dude, the waves around Cinnabar are gnarly!', 'You need Surf to get here by sea.', 'The Gym Leader here is all about Fire-types!'],
+        spriteType: 'man' },
+    ],
+    trainers: [],
   };
 }
 
@@ -971,7 +1233,7 @@ export function getAllMaps(): Record<string, GameMap> {
       { speciesId: 'psydux', minLevel: 19, maxLevel: 22, weight: 20 },
       { speciesId: 'magnolt', minLevel: 19, maxLevel: 22, weight: 15 },
     ]),
-    celadon_city: createGenericCity('celadon_city', 'Celadon City'),
+    celadon_city: createCeladonCity(),
     gym_celadon: createGymInterior('gym_celadon'),
     route6: createGenericRoute('route6', 'Route 6', [
       { speciesId: 'foxflame', minLevel: 22, maxLevel: 26, weight: 20 },
@@ -980,15 +1242,7 @@ export function getAllMaps(): Record<string, GameMap> {
       { speciesId: 'frostkit', minLevel: 23, maxLevel: 27, weight: 20 },
       { speciesId: 'ghoulby', minLevel: 24, maxLevel: 27, weight: 20 },
     ]),
-    fuchsia_city: (() => {
-      const m = createGenericCity('fuchsia_city', 'Fuchsia City');
-      m.npcs.push(
-        { id: 'hm_surf_npc', name: 'Warden', x: 10, y: 8, direction: 'down',
-          dialog: ['I\'m the Safari Zone Warden!', 'Here, take this HM for Surf!', 'Teach it to a Pokémon to cross water!'],
-          spriteType: 'man' },
-      );
-      return m;
-    })(),
+    fuchsia_city: createFuchsiaCity(),
     gym_fuchsia: createGymInterior('gym_fuchsia'),
     route7: createGenericRoute('route7', 'Route 7', [
       { speciesId: 'cobrix', minLevel: 28, maxLevel: 32, weight: 20 },
@@ -998,7 +1252,7 @@ export function getAllMaps(): Record<string, GameMap> {
       { speciesId: 'snorlord', minLevel: 30, maxLevel: 32, weight: 5 },
       { speciesId: 'drakelet', minLevel: 28, maxLevel: 32, weight: 10 },
     ]),
-    saffron_city: createGenericCity('saffron_city', 'Saffron City'),
+    saffron_city: createSaffronCity(),
     gym_saffron: createGymInterior('gym_saffron'),
     route8: createGenericRoute('route8', 'Route 8', [
       { speciesId: 'fossilon', minLevel: 30, maxLevel: 35, weight: 15 },
@@ -1007,7 +1261,7 @@ export function getAllMaps(): Record<string, GameMap> {
       { speciesId: 'boulderox', minLevel: 30, maxLevel: 35, weight: 20 },
       { speciesId: 'champeon', minLevel: 30, maxLevel: 35, weight: 20 },
     ]),
-    cinnabar_island: createGenericCity('cinnabar_island', 'Cinnabar Island'),
+    cinnabar_island: createCinnabarIsland(),
     gym_cinnabar: createGymInterior('gym_cinnabar'),
     route9: createGenericRoute('route9', 'Route 9', [
       { speciesId: 'draconix', minLevel: 35, maxLevel: 40, weight: 10 },
@@ -1020,25 +1274,41 @@ export function getAllMaps(): Record<string, GameMap> {
     elite4: createElite4(),
   };
 
-  // Add gym doors for later cities
-  const gymCities = [
-    { city: 'celadon_city', gym: 'gym_celadon' },
-    { city: 'fuchsia_city', gym: 'gym_fuchsia' },
-    { city: 'saffron_city', gym: 'gym_saffron' },
-    { city: 'cinnabar_island', gym: 'gym_cinnabar' },
-  ];
-  
-  for (const gc of gymCities) {
-    DOOR_CONNECTIONS.push(
-      { fromMap: gc.city, fromX: 18, fromY: 8, toMap: gc.gym, toX: 5, toY: 12 },
-      { fromMap: gc.gym, fromX: 5, fromY: 13, toMap: gc.city, toX: 18, toY: 9 },
-      { fromMap: gc.gym, fromX: 6, fromY: 13, toMap: gc.city, toX: 18, toY: 9 },
-      // Pokecenter
-      { fromMap: gc.city, fromX: 6, fromY: 7, toMap: 'pokecenter', toX: 4, toY: 6 },
-      // Mart  
-      { fromMap: gc.city, fromX: 6, fromY: 15, toMap: 'pokemart', toX: 3, toY: 6 },
-    );
-  }
+  // Celadon doors: pokecenter door at 5,6; gym door at 19,7; dept store (mart) at 6,17
+  DOOR_CONNECTIONS.push(
+    { fromMap: 'celadon_city', fromX: 5, fromY: 6, toMap: 'pokecenter', toX: 4, toY: 6 },
+    { fromMap: 'celadon_city', fromX: 19, fromY: 7, toMap: 'gym_celadon', toX: 5, toY: 12 },
+    { fromMap: 'gym_celadon', fromX: 5, fromY: 13, toMap: 'celadon_city', toX: 19, toY: 8 },
+    { fromMap: 'gym_celadon', fromX: 6, fromY: 13, toMap: 'celadon_city', toX: 19, toY: 8 },
+    { fromMap: 'celadon_city', fromX: 6, fromY: 17, toMap: 'pokemart', toX: 3, toY: 6 },
+  );
+
+  // Fuchsia doors: pokecenter door at 5,7; gym door at 17,7; mart at 5,14
+  DOOR_CONNECTIONS.push(
+    { fromMap: 'fuchsia_city', fromX: 5, fromY: 7, toMap: 'pokecenter', toX: 4, toY: 6 },
+    { fromMap: 'fuchsia_city', fromX: 17, fromY: 7, toMap: 'gym_fuchsia', toX: 5, toY: 12 },
+    { fromMap: 'gym_fuchsia', fromX: 5, fromY: 13, toMap: 'fuchsia_city', toX: 17, toY: 8 },
+    { fromMap: 'gym_fuchsia', fromX: 6, fromY: 13, toMap: 'fuchsia_city', toX: 17, toY: 8 },
+    { fromMap: 'fuchsia_city', fromX: 5, fromY: 14, toMap: 'pokemart', toX: 3, toY: 6 },
+  );
+
+  // Saffron doors: pokecenter door at 5,5; gym door at 20,5; mart at 5,17
+  DOOR_CONNECTIONS.push(
+    { fromMap: 'saffron_city', fromX: 5, fromY: 5, toMap: 'pokecenter', toX: 4, toY: 6 },
+    { fromMap: 'saffron_city', fromX: 20, fromY: 5, toMap: 'gym_saffron', toX: 5, toY: 12 },
+    { fromMap: 'gym_saffron', fromX: 5, fromY: 13, toMap: 'saffron_city', toX: 20, toY: 6 },
+    { fromMap: 'gym_saffron', fromX: 6, fromY: 13, toMap: 'saffron_city', toX: 20, toY: 6 },
+    { fromMap: 'saffron_city', fromX: 5, fromY: 17, toMap: 'pokemart', toX: 3, toY: 6 },
+  );
+
+  // Cinnabar doors: pokecenter door at 8,8; gym door at 17,8; mart at 8,15
+  DOOR_CONNECTIONS.push(
+    { fromMap: 'cinnabar_island', fromX: 8, fromY: 8, toMap: 'pokecenter', toX: 4, toY: 6 },
+    { fromMap: 'cinnabar_island', fromX: 17, fromY: 8, toMap: 'gym_cinnabar', toX: 5, toY: 12 },
+    { fromMap: 'gym_cinnabar', fromX: 5, fromY: 13, toMap: 'cinnabar_island', toX: 17, toY: 9 },
+    { fromMap: 'gym_cinnabar', fromX: 6, fromY: 13, toMap: 'cinnabar_island', toX: 17, toY: 9 },
+    { fromMap: 'cinnabar_island', fromX: 8, fromY: 15, toMap: 'pokemart', toX: 3, toY: 6 },
+  );
 
   return maps;
 }
