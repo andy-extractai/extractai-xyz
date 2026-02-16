@@ -1,5 +1,6 @@
 import { drawPokemonSprite } from '../engine/renderer';
 import { roundRectPath } from './utils';
+import { IntroState, OAK_DIALOG } from '../engine/intro';
 
 export function renderIntroScreen(ctx: CanvasRenderingContext2D, w: number, h: number, frame: number) {
   const gradient = ctx.createLinearGradient(0, 0, 0, h);
@@ -51,6 +52,86 @@ export function renderIntroScreen(ctx: CanvasRenderingContext2D, w: number, h: n
     ctx.fillStyle = '#4ade80';
     ctx.font = '14px monospace';
     ctx.fillText('Press L to load save', w / 2, h * 0.82);
+  }
+
+  ctx.textAlign = 'left';
+}
+
+export function renderOakSpeech(ctx: CanvasRenderingContext2D, w: number, h: number, introState: IntroState) {
+  const gradient = ctx.createLinearGradient(0, 0, 0, h);
+  gradient.addColorStop(0, '#0a0a1a');
+  gradient.addColorStop(1, '#1a1a3e');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, w, h);
+
+  // Oak sprite (simple professor figure)
+  const oakX = w / 2;
+  const oakY = h * 0.25;
+  const size = Math.min(w * 0.15, 80);
+  // Lab coat body
+  ctx.fillStyle = '#f0f0f0';
+  ctx.fillRect(oakX - size * 0.4, oakY, size * 0.8, size * 1.2);
+  // Head
+  ctx.fillStyle = '#f5c6a0';
+  ctx.beginPath();
+  ctx.arc(oakX, oakY - size * 0.1, size * 0.35, 0, Math.PI * 2);
+  ctx.fill();
+  // Hair
+  ctx.fillStyle = '#888';
+  ctx.beginPath();
+  ctx.arc(oakX, oakY - size * 0.25, size * 0.3, Math.PI, 0);
+  ctx.fill();
+  // Eyes
+  ctx.fillStyle = '#333';
+  ctx.fillRect(oakX - size * 0.15, oakY - size * 0.1, 4, 4);
+  ctx.fillRect(oakX + size * 0.1, oakY - size * 0.1, 4, 4);
+
+  // Name label
+  ctx.fillStyle = '#4ade80';
+  ctx.font = 'bold 14px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillText('Prof. Oak', oakX, oakY + size * 1.4);
+
+  // Dialog box
+  const boxY = h * 0.6;
+  const boxH = h * 0.3;
+  const pad = 20;
+  ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+  ctx.strokeStyle = '#4ade80';
+  ctx.lineWidth = 2;
+  roundRectPath(ctx, pad, boxY, w - pad * 2, boxH, 10);
+  ctx.fill();
+  ctx.stroke();
+
+  // Typewriter text
+  const fullText = OAK_DIALOG[introState.step];
+  const visibleText = fullText.substring(0, introState.charIndex);
+  ctx.fillStyle = '#fff';
+  ctx.font = '14px monospace';
+  ctx.textAlign = 'left';
+  // Word wrap
+  const maxW = w - pad * 4;
+  const words = visibleText.split(' ');
+  let line = '';
+  let lineY = boxY + 25;
+  for (const word of words) {
+    const test = line + (line ? ' ' : '') + word;
+    if (ctx.measureText(test).width > maxW && line) {
+      ctx.fillText(line, pad * 2, lineY);
+      line = word;
+      lineY += 20;
+    } else {
+      line = test;
+    }
+  }
+  if (line) ctx.fillText(line, pad * 2, lineY);
+
+  // Blinking advance indicator
+  if (introState.charIndex >= fullText.length && Math.floor(Date.now() / 500) % 2 === 0) {
+    ctx.fillStyle = '#4ade80';
+    ctx.font = '12px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('▼', w / 2, boxY + boxH - 10);
   }
 
   ctx.textAlign = 'left';

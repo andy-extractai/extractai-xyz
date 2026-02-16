@@ -16,7 +16,8 @@ import { findFirstAlive, roundRectPath } from './components/utils';
 import { renderBattleScreen } from './components/BattleScreen';
 import { renderMenu } from './components/MenuScreen';
 import { renderShop } from './components/ShopScreen';
-import { renderIntroScreen, renderNamingScreen, renderStarterSelect } from './components/IntroScreens';
+import { renderIntroScreen, renderNamingScreen, renderStarterSelect, renderOakSpeech } from './components/IntroScreens';
+import { IntroState, createIntroState, advanceIntroStep, tickIntroTypewriter, MOM_GOODBYE_LINES } from './engine/intro';
 import { renderEvolution } from './components/EvolutionScreen';
 import { renderPCScreen, depositPokemon, withdrawPokemon } from './components/PCScreen';
 import { getHmAction, cutTreeFlag, isTreeCut, shouldExitSurf, teamKnowsMove } from './engine/hm';
@@ -31,6 +32,7 @@ export default function PokemonGame() {
   const [state, setState] = useState<GameState>(createInitialState);
   const [inputName, setInputName] = useState('');
   const [selectedStarter, setSelectedStarter] = useState(0);
+  const [introState, setIntroState] = useState<IntroState>(createIntroState);
   const frameRef = useRef(0);
   const keysRef = useRef<Set<string>>(new Set());
   const lastMoveRef = useRef(0);
@@ -329,7 +331,11 @@ export default function PokemonGame() {
       }
       if (npc.id === 'oak' && s.player.mapId === 'oak_lab') {
         if (!s.player.storyFlags.has('got_starter')) {
-          showDialog(['Ah, there you are!', 'Welcome to the world of Pokémon!', 'Please choose your first partner!'], () => {
+          showDialog([
+            `Ah, ${s.player.name}! I\'ve been waiting for you!`,
+            'On that table are three Pokémon. They are all quite rare.',
+            'Go ahead — choose one as your very own partner!',
+          ], () => {
             setState(prev => ({ ...prev, phase: 'starter_select' }));
           }, 'Prof. Oak');
           return;
@@ -889,6 +895,7 @@ export default function PokemonGame() {
     ctx.clearRect(0, 0, w, h);
 
     if (s.phase === 'intro') { renderIntroScreen(ctx, w, h, frame); return; }
+    if (s.phase === 'oak_speech') { renderOakSpeech(ctx, w, h, introState); return; }
     if (s.phase === 'naming') { renderNamingScreen(ctx, w, h, inputName); return; }
     if (s.phase === 'starter_select') { renderStarterSelect(ctx, w, h, frame, selectedStarter); return; }
 
@@ -984,7 +991,13 @@ export default function PokemonGame() {
       const w = rect.width;
       const h = rect.height;
       const s = stateRef.current;
-      if (s.phase === 'intro') { setState(prev => ({ ...prev, phase: 'naming' })); return; }
+      if (s.phase === 'intro') { setState(prev => ({ ...prev, phase: 'oak_speech' })); return; }
+      if (s.phase === 'oak_speech') {
+        const result = advanceIntroStep(introState);
+        if (result.transitionToNaming) setState(prev => ({ ...prev, phase: 'naming' }));
+        else if (result.next) setIntroState(result.next);
+        return;
+      }
       if (s.dialog) { advanceDialog(); return; }
       const padX = 60;
       const padY = h - 140;
@@ -1016,26 +1029,43 @@ export default function PokemonGame() {
   }, []);
 
   // ===== INTRO/NAMING HANDLERS =====
+  // Typewriter tick for oak_speech
   useEffect(() => {
-    if (state.phase !== 'intro' && state.phase !== 'naming') return;
+    if (state.phase !== 'oak_speech') return;
+    const timer = setInterval(() => {
+      setIntroState(prev => tickIntroTypewriter(prev));
+    }, 30);
+    return () => clearInterval(timer);
+  }, [state.phase, introState.step]);
+
+  useEffect(() => {
+    if (state.phase !== 'intro' && state.phase !== 'naming' && state.phase !== 'oak_speech') return;
     const handleKey = (e: KeyboardEvent) => {
       if (state.phase === 'intro') {
-        if (e.key === 'Enter' || e.key === ' ') setState(prev => ({ ...prev, phase: 'naming' }));
+        if (e.key === 'Enter' || e.key === ' ') setState(prev => ({ ...prev, phase: 'oak_speech' }));
         if (e.key.toLowerCase() === 'l') { const saved = loadGame(); if (saved) setState(saved); }
+        return;
+      }
+      if (state.phase === 'oak_speech') {
+        if (e.key === 'Enter' || e.key === ' ') {
+          const result = advanceIntroStep(introState);
+          if (result.transitionToNaming) {
+            setState(prev => ({ ...prev, phase: 'naming' }));
+          } else if (result.next) {
+            setIntroState(result.next);
+          }
+        }
         return;
       }
       if (state.phase === 'naming') {
         if (e.key === 'Enter' && inputName.trim().length > 0) {
-          setState(prev => ({ ...prev, phase: 'overworld', player: { ...prev.player, name: inputName.trim() } }));
+          const name = inputName.trim();
+          setState(prev => ({
+            ...prev, phase: 'overworld',
+            player: { ...prev.player, name, mapId: 'player_house', x: 3, y: 5 },
+          }));
           setTimeout(() => {
-            showDialog([
-              `Welcome, ${inputName.trim()}!`, 'I am Professor Oak.',
-              'The world is full of creatures called Pokémon!',
-              'Some people keep them as pets, while others battle with them.',
-              'I study Pokémon as a profession.',
-              'Your very own Pokémon adventure is about to begin!',
-              'Head to my lab in Pallet Town to get your first Pokémon!',
-            ], undefined, 'Prof. Oak');
+            showDialog(MOM_GOODBYE_LINES, undefined, 'Mom');
           }, 300);
           return;
         }
@@ -1045,7 +1075,7 @@ export default function PokemonGame() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [state.phase, inputName, showDialog]);
+  }, [state.phase, inputName, showDialog, introState]);
 
   useEffect(() => {
     if (state.phase !== 'starter_select') return;
