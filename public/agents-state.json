@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T11:28:53.140Z",
+  "timestamp": "2026-02-16T11:32:13.168Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "020af3e7-7cae-4c55-a537-2e7e26730fa0"
     },
     {
       "id": "verify",
@@ -210,7 +210,7 @@
     {
       "id": "US-012",
       "title": "Add battle animations and transition effects",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
