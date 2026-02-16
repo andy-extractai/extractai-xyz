@@ -39,7 +39,6 @@ export default function PokemonGame() {
   const stateRef = useRef(state);
   stateRef.current = state;
   const introStateRef = useRef(introState);
-  introStateRef.current = introState;
   const inputNameRef = useRef(inputName);
   inputNameRef.current = inputName;
   const selectedStarterRef = useRef(selectedStarter);
