@@ -21,6 +21,7 @@ import { renderEvolution } from './components/EvolutionScreen';
 import { renderPCScreen, depositPokemon, withdrawPokemon } from './components/PCScreen';
 import { getHmAction, cutTreeFlag, isTreeCut, shouldExitSurf, teamKnowsMove } from './engine/hm';
 import { renderCreditsScreen, advanceCredits, getCreditsLines } from './components/CreditsScreen';
+import MobileControls from './components/MobileControls';
 
 const MAPS = getAllMaps();
 
@@ -975,6 +976,7 @@ export default function PokemonGame() {
           style={{ imageRendering: 'pixelated' }}
         />
       </div>
+      <MobileControls />
       <div className="mt-3 text-emerald-700 text-xs font-mono text-center max-w-md">
         <p>Arrow keys/WASD to move • Z/Space/Enter to interact • ESC for menu</p>
         <p className="mt-1">Mobile: Use on-screen controls</p>
