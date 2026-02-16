@@ -164,6 +164,25 @@ export default function PokemonGame() {
         });
       }
 
+      // Tick fade transition (door warps)
+      if (s.transition) {
+        setState(prev => {
+          if (!prev.transition) return prev;
+          const newProgress = Math.min(1, prev.transition.progress + 16 / 300); // 300ms fade
+          const doorData = (prev.transition as Record<string, unknown>)._door as { toMap: string; toX: number; toY: number; dismount: boolean } | undefined;
+          if (newProgress >= 0.5 && doorData && prev.player.mapId !== doorData.toMap) {
+            // At midpoint, warp the player
+            return {
+              ...prev,
+              player: { ...prev.player, x: doorData.toX, y: doorData.toY, mapId: doorData.toMap, onBicycle: doorData.dismount ? false : prev.player.onBicycle },
+              transition: { ...prev.transition, progress: newProgress },
+            };
+          }
+          if (newProgress >= 1) return { ...prev, transition: null };
+          return { ...prev, transition: { ...prev.transition, progress: newProgress } };
+        });
+      }
+
       // Tick battle transition
       if (s.battleTransition) {
         setState(prev => {
@@ -233,7 +252,16 @@ export default function PokemonGame() {
       const doorConn = DOOR_CONNECTIONS.find(d => d.fromMap === prev.player.mapId && d.fromX === newX && d.fromY === newY);
       if (doorConn && MAPS[doorConn.toMap]) {
         const dismount = isIndoorMap(doorConn.toMap);
-        return { ...prev, player: { ...prev.player, x: doorConn.toX, y: doorConn.toY, mapId: doorConn.toMap, direction: dir, steps: prev.player.steps + 1, onBicycle: dismount ? false : prev.player.onBicycle } };
+        return {
+          ...prev,
+          player: { ...prev.player, x: newX, y: newY, direction: dir, steps: prev.player.steps + 1 },
+          transition: {
+            type: 'fade' as const,
+            progress: 0,
+            callback: undefined,
+            _door: { toMap: doorConn.toMap, toX: doorConn.toX, toY: doorConn.toY, dismount },
+          } as GameState['transition'] & { _door?: { toMap: string; toX: number; toY: number; dismount: boolean } },
+        };
       }
 
       // Exit surf when stepping onto land
@@ -869,6 +897,11 @@ export default function PokemonGame() {
     }
     if (s.phase === 'evolution' && s.evolution) renderEvolution(ctx, s.evolution, w, h, frame);
     if (s.phase === 'credits' && s.credits) renderCreditsScreen(ctx, s, w, h, frame, s.credits);
+    if (s.transition) {
+      const alpha = s.transition.progress <= 0.5 ? s.transition.progress * 2 : (1 - s.transition.progress) * 2;
+      ctx.fillStyle = `rgba(0,0,0,${Math.min(1, alpha)})`;
+      ctx.fillRect(0, 0, w, h);
+    }
     if (s.dialog) renderDialog(ctx, s.dialog, w, h);
     if (s.phase === 'menu' && s.menu) renderMenu(ctx, s, w, h);
     if (s.phase === 'shop' && s.shop) renderShop(ctx, s, w, h);

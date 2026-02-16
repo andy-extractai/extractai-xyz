@@ -61,6 +61,9 @@ export const TILE_DEFS: Record<number, { walkable: boolean; encounter?: boolean;
   14: { walkable: false, color: '#2196f3', label: 'pc' },
   15: { walkable: true,  color: '#e91e63', label: 'healpad' },
   16: { walkable: false, color: '#33691e', label: 'cuttree' },
+  17: { walkable: false, color: '#6d4c41', label: 'bed' },
+  18: { walkable: false, color: '#8d6e63', label: 'table' },
+  19: { walkable: false, color: '#37474f', label: 'machine' },
 };
 
 // Helper to create a filled 2D array
@@ -135,6 +138,7 @@ function createPalletTown(): GameMap {
       { id: 'mom', name: 'Mom', x: 5, y: 8, direction: 'down', dialog: ['Be careful out there, dear!', 'Come home if you need rest!'], spriteType: 'woman', stationary: true },
       { id: 'oak_outside', name: 'Villager', x: 8, y: 12, direction: 'right', dialog: ['Professor Oak\'s lab is to the east!', 'He studies Pokémon.'], spriteType: 'man' },
       { id: 'sign_pallet', name: 'Sign', x: 8, y: 10, direction: 'down', dialog: ['PALLET TOWN', 'Shades of your journey await!'], spriteType: 'sign', stationary: true },
+      { id: 'sign_oak_lab', name: 'Sign', x: 12, y: 16, direction: 'down', dialog: ['OAK POKÉMON RESEARCH LAB'], spriteType: 'sign', stationary: true },
     ],
     trainers: [],
   };
@@ -159,6 +163,11 @@ function createOakLab(): GameMap {
   
   // PC
   tiles[2][1] = 14;
+  
+  // Research machines
+  tiles[2][10] = 19;
+  tiles[3][10] = 19;
+  tiles[2][9] = 19;
   
   // Door at bottom
   tiles[h-1][5] = 6;
@@ -188,6 +197,8 @@ function createPlayerHouse(): GameMap {
   // Furniture
   tiles[1][1] = 13; tiles[1][2] = 13; // shelf
   tiles[2][6] = 14; // TV/PC
+  tiles[1][5] = 17; tiles[1][6] = 17; // bed
+  tiles[3][1] = 18; tiles[3][2] = 18; // table
   // Door
   tiles[h-1][3] = 6;
   tiles[h-1][4] = 6;

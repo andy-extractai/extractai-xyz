@@ -160,3 +160,16 @@ Started: 2026-02-16
 - Files: engine/battleLogic.ts, engine/__tests__/itemUsage.test.ts, components/MenuScreen.ts
 - **Learnings:** useBattleItem calls executeBattleAction which runs executeTurn — enemy attacks after item use, so tests must account for enemy damage when checking HP values
 ---
+
+## 2026-02-16 03:59 - US-014: Implement Pokémart with expanded inventory per city
+- Expanded MART_INVENTORY: added Lavender, Fuchsia, Saffron, Cinnabar (9 cities total)
+- Early cities (Viridian): Pokéballs, Potions, Antidotes; Mid (Pewter/Cerulean/Lavender): Great Balls, Super Potions, status heals; Late (Vermilion+): Ultra Balls, Hyper Potions, Full Restores, Revives
+- Created engine/shopLogic.ts: pure functions buyItem, sellItem, getSellPrice, getMaxBuyable
+- Updated ShopScreen.ts: 3-option select menu (Buy/Sell/Exit), quantity selector (←/→), sell mode with half-price display
+- Updated Game.tsx handleShopInput: full buy/sell/quantity flow, sell removes empty items from bag
+- Clerk NPC already exists in shared pokemart map (all cities use same interior)
+- 20 new tests in engine/__tests__/shopLogic.test.ts: buy (5), sell (6), getSellPrice (2), getMaxBuyable (2), MART_INVENTORY validation (4 - unique cities, progression, valid refs, valid prices)
+- All 264 tests pass, tsc clean, build succeeds
+- Files: data/items.ts, engine/shopLogic.ts, engine/__tests__/shopLogic.test.ts, components/ShopScreen.ts, Game.tsx
+- **Learnings:** All cities share a single pokemart map instance; city-specific inventory is resolved by matching player.mapId against MART_INVENTORY keys
+---
