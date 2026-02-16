@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T16:29:13.318Z",
+  "timestamp": "2026-02-16T16:31:03.398Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -46,8 +46,8 @@
       "name": "Developer",
       "role": "Implementation",
       "emoji": "💻",
-      "status": "done",
-      "statusMessage": "Completed: implement"
+      "status": "active",
+      "statusMessage": "Working on: pr"
     },
     {
       "id": "verifier",
@@ -62,8 +62,8 @@
       "name": "Tester",
       "role": "Integration & E2E",
       "emoji": "🧪",
-      "status": "active",
-      "statusMessage": "Working on: test"
+      "status": "done",
+      "statusMessage": "Completed: test"
     },
     {
       "id": "reviewer",
@@ -118,7 +118,7 @@
     {
       "id": "test",
       "agent": "tester",
-      "status": "running",
+      "status": "done",
       "retries": 0,
       "type": "single",
       "currentStory": null
@@ -126,7 +126,7 @@
     {
       "id": "pr",
       "agent": "developer",
-      "status": "waiting",
+      "status": "pending",
       "retries": 0,
       "type": "single",
       "currentStory": null
