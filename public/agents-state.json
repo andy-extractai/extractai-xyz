@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T15:14:52.791Z",
+  "timestamp": "2026-02-16T15:34:42.934Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -54,8 +54,8 @@
       "name": "Verifier",
       "role": "QA / Sanity Check",
       "emoji": "✅",
-      "status": "active",
-      "statusMessage": "Working on: verify"
+      "status": "idle",
+      "statusMessage": "Waiting for tasks"
     },
     {
       "id": "tester",
@@ -105,12 +105,12 @@
       "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": "ff174763-d2cd-4e28-a4ea-99f09e483969"
+      "currentStory": "4561b181-b833-4e17-9c67-2ad80f196aed"
     },
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "running",
+      "status": "waiting",
       "retries": 1,
       "type": "single",
       "currentStory": null
@@ -228,19 +228,19 @@
     {
       "id": "US-015",
       "title": "Polish overworld rendering: building interiors, fade transitions, signs",
-      "status": "running",
+      "status": "done",
       "retries": 1
     },
     {
       "id": "US-016",
       "title": "Implement Victory Road and Elite 4 sequential battles",
-      "status": "pending",
+      "status": "done",
       "retries": 0
     },
     {
       "id": "US-017",
       "title": "Add Pokédex detail screen with sprite and stats",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {

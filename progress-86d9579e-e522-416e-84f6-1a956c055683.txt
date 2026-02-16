@@ -173,3 +173,23 @@ Started: 2026-02-16
 - Files: data/items.ts, engine/shopLogic.ts, engine/__tests__/shopLogic.test.ts, components/ShopScreen.ts, Game.tsx
 - **Learnings:** All cities share a single pokemart map instance; city-specific inventory is resolved by matching player.mapId against MART_INVENTORY keys
 ---
+
+## 2026-02-16 07:15 - US-015: Polish overworld rendering
+- Added fade-to-black door transitions (300ms, fade out → warp at midpoint → fade in)
+- Enhanced sign interaction (already worked via NPC system; added missing Oak Lab sign NPC)
+- New interior tiles: bed (17), table (18), machine (19) with pixel art rendering
+- Added bed + table to player_house, research machines to oak_lab
+- Enhanced ledge tile (8) rendering with face, highlight, and shadow
+- Wrote 10 tests for transition state management and new tile definitions
+- Files: renderer.ts, state.ts (unchanged), maps.ts, Game.tsx, transitions.test.ts
+- **Learnings:** Transitions use {type, progress} pattern; door warps piggyback on transition._door
+---
+
+## 2026-02-16 07:25 - US-016: Victory Road and Elite 4 sequential battles
+- Added 8-badge gate for Victory Road entry (Game.tsx map transition check)
+- Updated Victory Road wild encounters to level range 35-45
+- E4 sequential flow already wired: battles trigger at y<=4 on elite4 map, champion defeat → credits
+- No healing between E4 battles (HP carries over via playerTeam in battle state)
+- Files changed: Game.tsx, data/maps.ts, engine/__tests__/elite4.test.ts
+- **Learnings:** E4 flow was mostly pre-wired; badge gate was the main missing piece. DialogState uses `lines`/`currentLine`/`charIndex`/`done` fields.
+---

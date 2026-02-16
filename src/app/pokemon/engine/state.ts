@@ -100,7 +100,7 @@ export interface DialogState {
 }
 
 export interface MenuState {
-  screen: 'main' | 'pokemon' | 'bag' | 'pokedex' | 'save' | 'options' | 'pokemon_detail' | 'map';
+  screen: 'main' | 'pokemon' | 'bag' | 'pokedex' | 'save' | 'options' | 'pokemon_detail' | 'map' | 'pokedex_detail';
   selectedIndex: number;
   subIndex: number;
   selectedPokemon?: number;

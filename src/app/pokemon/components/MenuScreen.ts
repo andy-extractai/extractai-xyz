@@ -3,6 +3,7 @@ import { drawPokemonSprite } from '../engine/renderer';
 import { SPECIES } from '../data/pokemon';
 import { MOVES } from '../data/moves';
 import { ITEMS } from '../data/items';
+import { renderPokedexList, renderPokedexDetail } from './PokedexScreen';
 import { drawHPBar, getStatusColor, roundRectPath } from './utils';
 
 export function renderMenu(ctx: CanvasRenderingContext2D, s: GameState, w: number, h: number) {
@@ -189,41 +190,11 @@ export function renderMenu(ctx: CanvasRenderingContext2D, s: GameState, w: numbe
     ctx.font = '11px monospace';
     ctx.fillText('[ESC] Back  [Enter] Use', 20, h - 15);
   } else if (m.screen === 'pokedex') {
-    ctx.fillStyle = 'rgba(0,0,0,0.95)';
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.fillStyle = '#4ade80';
-    ctx.font = 'bold 18px monospace';
-    ctx.fillText('POKÉDEX', 20, 30);
-
-    ctx.fillStyle = '#aaa';
-    ctx.font = '12px monospace';
-    ctx.fillText(`Seen: ${s.player.pokedex.seen.size}  Caught: ${s.player.pokedex.caught.size}`, 20, 55);
-
-    let row = 0;
-    const allSpecies = Object.entries(SPECIES).sort((a, b) => a[1].id - b[1].id);
-    const startIdx = 0;
-    const maxShow = Math.min(allSpecies.length, 20);
-
-    for (let i = startIdx; i < startIdx + maxShow; i++) {
-      const [id, sp] = allSpecies[i] || [];
-      if (!id) continue;
-      const y = 75 + row * 22;
-      const seen = s.player.pokedex.seen.has(id);
-      const caught = s.player.pokedex.caught.has(id);
-
-      ctx.fillStyle = caught ? '#4ade80' : seen ? '#aaa' : '#444';
-      ctx.font = '11px monospace';
-      ctx.fillText(
-        `${String(sp.id).padStart(3, '0')} ${caught ? '●' : seen ? '○' : '?'} ${seen ? sp.name : '???'}`,
-        20, y
-      );
-      row++;
-    }
-
-    ctx.fillStyle = '#666';
-    ctx.font = '11px monospace';
-    ctx.fillText('[ESC] Back', 20, h - 15);
+    const maxVisible = Math.floor((h - 100) / 22);
+    const scrollStart = Math.max(0, m.selectedIndex - maxVisible + 1);
+    renderPokedexList(ctx, s, w, h, scrollStart, m.selectedIndex);
+  } else if (m.screen === 'pokedex_detail') {
+    renderPokedexDetail(ctx, s, w, h, m.selectedIndex);
   } else if (m.screen === 'map') {
     ctx.fillStyle = 'rgba(0,0,0,0.95)';
     ctx.fillRect(0, 0, w, h);

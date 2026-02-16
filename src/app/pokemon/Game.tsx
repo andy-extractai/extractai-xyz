@@ -624,7 +624,18 @@ export default function PokemonGame() {
           }
         }
         if (key === 'x' || key === 'backspace' || key === 'escape') { m.screen = 'main'; m.selectedIndex = 1; }
-      } else if (m.screen === 'pokedex' || m.screen === 'map') {
+      } else if (m.screen === 'pokedex') {
+        const totalSpecies = 50;
+        if (key === 'arrowup') { m.selectedIndex = Math.max(0, m.selectedIndex - 1); }
+        else if (key === 'arrowdown') { m.selectedIndex = Math.min(totalSpecies - 1, m.selectedIndex + 1); }
+        else if (key === 'z' || key === ' ' || key === 'enter') { m.screen = 'pokedex_detail'; }
+        else if (key === 'x' || key === 'backspace' || key === 'escape') { m.screen = 'main'; m.selectedIndex = 2; }
+      } else if (m.screen === 'pokedex_detail') {
+        const totalSpecies = 50;
+        if (key === 'arrowleft') { m.selectedIndex = Math.max(0, m.selectedIndex - 1); }
+        else if (key === 'arrowright') { m.selectedIndex = Math.min(totalSpecies - 1, m.selectedIndex + 1); }
+        else if (key === 'x' || key === 'backspace' || key === 'escape') { m.screen = 'pokedex'; }
+      } else if (m.screen === 'map') {
         if (key === 'x' || key === 'backspace' || key === 'escape' || key === 'z' || key === ' ' || key === 'enter') { m.screen = 'main'; m.selectedIndex = 2; }
       } else if (m.screen === 'save' || m.screen === 'options') {
         if (key === 'x' || key === 'backspace' || key === 'escape') m.screen = 'main';
