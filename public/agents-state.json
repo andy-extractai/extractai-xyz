@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T15:13:12.787Z",
+  "timestamp": "2026-02-16T15:15:22.791Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -105,12 +105,12 @@
       "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": "ff174763-d2cd-4e28-a4ea-99f09e483969"
+      "currentStory": null
     },
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "running",
+      "status": "pending",
       "retries": 1,
       "type": "single",
       "currentStory": null
@@ -228,7 +228,7 @@
     {
       "id": "US-015",
       "title": "Polish overworld rendering: building interiors, fade transitions, signs",
-      "status": "running",
+      "status": "done",
       "retries": 1
     },
     {
