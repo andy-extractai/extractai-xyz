@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T11:08:12.968Z",
+  "timestamp": "2026-02-16T11:09:12.978Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -54,8 +54,8 @@
       "name": "Verifier",
       "role": "QA / Sanity Check",
       "emoji": "✅",
-      "status": "active",
-      "statusMessage": "Working on: verify"
+      "status": "idle",
+      "statusMessage": "Waiting for tasks"
     },
     {
       "id": "tester",
@@ -102,7 +102,7 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "running",
+      "status": "pending",
       "retries": 0,
       "type": "loop",
       "currentStory": null
@@ -110,7 +110,7 @@
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "running",
+      "status": "waiting",
       "retries": 0,
       "type": "single",
       "currentStory": null
