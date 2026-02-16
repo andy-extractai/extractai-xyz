@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:42:12.747Z",
+  "timestamp": "2026-02-16T10:46:32.783Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -54,8 +54,8 @@
       "name": "Verifier",
       "role": "QA / Sanity Check",
       "emoji": "✅",
-      "status": "idle",
-      "statusMessage": "Waiting for tasks"
+      "status": "active",
+      "statusMessage": "Working on: verify"
     },
     {
       "id": "tester",
@@ -105,12 +105,12 @@
       "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": "c3e54491-a4bf-4df8-8154-d56f277bb939"
+      "currentStory": null
     },
     {
       "id": "verify",
       "agent": "verifier",
-      "status": "waiting",
+      "status": "pending",
       "retries": 0,
       "type": "single",
       "currentStory": null
@@ -180,7 +180,7 @@
     {
       "id": "US-007",
       "title": "Implement credits screen and game completion flow",
-      "status": "running",
+      "status": "done",
       "retries": 0
     },
     {
