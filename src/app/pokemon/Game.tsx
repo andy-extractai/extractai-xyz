@@ -210,6 +210,11 @@ export default function PokemonGame() {
         });
       }
 
+      // Tick oak speech typewriter (~every other frame ≈ 30ms at 60fps)
+      if (s.phase === 'oak_speech' && frameRef.current % 2 === 0) {
+        introStateRef.current = tickIntroTypewriter(introStateRef.current);
+      }
+
       const canvas = canvasRef.current;
       if (canvas) {
         const ctx = canvas.getContext('2d');
@@ -999,9 +1004,9 @@ export default function PokemonGame() {
       const s = stateRef.current;
       if (s.phase === 'intro') { setState(prev => ({ ...prev, phase: 'oak_speech' })); return; }
       if (s.phase === 'oak_speech') {
-        const result = advanceIntroStep(introState);
+        const result = advanceIntroStep(introStateRef.current);
         if (result.transitionToNaming) setState(prev => ({ ...prev, phase: 'naming' }));
-        else if (result.next) setIntroState(result.next);
+        else if (result.next) introStateRef.current = result.next;
         return;
       }
       if (s.dialog) { advanceDialog(); return; }
@@ -1035,14 +1040,7 @@ export default function PokemonGame() {
   }, []);
 
   // ===== INTRO/NAMING HANDLERS =====
-  // Typewriter tick for oak_speech
-  useEffect(() => {
-    if (state.phase !== 'oak_speech') return;
-    const timer = setInterval(() => {
-      setIntroState(prev => tickIntroTypewriter(prev));
-    }, 30);
-    return () => clearInterval(timer);
-  }, [state.phase, introState.step]);
+  // Oak speech typewriter is now ticked in the game loop via introStateRef (no setInterval needed)
 
   useEffect(() => {
     if (state.phase !== 'intro' && state.phase !== 'naming' && state.phase !== 'oak_speech') return;
@@ -1054,11 +1052,11 @@ export default function PokemonGame() {
       }
       if (state.phase === 'oak_speech') {
         if (e.key === 'Enter' || e.key === ' ') {
-          const result = advanceIntroStep(introState);
+          const result = advanceIntroStep(introStateRef.current);
           if (result.transitionToNaming) {
             setState(prev => ({ ...prev, phase: 'naming' }));
           } else if (result.next) {
-            setIntroState(result.next);
+            introStateRef.current = result.next;
           }
         }
         return;
@@ -1081,7 +1079,7 @@ export default function PokemonGame() {
     };
     window.addEventListener('keydown', handleKey);
     return () => window.removeEventListener('keydown', handleKey);
-  }, [state.phase, inputName, showDialog, introState]);
+  }, [state.phase, inputName, showDialog]);
 
   useEffect(() => {
     if (state.phase !== 'starter_select') return;
