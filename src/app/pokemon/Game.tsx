@@ -6,6 +6,7 @@ import { rollWildEncounter, evolvePokemon } from './engine/battle';
 import { renderMap } from './engine/renderer';
 import { executeBattleAction, handlePostMessage, handleBattleVictory, handlePostExp, handleLearnMove, useBattleItem, handleCatchResult } from './engine/battleLogic';
 import { getAllMaps, DOOR_CONNECTIONS, MAP_CONNECTIONS, TILE_DEFS } from './data/maps';
+import { toggleBicycle, isIndoorMap } from './engine/bicycle';
 import { SPECIES } from './data/pokemon';
 import { MOVES } from './data/moves';
 import { ITEMS, MART_INVENTORY } from './data/items';
@@ -42,6 +43,15 @@ export default function PokemonGame() {
       if (s.dialog && (e.key === 'z' || e.key === ' ' || e.key === 'Enter')) {
         e.preventDefault();
         advanceDialog();
+        return;
+      }
+
+      if (e.key.toLowerCase() === 'b' && s.phase === 'overworld' && !s.dialog) {
+        e.preventDefault();
+        const newOnBicycle = toggleBicycle(s.player.onBicycle, s.player.hasBicycle, s.player.mapId, s.player.isSurfing);
+        if (newOnBicycle !== s.player.onBicycle) {
+          setState(prev => ({ ...prev, player: { ...prev.player, onBicycle: newOnBicycle } }));
+        }
         return;
       }
 
@@ -181,7 +191,8 @@ export default function PokemonGame() {
 
       const doorConn = DOOR_CONNECTIONS.find(d => d.fromMap === prev.player.mapId && d.fromX === newX && d.fromY === newY);
       if (doorConn && MAPS[doorConn.toMap]) {
-        return { ...prev, player: { ...prev.player, x: doorConn.toX, y: doorConn.toY, mapId: doorConn.toMap, direction: dir, steps: prev.player.steps + 1 } };
+        const dismount = isIndoorMap(doorConn.toMap);
+        return { ...prev, player: { ...prev.player, x: doorConn.toX, y: doorConn.toY, mapId: doorConn.toMap, direction: dir, steps: prev.player.steps + 1, onBicycle: dismount ? false : prev.player.onBicycle } };
       }
 
       // Exit surf when stepping onto land
@@ -290,6 +301,17 @@ export default function PokemonGame() {
             return { ...prev, player: { ...prev.player, team, storyFlags: newFlags } };
           });
         }, npc.name);
+        return;
+      }
+      // Bicycle NPC
+      if (npc.id === 'bicycle_npc' && !s.player.hasBicycle) {
+        showDialog(npc.dialog, () => {
+          setState(prev => ({ ...prev, player: { ...prev.player, hasBicycle: true } }));
+        }, npc.name);
+        return;
+      }
+      if (npc.id === 'bicycle_npc' && s.player.hasBicycle) {
+        showDialog(['You already have a Bicycle! Press B to ride it!'], undefined, npc.name);
         return;
       }
       // Already got HM - show different dialog
@@ -741,7 +763,7 @@ export default function PokemonGame() {
     if (s.phase === 'overworld' || s.phase === 'menu' || s.phase === 'shop' || s.phase === 'pc') {
       const map = MAPS[s.player.mapId];
       if (map) {
-        renderMap(ctx, map, s.player.x, s.player.y, s.player.direction, w, h, frame, map.npcs, { isSurfing: s.player.isSurfing, cutTrees: s.player.storyFlags });
+        renderMap(ctx, map, s.player.x, s.player.y, s.player.direction, w, h, frame, map.npcs, { isSurfing: s.player.isSurfing, onBicycle: s.player.onBicycle, cutTrees: s.player.storyFlags });
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
         ctx.fillRect(0, 0, w, 28);
         ctx.fillStyle = '#4ade80';

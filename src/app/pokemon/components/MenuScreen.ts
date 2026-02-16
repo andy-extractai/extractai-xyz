@@ -139,6 +139,28 @@ export function renderMenu(ctx: CanvasRenderingContext2D, s: GameState, w: numbe
       ctx.fillText('Bag is empty!', 20, 60);
     }
 
+    // Key Items section
+    const keyItemsY = 55 + Math.max(items.length, 1) * 28 + 20;
+    ctx.fillStyle = '#4ade80';
+    ctx.font = 'bold 14px monospace';
+    ctx.fillText('KEY ITEMS', 20, keyItemsY);
+    const keyItems: { name: string; desc: string }[] = [];
+    if (s.player.hasBicycle) keyItems.push({ name: 'Bicycle', desc: 'A folding bike. Press B to ride.' });
+    if (keyItems.length === 0) {
+      ctx.fillStyle = '#888';
+      ctx.font = '12px monospace';
+      ctx.fillText('No key items', 20, keyItemsY + 20);
+    } else {
+      keyItems.forEach((ki, i) => {
+        ctx.fillStyle = '#fff';
+        ctx.font = '13px monospace';
+        ctx.fillText(`  ${ki.name}`, 20, keyItemsY + 20 + i * 22);
+        ctx.fillStyle = '#888';
+        ctx.font = '10px monospace';
+        ctx.fillText(ki.desc, 200, keyItemsY + 20 + i * 22);
+      });
+    }
+
     ctx.fillStyle = '#aaa';
     ctx.font = '12px monospace';
     ctx.fillText(`Money: $${s.player.money}`, 20, h - 35);

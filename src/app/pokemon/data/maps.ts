@@ -681,6 +681,9 @@ function createVermilionCity(): GameMap {
       { id: 'hm_cut_npc', name: 'Captain', x: 10, y: 12, direction: 'down',
         dialog: ['I\'m the S.S. Anne captain!', 'Here, take this HM for Cut!', 'Teach it to a Pokémon to chop down small trees!'],
         spriteType: 'man' },
+      { id: 'bicycle_npc', name: 'Bike Shop Owner', x: 16, y: 12, direction: 'left',
+        dialog: ['I run the bike shop!', 'Here, take this Bicycle! It\'s a promotional giveaway!', 'Press B in the overworld to ride it!'],
+        spriteType: 'man' },
     ],
     trainers: [],
   };

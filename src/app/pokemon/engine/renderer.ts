@@ -229,7 +229,7 @@ export function renderMap(
   canvasWidth: number, canvasHeight: number,
   frameCount: number,
   npcs: NPCData[],
-  options?: { isSurfing?: boolean; cutTrees?: Set<string> },
+  options?: { isSurfing?: boolean; onBicycle?: boolean; cutTrees?: Set<string> },
 ) {
   const camX = playerX - Math.floor(VIEWPORT_TILES_X / 2);
   const camY = playerY - Math.floor(VIEWPORT_TILES_Y / 2);
@@ -359,6 +359,22 @@ export function renderMap(
   
   drawSprite(ctx, animatedSprite, PLAYER_COLORS, playerScreenX, playerScreenY, TILE_SIZE);
   
+  // Bicycle visual indicator - green tint overlay on player
+  if (options?.onBicycle) {
+    ctx.fillStyle = 'rgba(74, 222, 128, 0.3)';
+    ctx.fillRect(playerScreenX, playerScreenY, TILE_SIZE, TILE_SIZE);
+    // Draw wheel effect under player
+    const spin = frameCount * 0.15;
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.6)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(playerScreenX + TILE_SIZE / 2 - 4, playerScreenY + TILE_SIZE - 4, 3, spin, spin + Math.PI);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(playerScreenX + TILE_SIZE / 2 + 4, playerScreenY + TILE_SIZE - 4, 3, spin + Math.PI, spin + Math.PI * 2);
+    ctx.stroke();
+  }
+
   // Surfing visual indicator - blue tint overlay on player
   if (options?.isSurfing) {
     ctx.fillStyle = 'rgba(52, 152, 219, 0.35)';
