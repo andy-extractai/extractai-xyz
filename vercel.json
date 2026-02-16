@@ -1,0 +1,11 @@
+{
+  "headers": [
+    {
+      "source": "/agents-state.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" },
+        { "key": "CDN-Cache-Control", "value": "no-store" }
+      ]
+    }
+  ]
+}

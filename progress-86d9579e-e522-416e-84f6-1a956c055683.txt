@@ -1,0 +1,25 @@
+# Progress Log
+Run: 86d9579e-e522-416e-84f6-1a956c055683
+Task: Pokemon RPG Feature Development
+Started: 2026-02-16
+
+## Codebase Patterns
+- Next.js app with vitest for testing
+- Pokemon engine in src/app/pokemon/engine/ (battle.ts, state.ts)
+- Data definitions in src/app/pokemon/data/ (types.ts, pokemon.ts, moves.ts)
+- Tests use vitest with vi.spyOn(Math, 'random') for deterministic results
+- createPokemon accepts optional IV override for test determinism
+- Save/load uses localStorage with Set→Array serialization
+- Stats formula: HP = floor(((base+iv)*2*level)/100) + level + 10; others = floor(((base+iv)*2*level)/100) + 5
+- TypeScript strict mode, run `npx tsc --noEmit` to check
+
+---
+
+## 2026-02-16 01:48 - US-002: Test battle engine core mechanics
+- Wrote comprehensive tests for battle.ts (30 tests) and state.ts (13 tests)
+- battle.test.ts covers: calculateDamage (STAB, type effectiveness, crits, burn), doesMoveHit, applyStatusDamage, canAct, executeTurn, attemptCatch, checkEvolution, gainExp, calculateExpGain
+- state.test.ts covers: createPokemon, calcStats, createInitialState, save/load round-trip
+- All 56 tests pass, tsc --noEmit clean
+- Files: src/app/pokemon/engine/__tests__/battle.test.ts, src/app/pokemon/engine/__tests__/state.test.ts
+- **Learnings:** Use fixedIvs for deterministic stat tests; mock Math.random for all RNG-dependent functions
+---
