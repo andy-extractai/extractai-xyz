@@ -36,6 +36,7 @@ export interface GameState {
   evolution: EvolutionState | null;
   credits: { scrollY: number; done: boolean } | null;
   transition: { type: 'fade' | 'battle'; progress: number; callback?: () => void } | null;
+  battleTransition: BattleTransitionState | null;
   lastPokecenterMap: string;
   lastPokecenterX: number;
   lastPokecenterY: number;
@@ -66,6 +67,13 @@ export interface BattleState {
 export interface BattleAnimation {
   type: 'shake' | 'flash' | 'hp_drain' | 'faint' | 'ball_throw' | 'exp_fill';
   target: 'player' | 'enemy';
+  progress: number;
+  duration: number;
+  color?: string; // for type-colored flash
+}
+
+export interface BattleTransitionState {
+  type: 'flash_wipe';
   progress: number;
   duration: number;
 }
@@ -210,6 +218,7 @@ export function createInitialState(): GameState {
     evolution: null,
     credits: null,
     transition: null,
+    battleTransition: null,
     lastPokecenterMap: 'player_house',
     lastPokecenterX: 3,
     lastPokecenterY: 5,
@@ -257,6 +266,7 @@ export function loadGame(): GameState | null {
     if (!data.player.pc) data.player.pc = [];
     if (data.player.isSurfing === undefined) data.player.isSurfing = false;
     data.pcUI = null;
+    data.battleTransition = null;
     return data as GameState;
   } catch {
     return null;

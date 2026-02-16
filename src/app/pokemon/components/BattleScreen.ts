@@ -4,19 +4,58 @@ import { SPECIES, expForLevel, expToNextLevel } from '../data/pokemon';
 import { MOVES } from '../data/moves';
 import { ITEMS } from '../data/items';
 import { drawHPBar, getStatusColor, roundRectPath } from './utils';
+import {
+  renderScreenShake,
+  getFaintOpacity,
+  getFaintOffset,
+  getAnimationProgress,
+  hasAnimation,
+} from '../engine/animations';
 
 export function renderBattleScreen(ctx: CanvasRenderingContext2D, s: GameState, w: number, h: number, frame: number) {
   const b = s.battle!;
   const playerPoke = b.playerTeam[b.activePlayerIdx];
   const enemyPoke = b.enemyTeam[b.activeEnemyIdx];
 
-  const shakeOffset = { x: 0, y: 0 };
-  if (b.animations.length > 0) {
-    shakeOffset.x = (Math.random() - 0.5) * 6;
-    shakeOffset.y = (Math.random() - 0.5) * 6;
-  }
+  // Screen shake from animations
+  const shakeOffset = renderScreenShake(b.animations);
+
+  ctx.save();
+  ctx.translate(shakeOffset.x, shakeOffset.y);
 
   renderBattle(ctx, playerPoke, enemyPoke, w, h, frame, shakeOffset);
+
+  // Faint animation: fade + drop sprite
+  const enemyFaintOpacity = getFaintOpacity(b.animations, 'enemy');
+  const playerFaintOpacity = getFaintOpacity(b.animations, 'player');
+  const enemyFaintDrop = getFaintOffset(b.animations, 'enemy');
+  const playerFaintDrop = getFaintOffset(b.animations, 'player');
+
+  // Overlay faint effect on sprites (darken fading sprites)
+  if (enemyFaintOpacity < 1) {
+    ctx.fillStyle = `rgba(0,0,0,${1 - enemyFaintOpacity})`;
+    ctx.fillRect(w * 0.55, 60 + enemyFaintDrop, w * 0.35, w * 0.35);
+  }
+  if (playerFaintOpacity < 1) {
+    ctx.fillStyle = `rgba(0,0,0,${1 - playerFaintOpacity})`;
+    ctx.fillRect(w * 0.05, h * 0.35 + playerFaintDrop, w * 0.35, w * 0.35);
+  }
+
+  // Type-colored flash overlay
+  const flashAnims = b.animations.filter(a => a.type === 'flash');
+  for (const fa of flashAnims) {
+    const flashAlpha = 0.5 * (1 - fa.progress);
+    const color = fa.color || 'rgba(255,255,255,0.5)';
+    // Parse and override alpha
+    ctx.fillStyle = color.replace(/[\d.]+\)$/, `${flashAlpha})`);
+    if (fa.target === 'enemy') {
+      ctx.fillRect(w * 0.5, 0, w * 0.5, h * 0.5);
+    } else {
+      ctx.fillRect(0, h * 0.3, w * 0.5, h * 0.4);
+    }
+  }
+
+  ctx.restore();
 
   // Enemy info box (top-right area)
   const enemySpecies = SPECIES[enemyPoke.speciesId];
@@ -28,7 +67,11 @@ export function renderBattleScreen(ctx: CanvasRenderingContext2D, s: GameState, 
   ctx.font = 'bold 14px monospace';
   ctx.fillText(`${enemySpecies.name}  Lv${enemyPoke.level}`, 20, 30);
 
-  drawHPBar(ctx, 20, 38, w * 0.4, 12, enemyPoke.currentHp, enemyPoke.stats.hp);
+  // HP bar with animation support
+  const enemyHpRatio = enemyPoke.currentHp / enemyPoke.stats.hp;
+  const enemyDrainProgress = getAnimationProgress(b.animations, 'hp_drain', 'enemy');
+  const displayEnemyRatio = enemyDrainProgress > 0 ? enemyHpRatio : enemyHpRatio;
+  drawHPBar(ctx, 20, 38, w * 0.4, 12, Math.max(0, displayEnemyRatio * enemyPoke.stats.hp), enemyPoke.stats.hp);
 
   if (enemyPoke.status) {
     ctx.fillStyle = getStatusColor(enemyPoke.status);
@@ -48,13 +91,15 @@ export function renderBattleScreen(ctx: CanvasRenderingContext2D, s: GameState, 
 
   drawHPBar(ctx, w * 0.53, h * 0.52 + 30, w * 0.4, 12, playerPoke.currentHp, playerPoke.stats.hp);
 
-  // EXP bar
+  // EXP bar with animation support
   const expNeeded = expToNextLevel(playerPoke.level);
   const expProgress = (playerPoke.exp - expForLevel(playerPoke.level)) / Math.max(1, expNeeded);
+  const expFillProgress = getAnimationProgress(b.animations, 'exp_fill');
+  const displayExpRatio = expFillProgress > 0 ? expProgress * expFillProgress : expProgress;
   ctx.fillStyle = '#333';
   ctx.fillRect(w * 0.53, h * 0.52 + 48, w * 0.4, 6);
   ctx.fillStyle = '#3b82f6';
-  ctx.fillRect(w * 0.53, h * 0.52 + 48, w * 0.4 * Math.min(1, expProgress), 6);
+  ctx.fillRect(w * 0.53, h * 0.52 + 48, w * 0.4 * Math.min(1, displayExpRatio), 6);
 
   ctx.fillStyle = '#aaa';
   ctx.font = '10px monospace';

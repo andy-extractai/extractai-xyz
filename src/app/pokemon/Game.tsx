@@ -21,6 +21,7 @@ import { renderEvolution } from './components/EvolutionScreen';
 import { renderPCScreen, depositPokemon, withdrawPokemon } from './components/PCScreen';
 import { getHmAction, cutTreeFlag, isTreeCut, shouldExitSurf, teamKnowsMove } from './engine/hm';
 import { renderCreditsScreen, advanceCredits, getCreditsLines } from './components/CreditsScreen';
+import { renderBattleTransition as drawBattleTransition, tickAnimations } from './engine/animations';
 import MobileControls from './components/MobileControls';
 
 const MAPS = getAllMaps();
@@ -154,6 +155,25 @@ export default function PokemonGame() {
         }
       }
 
+      // Tick battle animations
+      if (s.battle && s.battle.animations.length > 0) {
+        setState(prev => {
+          if (!prev.battle || prev.battle.animations.length === 0) return prev;
+          const updated = tickAnimations(prev.battle.animations, 16);
+          return { ...prev, battle: { ...prev.battle, animations: updated } };
+        });
+      }
+
+      // Tick battle transition
+      if (s.battleTransition) {
+        setState(prev => {
+          if (!prev.battleTransition) return prev;
+          const newProgress = Math.min(1, prev.battleTransition.progress + 16 / prev.battleTransition.duration);
+          if (newProgress >= 1) return { ...prev, battleTransition: null };
+          return { ...prev, battleTransition: { ...prev.battleTransition, progress: newProgress } };
+        });
+      }
+
       // Auto-scroll credits
       if (s.phase === 'credits' && s.credits && !s.credits.done) {
         const lineCount = getCreditsLines(s).length;
@@ -233,6 +253,7 @@ export default function PokemonGame() {
               phase: 'intro', messages: [`A wild ${SPECIES[encounter.speciesId].name} appeared!`],
               messageIdx: 0, animations: [], canRun: true, battleReward: 0,
             },
+            battleTransition: { type: 'flash_wipe' as const, progress: 0, duration: 800 },
           };
         }
       }
@@ -796,7 +817,10 @@ export default function PokemonGame() {
       }
     }
 
-    if (s.phase === 'battle' && s.battle) renderBattleScreen(ctx, s, w, h, frame);
+    if (s.phase === 'battle' && s.battle) {
+      renderBattleScreen(ctx, s, w, h, frame);
+      if (s.battleTransition) drawBattleTransition(ctx, s.battleTransition, w, h);
+    }
     if (s.phase === 'evolution' && s.evolution) renderEvolution(ctx, s.evolution, w, h, frame);
     if (s.phase === 'credits' && s.credits) renderCreditsScreen(ctx, s, w, h, frame, s.credits);
     if (s.dialog) renderDialog(ctx, s.dialog, w, h);

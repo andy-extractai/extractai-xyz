@@ -4,6 +4,7 @@ import { SPECIES } from '../data/pokemon';
 import { MOVES } from '../data/moves';
 import { ITEMS } from '../data/items';
 import { GYM_ORDER } from '../data/trainers';
+import { buildTurnAnimations, createExpFillAnimation, getTypeFlashColor } from './animations';
 
 export function executeBattleAction(prev: GameState, action: BattleAction): GameState {
   if (!prev.battle) return prev;
@@ -16,6 +17,29 @@ export function executeBattleAction(prev: GameState, action: BattleAction): Game
   b.messageIdx = 0;
   b.phase = 'message';
   b.turnResult = result;
+
+  // Build animations for this turn
+  const anims = buildTurnAnimations(
+    result.effectiveness,
+    result.playerFainted,
+    result.enemyFainted,
+    result.playerDamage,
+    result.enemyDamage,
+  );
+
+  // Add type-colored flash if a move was used
+  if (action.type === 'move' && action.moveIdx !== undefined) {
+    const playerPoke = b.playerTeam[b.activePlayerIdx];
+    const moveId = playerPoke.moves[action.moveIdx]?.moveId;
+    const moveData = moveId ? MOVES[moveId] : null;
+    if (moveData && result.enemyDamage > 0) {
+      const flashColor = getTypeFlashColor(moveData.type);
+      const flash = anims.find(a => a.type === 'flash' && a.target === 'enemy');
+      if (flash) flash.color = flashColor;
+    }
+  }
+
+  b.animations = anims;
   return { ...prev, battle: b };
 }
 
@@ -33,6 +57,7 @@ export function handlePostMessage(prev: GameState): GameState {
     b.messages = [`Gained ${expAmount} EXP!`];
     b.messageIdx = 0;
     b.turnResult = undefined;
+    b.animations = [createExpFillAnimation(500)];
     return { ...prev, battle: b };
   }
 
