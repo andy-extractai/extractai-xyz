@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T15:29:02.884Z",
+  "timestamp": "2026-02-16T15:32:12.914Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "4561b181-b833-4e17-9c67-2ad80f196aed"
     },
     {
       "id": "verify",
@@ -240,7 +240,7 @@
     {
       "id": "US-017",
       "title": "Add Pokédex detail screen with sprite and stats",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
