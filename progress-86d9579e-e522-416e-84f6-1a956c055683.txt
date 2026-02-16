@@ -229,3 +229,10 @@ Started: 2026-02-16
 - Files: engine/__tests__/integration.test.ts
 - **Learnings:** All edge cases (white out, party full catch) were already implemented in prior stories; this story confirmed correctness via tests
 ---
+
+## 2026-02-16 08:08 - US-019: Final integration: build verification, save/load robustness, edge cases
+- Fixed TypeScript errors: createInitialState() takes no args, badges is string[] not number
+- integration.test.ts: 13 tests covering save/load round-trip (Sets, all fields), white out mechanic, party full catch → PC, door transition validity
+- All 325 tests pass, typecheck clean, build clean
+- **Learnings:** createInitialState() has no params (name set during intro phase), badges is string[]
+---
