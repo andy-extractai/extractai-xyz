@@ -176,7 +176,7 @@ export function handleLearnMove(prev: GameState, slot: number): GameState {
   return { ...prev, battle: b };
 }
 
-export function useBattleItem(prev: GameState, itemId: string): GameState {
+export function useBattleItem(prev: GameState, itemId: string, targetIdx?: number): GameState {
   if (!prev.battle) return prev;
   const b = { ...prev.battle };
   const item = ITEMS[itemId];
@@ -196,14 +196,24 @@ export function useBattleItem(prev: GameState, itemId: string): GameState {
   }
 
   if (item.category === 'medicine') {
+    if (item.effect === 'revive') {
+      // Revive targets a fainted party member
+      const idx = targetIdx ?? b.playerTeam.findIndex(p => p.currentHp === 0);
+      if (idx < 0 || idx >= b.playerTeam.length || b.playerTeam[idx].currentHp > 0) return prev; // no valid target, don't consume
+      b.playerTeam[idx].currentHp = Math.floor(b.playerTeam[idx].stats.hp / 2);
+      b.messages = [`${SPECIES[b.playerTeam[idx].speciesId].name} was revived!`];
+      b.messageIdx = 0;
+      return executeBattleAction({ ...prev, player: { ...prev.player, bag: newBag }, battle: b }, { type: 'item', itemId });
+    }
+
     const playerPoke = b.playerTeam[b.activePlayerIdx];
     if (item.effect === 'heal20') playerPoke.currentHp = Math.min(playerPoke.stats.hp, playerPoke.currentHp + 20);
     else if (item.effect === 'heal50') playerPoke.currentHp = Math.min(playerPoke.stats.hp, playerPoke.currentHp + 50);
     else if (item.effect === 'heal200') playerPoke.currentHp = Math.min(playerPoke.stats.hp, playerPoke.currentHp + 200);
     else if (item.effect === 'fullRestore') { playerPoke.currentHp = playerPoke.stats.hp; playerPoke.status = null; }
-    else if (item.effect === 'curePoison' && playerPoke.status === 'poison') playerPoke.status = null;
-    else if (item.effect === 'cureParalyze' && playerPoke.status === 'paralyze') playerPoke.status = null;
-    else if (item.effect === 'cureSleep' && playerPoke.status === 'sleep') playerPoke.status = null;
+    else if (item.effect === 'curePoison') { if (playerPoke.status === 'poison') playerPoke.status = null; }
+    else if (item.effect === 'cureParalyze') { if (playerPoke.status === 'paralyze') playerPoke.status = null; }
+    else if (item.effect === 'cureSleep') { if (playerPoke.status === 'sleep') playerPoke.status = null; }
     return executeBattleAction({ ...prev, player: { ...prev.player, bag: newBag }, battle: b }, { type: 'item', itemId });
   }
   return prev;

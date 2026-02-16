@@ -120,44 +120,65 @@ export function renderMenu(ctx: CanvasRenderingContext2D, s: GameState, w: numbe
     ctx.font = 'bold 18px monospace';
     ctx.fillText('BAG', 20, 30);
 
-    const items = Object.entries(s.player.bag).filter(([, qty]) => qty > 0);
-    items.forEach(([itemId, qty], i) => {
-      const item = ITEMS[itemId];
-      if (!item) return;
-      const y = 55 + i * 28;
-      ctx.fillStyle = i === m.selectedIndex ? '#4ade80' : '#fff';
-      ctx.font = '13px monospace';
-      ctx.fillText(`${i === m.selectedIndex ? '▸ ' : '  '}${item.name} x${qty}`, 20, y);
-      ctx.fillStyle = '#888';
-      ctx.font = '10px monospace';
-      ctx.fillText(item.description, 200, y);
-    });
+    // Categorize items
+    const categories: { label: string; cat: string }[] = [
+      { label: 'MEDICINE', cat: 'medicine' },
+      { label: 'POKÉBALLS', cat: 'pokeball' },
+      { label: 'BATTLE ITEMS', cat: 'battle' },
+    ];
 
-    if (items.length === 0) {
+    let yPos = 50;
+    let flatIdx = 0;
+    const allItems = Object.entries(s.player.bag).filter(([, qty]) => qty > 0);
+
+    for (const { label, cat } of categories) {
+      const catItems = allItems.filter(([id]) => ITEMS[id]?.category === cat);
+      if (catItems.length === 0) continue;
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'bold 12px monospace';
+      ctx.fillText(label, 20, yPos);
+      yPos += 18;
+      for (const [itemId, qty] of catItems) {
+        const item = ITEMS[itemId];
+        if (!item) { flatIdx++; continue; }
+        ctx.fillStyle = flatIdx === m.selectedIndex ? '#4ade80' : '#fff';
+        ctx.font = '13px monospace';
+        ctx.fillText(`${flatIdx === m.selectedIndex ? '▸ ' : '  '}${item.name} x${qty}`, 20, yPos);
+        ctx.fillStyle = '#888';
+        ctx.font = '10px monospace';
+        ctx.fillText(item.description, 200, yPos);
+        yPos += 24;
+        flatIdx++;
+      }
+      yPos += 6;
+    }
+
+    if (allItems.length === 0) {
       ctx.fillStyle = '#888';
       ctx.font = '14px monospace';
       ctx.fillText('Bag is empty!', 20, 60);
     }
 
     // Key Items section
-    const keyItemsY = 55 + Math.max(items.length, 1) * 28 + 20;
-    ctx.fillStyle = '#4ade80';
-    ctx.font = 'bold 14px monospace';
-    ctx.fillText('KEY ITEMS', 20, keyItemsY);
+    ctx.fillStyle = '#f59e0b';
+    ctx.font = 'bold 12px monospace';
+    ctx.fillText('KEY ITEMS', 20, yPos);
+    yPos += 18;
     const keyItems: { name: string; desc: string }[] = [];
     if (s.player.hasBicycle) keyItems.push({ name: 'Bicycle', desc: 'A folding bike. Press B to ride.' });
     if (keyItems.length === 0) {
       ctx.fillStyle = '#888';
       ctx.font = '12px monospace';
-      ctx.fillText('No key items', 20, keyItemsY + 20);
+      ctx.fillText('No key items', 20, yPos);
     } else {
-      keyItems.forEach((ki, i) => {
+      keyItems.forEach((ki) => {
         ctx.fillStyle = '#fff';
         ctx.font = '13px monospace';
-        ctx.fillText(`  ${ki.name}`, 20, keyItemsY + 20 + i * 22);
+        ctx.fillText(`  ${ki.name}`, 20, yPos);
         ctx.fillStyle = '#888';
         ctx.font = '10px monospace';
-        ctx.fillText(ki.desc, 200, keyItemsY + 20 + i * 22);
+        ctx.fillText(ki.desc, 200, yPos);
+        yPos += 22;
       });
     }
 
