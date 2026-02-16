@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T10:29:12.636Z",
+  "timestamp": "2026-02-16T10:32:12.663Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -102,10 +102,10 @@
     {
       "id": "implement",
       "agent": "developer",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "loop",
-      "currentStory": null
+      "currentStory": "4a0f8c43-f95e-4ec1-a084-dba4e8a5fb91"
     },
     {
       "id": "verify",
@@ -174,7 +174,7 @@
     {
       "id": "US-006",
       "title": "Implement bicycle toggle and key items",
-      "status": "pending",
+      "status": "running",
       "retries": 0
     },
     {
