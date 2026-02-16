@@ -86,3 +86,28 @@ Started: 2026-02-16
 - All 121 tests pass, tsc clean, build succeeds
 - **Learnings:** Indoor maps identified by id: pokecenter, pokemart, oak_lab, elite4, gym_* prefix
 ---
+
+## 2026-02-16 02:46 - US-007: Credits screen and game completion flow
+- Created components/CreditsScreen.ts with scrolling credits (champion announcement, player name, team, badges, pokédex stats, THE END)
+- Modified battleLogic.ts handleBattleVictory to transition to credits phase when champion_gary is defeated, sets 'champion' storyFlag
+- Added credits field to GameState interface and createInitialState
+- Wired credits phase in Game.tsx: auto-scroll in game loop, input handler (Enter when done → return to Pallet Town), rendering
+- 13 new tests in components/__tests__/credits.test.ts covering: battle transition, champion flag, money reward, credits content (name, team, badges, pokédex, THE END), scroll advancement, completion state
+- All 134 tests pass, tsc clean, build succeeds
+- Files: components/CreditsScreen.ts, components/__tests__/credits.test.ts, engine/battleLogic.ts, engine/state.ts, Game.tsx
+- **Learnings:** Credits is a canvas render function like other components, uses advanceCredits pure function for scroll state
+---
+
+## 2026-02-16 02:55 - US-008: Improve mobile controls with virtual D-pad and action buttons
+- Created components/MobileControls.tsx as React overlay component (first .tsx component)
+- D-pad (up/down/left/right) on bottom-left dispatches ArrowKey events
+- A button (space/confirm) and B button (Escape/cancel) on bottom-right
+- Start button (Enter/menu) in top center area
+- Touch detection via ontouchstart/maxTouchPoints, hidden on non-touch devices
+- Styled with emerald-400/50 semi-transparent backgrounds, pixel art feel
+- Fixed positioning with pointer-events-none container, z-50 overlay
+- Integrated into Game.tsx render output
+- 13 new tests in components/__tests__/mobileControls.test.ts covering structure, styling, key mappings, touch detection, positioning
+- All 147 tests pass, tsc clean, build succeeds
+- **Learnings:** No jsdom in this project; use source-code analysis tests for React components instead of render tests
+---
