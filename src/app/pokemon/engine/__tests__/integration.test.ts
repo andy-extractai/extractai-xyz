@@ -17,7 +17,7 @@ describe('Save/Load round-trip', () => {
   beforeEach(() => localStorageMock.clear());
 
   it('preserves pokedex Sets', () => {
-    const state = createInitialState('Ash');
+    const state = createInitialState();
     state.player.pokedex.seen.add('emberon');
     state.player.pokedex.seen.add('aqualing');
     state.player.pokedex.caught.add('emberon');
@@ -33,7 +33,7 @@ describe('Save/Load round-trip', () => {
   });
 
   it('preserves defeatedTrainers Set', () => {
-    const state = createInitialState('Ash');
+    const state = createInitialState();
     state.player.defeatedTrainers.add('trainer_1');
     state.player.defeatedTrainers.add('trainer_2');
     saveGame(state);
@@ -45,7 +45,7 @@ describe('Save/Load round-trip', () => {
   });
 
   it('preserves storyFlags Set', () => {
-    const state = createInitialState('Ash');
+    const state = createInitialState();
     state.player.storyFlags.add('got_pokedex');
     state.player.storyFlags.add('beat_brock');
     saveGame(state);
@@ -56,9 +56,9 @@ describe('Save/Load round-trip', () => {
   });
 
   it('preserves all player fields round-trip', () => {
-    const state = createInitialState('Red');
+    const state = createInitialState();
     state.player.money = 12345;
-    state.player.badges = 5;
+    state.player.badges = ['boulder', 'cascade', 'thunder', 'rainbow', 'soul'];
     state.player.mapId = 'cerulean_city';
     state.player.x = 10;
     state.player.y = 15;
@@ -67,7 +67,7 @@ describe('Save/Load round-trip', () => {
     saveGame(state);
     const loaded = loadGame()!;
     expect(loaded.player.money).toBe(12345);
-    expect(loaded.player.badges).toBe(5);
+    expect(loaded.player.badges).toEqual(['boulder', 'cascade', 'thunder', 'rainbow', 'soul']);
     expect(loaded.player.mapId).toBe('cerulean_city');
     expect(loaded.player.x).toBe(10);
     expect(loaded.player.y).toBe(15);
@@ -76,7 +76,7 @@ describe('Save/Load round-trip', () => {
   });
 
   it('preserves team and PC pokemon', () => {
-    const state = createInitialState('Red');
+    const state = createInitialState();
     const poke = createPokemon('aqualing', 15);
     state.player.pc.push(poke);
     saveGame(state);
@@ -92,7 +92,7 @@ describe('Save/Load round-trip', () => {
 
 describe('White out mechanic', () => {
   it('heals team, halves money, returns to pokecenter when all fainted', () => {
-    const state = createInitialState('Ash');
+    const state = createInitialState();
     const poke = createPokemon('emberon', 20);
     poke.currentHp = 0;
     state.player.team = [poke];
@@ -132,7 +132,7 @@ describe('White out mechanic', () => {
 
 describe('Party full catch → PC', () => {
   it('sends caught pokemon to PC when party is full', () => {
-    const state = createInitialState('Ash');
+    const state = createInitialState();
     // Fill party to 6
     while (state.player.team.length < 6) {
       state.player.team.push(createPokemon('emberon', 10));
@@ -167,7 +167,7 @@ describe('Party full catch → PC', () => {
   });
 
   it('adds to party when not full', () => {
-    const state = createInitialState('Ash');
+    const state = createInitialState();
     state.player.team = [createPokemon('emberon', 10)];
     const enemy = createPokemon('aqualing', 5);
     state.battle = {

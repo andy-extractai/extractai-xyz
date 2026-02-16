@@ -193,3 +193,39 @@ Started: 2026-02-16
 - Files changed: Game.tsx, data/maps.ts, engine/__tests__/elite4.test.ts
 - **Learnings:** E4 flow was mostly pre-wired; badge gate was the main missing piece. DialogState uses `lines`/`currentLine`/`charIndex`/`done` fields.
 ---
+
+## 2026-02-16 07:35 - US-017: Add Pokédex detail screen with sprite and stats
+- Created components/PokedexScreen.ts with pure logic functions (getPokedexEntries, getCompletionStats) and render functions (renderPokedexList, renderPokedexDetail)
+- List screen: all 50 species ordered by ID, scroll with up/down, caught/total completion count
+- Detail screen: caught shows sprite (drawPokemonSprite), types with colored badges, description, base stat bars; seen shows silhouette; unknown shows ???
+- Added pokedex_detail to MenuState screen union
+- Updated MenuScreen.ts to delegate to PokedexScreen renderers
+- Updated Game.tsx: up/down scroll in list, Enter for detail, left/right navigate in detail, Escape to go back
+- 12 new tests in components/__tests__/pokedex.test.ts covering: entry count, ordering, status filtering, completion stats, display logic
+- All 299 tests pass, tsc clean, build succeeds
+- Files: components/PokedexScreen.ts, components/__tests__/pokedex.test.ts, components/MenuScreen.ts, engine/state.ts, Game.tsx
+- **Learnings:** Pokedex scroll uses selectedIndex as cursor with computed scrollStart based on visible rows
+---
+
+## 2026-02-16 07:45 - US-018: Implement Professor Oak intro sequence and starter selection polish
+- Created engine/intro.ts: intro state machine with 4 steps (welcome → oak_lore_1/2/3 → naming transition), typewriter tick, counter starters, mom dialog
+- Updated IntroScreens.ts: added renderOakSpeech with Oak sprite, typewriter dialog box, word wrap
+- Updated Game.tsx flow: intro → oak_speech (with typewriter) → naming → start in player_house (mom goodbye dialog) → walk to oak_lab → starter select → rival battle
+- Oak lab dialog polished with personalized greeting
+- 13 new tests in engine/__tests__/intro.test.ts covering: state creation, typewriter ticks, step advancement, full sequence traversal, dialog content, counter starters, mom dialog
+- All 312 tests pass, tsc clean, build succeeds
+- Files: engine/intro.ts, engine/__tests__/intro.test.ts, components/IntroScreens.ts, Game.tsx
+- **Learnings:** Intro state machine uses pure functions (advanceIntroStep, tickIntroTypewriter) separate from React state for testability
+---
+
+## 2026-02-16 07:54 - US-019: Final integration: build verification, save/load robustness, edge cases
+- Verified build passes clean (npm run build, npx tsc --noEmit)
+- Verified save/load round-trip: pokedex Sets, defeatedTrainers, storyFlags all serialize/deserialize correctly
+- Verified white out mechanic already implemented: all fainted → return to pokecenter, lose half money, heal to 50% HP
+- Verified party full catch → PC already implemented in handleCatchResult
+- Verified all door connections reference valid maps with in-bounds coordinates
+- 13 new tests in engine/__tests__/integration.test.ts: save/load (6), white out (2), catch→PC (2), door validation (3)
+- All 325 tests pass, tsc clean, build succeeds
+- Files: engine/__tests__/integration.test.ts
+- **Learnings:** All edge cases (white out, party full catch) were already implemented in prior stories; this story confirmed correctness via tests
+---
