@@ -1,10 +1,10 @@
 {
-  "timestamp": "2026-02-16T16:32:13.406Z",
+  "timestamp": "2026-02-16T17:33:12.230Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
     "task": "Build a full browser-based Pokémon RPG game at /pokemon on extractai.xyz (Next.js app at /Users/kylekaplan/.openclaw/workspace/extractai-xyz).\n\nGAME REQUIREMENTS:\n\nSTORY & WORLD:\n- Professor Oak intro",
-    "status": "running",
+    "status": "failed",
     "createdAt": "2026-02-16T08:53:28.969Z",
     "runNumber": 1
   },
@@ -14,8 +14,8 @@
       "name": "Andy",
       "role": "Commander / Orchestrator",
       "emoji": "🐾",
-      "status": "active",
-      "statusMessage": "Orchestrating run #1"
+      "status": "idle",
+      "statusMessage": "Waiting for tasks"
     },
     {
       "id": "planner",
@@ -46,8 +46,8 @@
       "name": "Developer",
       "role": "Implementation",
       "emoji": "💻",
-      "status": "active",
-      "statusMessage": "Working on: pr"
+      "status": "done",
+      "statusMessage": "Completed: implement"
     },
     {
       "id": "verifier",
@@ -126,8 +126,8 @@
     {
       "id": "pr",
       "agent": "developer",
-      "status": "running",
-      "retries": 0,
+      "status": "failed",
+      "retries": 3,
       "type": "single",
       "currentStory": null
     },
@@ -266,7 +266,7 @@
     {
       "id": "86d9579e-e522-416e-84f6-1a956c055683",
       "workflow": "feature-dev",
-      "status": "running",
+      "status": "failed",
       "createdAt": "2026-02-16T08:53:28.969Z",
       "runNumber": 1
     }
