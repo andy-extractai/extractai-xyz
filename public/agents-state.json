@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-02-16T09:29:28.539Z",
+  "timestamp": "2026-02-16T09:30:18.544Z",
   "activeRun": {
     "id": "86d9579e-e522-416e-84f6-1a956c055683",
     "workflow": "feature-dev",
@@ -86,7 +86,7 @@
     {
       "id": "plan_review",
       "agent": "architect",
-      "status": "pending",
+      "status": "running",
       "retries": 0,
       "type": "single",
       "currentStory": null
