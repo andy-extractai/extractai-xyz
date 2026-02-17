@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const CLANKER_API = "https://www.clanker.world/api/tokens";
-const DEXSCREENER_API = "https://api.dexscreener.com/tokens/v1/base";
+const DEXSCREENER_SEARCH = "https://api.dexscreener.com/latest/dex/search";
+const DEXSCREENER_TOKENS = "https://api.dexscreener.com/tokens/v1/base";
 
 const AGENT_KEYWORDS = [
   "ai", "agent", "bot", "assistant", "gpt", "llm", "autonomous",
@@ -9,22 +10,95 @@ const AGENT_KEYWORDS = [
   "neural", "intelligence", "cognitive", "sentient", "autonom",
 ];
 
-function isAgentToken(t: any): boolean {
-  const text = `${t.name || ""} ${t.symbol || ""} ${t.description || ""}`.toLowerCase();
+function isAgentToken(name: string, symbol: string, description: string): boolean {
+  const text = `${name} ${symbol} ${description}`.toLowerCase();
   return AGENT_KEYWORDS.some((kw) => {
     const regex = new RegExp(`(^|[^a-z])${kw}([^a-z]|$)`, "i");
     return regex.test(text);
   });
 }
 
-function formatToken(t: any, dexData?: any) {
+// For agent filter: use DexScreener search to find agent tokens with volume data directly
+async function searchAgentTokens(): Promise<any[]> {
+  const searchTerms = ["AI agent", "AI bot", "autonomous agent", "GPT bot", "claw agent", "bankr bot", "neural AI", "sentient AI"];
+  const seen = new Set<string>();
+  const allPairs: any[] = [];
+
+  // Fetch in parallel (DexScreener handles it fine)
+  const results = await Promise.all(
+    searchTerms.map(async (q) => {
+      try {
+        const res = await fetch(`${DEXSCREENER_SEARCH}?q=${encodeURIComponent(q)}`, {
+          next: { revalidate: 60 },
+        });
+        if (!res.ok) return [];
+        const data = await res.json();
+        return (data.pairs || []).filter((p: any) => p.chainId === "base");
+      } catch {
+        return [];
+      }
+    })
+  );
+
+  for (const pairs of results) {
+    for (const pair of pairs) {
+      const addr = pair.baseToken?.address?.toLowerCase();
+      if (!addr || seen.has(addr)) continue;
+      // Verify it's actually an agent token
+      const name = pair.baseToken?.name || "";
+      const symbol = pair.baseToken?.symbol || "";
+      // DexScreener doesn't have descriptions, but the search already filtered
+      if (isAgentToken(name, symbol, name)) {
+        seen.add(addr);
+        allPairs.push(pair);
+      }
+    }
+  }
+
+  return allPairs;
+}
+
+function formatDexPair(pair: any) {
+  return {
+    id: pair.pairAddress,
+    name: pair.baseToken?.name || "Unknown",
+    symbol: pair.baseToken?.symbol || "???",
+    description: "",
+    contractAddress: pair.baseToken?.address || "",
+    chainId: 8453,
+    imageUrl: pair.info?.imageUrl || null,
+    poolAddress: pair.pairAddress,
+    deployedAt: pair.pairCreatedAt ? new Date(pair.pairCreatedAt).toISOString() : "",
+    startingMarketCap: 0,
+    type: "clanker",
+    verified: false,
+    champagne: false,
+    warnings: [],
+    socialLinks: {} as Record<string, string>,
+    deployer: "",
+    txHash: "",
+    pair: pair.quoteToken?.symbol || "WETH",
+    feeType: "unknown",
+    volume24h: parseFloat(pair.volume?.h24 || "0"),
+    marketCap: pair.marketCap || null,
+    fdv: pair.fdv || null,
+    priceUsd: pair.priceUsd || null,
+    priceChange24h: pair.priceChange?.h24 ?? null,
+    liquidity: pair.liquidity?.usd ?? null,
+    txns24h: pair.txns?.h24
+      ? { buys: pair.txns.h24.buys || 0, sells: pair.txns.h24.sells || 0 }
+      : null,
+    dexUrl: pair.url || null,
+  };
+}
+
+function formatClankerToken(t: any, dexData?: any) {
   const socialLinks: Record<string, string> = {};
   if (Array.isArray(t.socialLinks)) {
     for (const link of t.socialLinks) {
       if (link.name && link.link) socialLinks[link.name] = link.link;
     }
   }
-
   return {
     id: t.id,
     name: t.name || "Unknown",
@@ -59,14 +133,12 @@ function formatToken(t: any, dexData?: any) {
 
 async function fetchDexScreenerBatch(addresses: string[]): Promise<Record<string, any>> {
   if (addresses.length === 0) return {};
-  const chunks: string[][] = [];
-  for (let i = 0; i < addresses.length; i += 30) {
-    chunks.push(addresses.slice(i, i + 30));
-  }
   const results: Record<string, any> = {};
-  for (const chunk of chunks) {
+  // DexScreener supports up to 30 addresses per call
+  for (let i = 0; i < addresses.length; i += 30) {
+    const chunk = addresses.slice(i, i + 30);
     try {
-      const res = await fetch(`${DEXSCREENER_API}/${chunk.join(",")}`, {
+      const res = await fetch(`${DEXSCREENER_TOKENS}/${chunk.join(",")}`, {
         next: { revalidate: 30 },
       });
       if (!res.ok) continue;
@@ -75,11 +147,7 @@ async function fetchDexScreenerBatch(addresses: string[]): Promise<Record<string
       for (const pair of pairs) {
         const addr = pair.baseToken?.address?.toLowerCase();
         if (!addr) continue;
-        const existing = results[addr];
-        if (
-          !existing ||
-          parseFloat(pair.volume?.h24 || "0") > parseFloat(existing.volume?.h24 || "0")
-        ) {
+        if (!results[addr] || parseFloat(pair.volume?.h24 || "0") > parseFloat(results[addr].volume?.h24 || "0")) {
           results[addr] = pair;
         }
       }
@@ -87,25 +155,6 @@ async function fetchDexScreenerBatch(addresses: string[]): Promise<Record<string
   }
   return results;
 }
-
-async function fetchClankerPage(page: number, limit: number, search?: string): Promise<any[]> {
-  try {
-    const url = search
-      ? `${CLANKER_API}?sort=desc&page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`
-      : `${CLANKER_API}?sort=desc&page=${page}&limit=${limit}`;
-    const res = await fetch(url, { next: { revalidate: 30 } });
-    if (!res.ok) return [];
-    const data = await res.json();
-    if (!Array.isArray(data?.data)) return [];
-    // Validate that items have expected shape
-    return data.data.filter((t: any) => t.id && t.contract_address);
-  } catch {
-    return [];
-  }
-}
-
-export const runtime = "nodejs";
-export const maxDuration = 25;
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -117,63 +166,39 @@ export async function GET(req: NextRequest) {
 
   try {
     if (filter === "agents") {
-      // Sequential fetches (avoid rate-limiting by Clanker)
-      const agentTokens: any[] = [];
-      const seenIds = new Set<number>();
-      let totalDeployed = 0;
-
-      for (let p = 1; p <= 10; p++) {
-        const tokens = await fetchClankerPage(p, 100, search || undefined);
-        if (tokens.length === 0) break; // no more pages or rate limited
-
-        for (const t of tokens) {
-          if (isAgentToken(t) && !seenIds.has(t.id)) {
-            seenIds.add(t.id);
-            agentTokens.push(t);
-          }
-        }
-
-        // Stop early if we have enough
-        if (agentTokens.length >= limit * 2) break;
-      }
-
-      // Fetch live market data
-      const addresses = agentTokens.map((t) => t.contract_address);
-      const dexData = await fetchDexScreenerBatch(addresses);
-
-      const formatted = agentTokens.map((t) => {
-        const dex = dexData[t.contract_address.toLowerCase()];
-        return formatToken(t, dex);
-      });
+      // Use DexScreener search directly — fast, has volume, no Clanker timeout issues
+      const pairs = await searchAgentTokens();
+      const formatted = pairs.map(formatDexPair);
 
       if (sortBy === "volume") {
         formatted.sort((a, b) => (b.volume24h || 0) - (a.volume24h || 0));
       } else if (sortBy === "mcap") {
         formatted.sort((a, b) => (b.marketCap || b.fdv || 0) - (a.marketCap || a.fdv || 0));
       } else {
-        formatted.sort(
-          (a, b) => new Date(b.deployedAt).getTime() - new Date(a.deployedAt).getTime()
-        );
+        formatted.sort((a, b) => new Date(b.deployedAt).getTime() - new Date(a.deployedAt).getTime());
       }
 
       return NextResponse.json({
         tokens: formatted.slice(0, limit),
         total: formatted.length,
-        totalDeployed,
-        debug: { scanned: agentTokens.length + seenIds.size, pagesScanned: Math.min(10, agentTokens.length) },
+        totalDeployed: 0,
       });
     }
 
-    // "all" filter
-    const rawTokens = await fetchClankerPage(parseInt(page), limit, search || undefined);
+    // "all" filter — single Clanker page + DexScreener enrichment
+    const url = search
+      ? `${CLANKER_API}?sort=desc&page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`
+      : `${CLANKER_API}?sort=desc&page=${page}&limit=${limit}`;
 
+    const res = await fetch(url, { next: { revalidate: 30 } });
+    if (!res.ok) return NextResponse.json({ error: "Failed to fetch" }, { status: 502 });
+
+    const data = await res.json();
+    const rawTokens = (data.data || []).filter((t: any) => t.id && t.contract_address);
     const addresses = rawTokens.map((t: any) => t.contract_address);
     const dexData = await fetchDexScreenerBatch(addresses);
 
-    let tokens = rawTokens.map((t: any) => {
-      const dex = dexData[t.contract_address.toLowerCase()];
-      return formatToken(t, dex);
-    });
+    let tokens = rawTokens.map((t: any) => formatClankerToken(t, dexData[t.contract_address.toLowerCase()]));
 
     if (sortBy === "volume") {
       tokens.sort((a: any, b: any) => (b.volume24h || 0) - (a.volume24h || 0));
@@ -181,7 +206,11 @@ export async function GET(req: NextRequest) {
       tokens.sort((a: any, b: any) => (b.marketCap || b.fdv || 0) - (a.marketCap || a.fdv || 0));
     }
 
-    return NextResponse.json({ tokens, total: tokens.length, totalDeployed: 0 });
+    return NextResponse.json({
+      tokens,
+      total: data.total || tokens.length,
+      totalDeployed: data.tokensDeployed || 0,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
