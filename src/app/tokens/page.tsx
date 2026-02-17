@@ -293,6 +293,7 @@ export default function TokensPage() {
         {/* Threshold badges */}
         <div className="flex items-center gap-2 mt-2 text-[9px] text-zinc-600">
           <span className="bg-zinc-900 px-1.5 py-0.5 rounded">MCap ≥ $250k</span>
+          <span className="bg-zinc-900 px-1.5 py-0.5 rounded">Vol ≥ $50k</span>
           <span className="bg-zinc-900 px-1.5 py-0.5 rounded">Liq ≥ $25k</span>
           <span className="bg-zinc-900 px-1.5 py-0.5 rounded">Txns ≥ 125</span>
           {total > 0 && (

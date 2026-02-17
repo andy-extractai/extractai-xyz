@@ -19,6 +19,7 @@ const SEARCH_TERMS = [
 const MIN_MARKET_CAP = 250_000;
 const MIN_LIQUIDITY = 25_000;
 const MIN_TXNS = 125;
+const MIN_VOLUME = 50_000;
 
 function isAgentToken(name: string, symbol: string, description: string): boolean {
   const text = `${name} ${symbol} ${description}`.toLowerCase();
@@ -49,7 +50,8 @@ function passesThresholds(pair: any): boolean {
   const mc = pair.marketCap || pair.fdv || 0;
   const liq = pair.liquidity?.usd || 0;
   const txns = (pair.txns?.h24?.buys || 0) + (pair.txns?.h24?.sells || 0);
-  return mc >= MIN_MARKET_CAP && liq >= MIN_LIQUIDITY && txns >= MIN_TXNS;
+  const vol = parseFloat(pair.volume?.h24 || "0");
+  return mc >= MIN_MARKET_CAP && liq >= MIN_LIQUIDITY && txns >= MIN_TXNS && vol >= MIN_VOLUME;
 }
 
 function formatPair(pair: any) {
@@ -234,7 +236,7 @@ export async function GET(req: NextRequest) {
         newTokens: newTokens.slice(0, limit),
         allTokens: allTokens.slice(0, limit),
         total: formatted.length,
-        thresholds: { minMarketCap: MIN_MARKET_CAP, minLiquidity: MIN_LIQUIDITY, minTxns: MIN_TXNS },
+        thresholds: { minMarketCap: MIN_MARKET_CAP, minLiquidity: MIN_LIQUIDITY, minTxns: MIN_TXNS, minVolume: MIN_VOLUME },
       });
     }
 
