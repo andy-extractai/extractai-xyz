@@ -58,6 +58,23 @@ async function searchAgentTokens(): Promise<any[]> {
   return allPairs;
 }
 
+function extractSocialLinks(info: any): Record<string, string> {
+  const links: Record<string, string> = {};
+  if (info?.websites) {
+    for (const w of info.websites) {
+      if (w.url) links.website = w.url;
+    }
+  }
+  if (info?.socials) {
+    for (const s of info.socials) {
+      if (s.type === "twitter" && s.url) links.twitter = s.url;
+      if (s.type === "telegram" && s.url) links.telegram = s.url;
+      if (s.type === "discord" && s.url) links.discord = s.url;
+    }
+  }
+  return links;
+}
+
 function formatDexPair(pair: any) {
   return {
     id: pair.pairAddress,
@@ -74,7 +91,7 @@ function formatDexPair(pair: any) {
     verified: false,
     champagne: false,
     warnings: [],
-    socialLinks: {} as Record<string, string>,
+    socialLinks: extractSocialLinks(pair.info),
     deployer: "",
     txHash: "",
     pair: pair.quoteToken?.symbol || "WETH",
@@ -98,6 +115,11 @@ function formatClankerToken(t: any, dexData?: any) {
     for (const link of t.socialLinks) {
       if (link.name && link.link) socialLinks[link.name] = link.link;
     }
+  }
+  // Merge in DexScreener social links (fills gaps)
+  const dexLinks = extractSocialLinks(dexData?.info);
+  for (const [k, v] of Object.entries(dexLinks)) {
+    if (!socialLinks[k]) socialLinks[k] = v;
   }
   return {
     id: t.id,

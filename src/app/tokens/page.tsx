@@ -152,18 +152,26 @@ function TokenCard({ token }: { token: Token }) {
       <div className="flex items-center justify-between mt-3 pt-2 border-t border-zinc-800/50">
         <span className="text-zinc-700 text-xs font-mono">{shortenAddr(token.contractAddress)}</span>
         <div className="flex items-center gap-2">
-          {token.socialLinks.twitter && (
-            <a href={token.socialLinks.twitter} target="_blank" rel="noopener noreferrer"
-              className="text-zinc-600 hover:text-blue-400 text-xs transition">𝕏</a>
-          )}
           {token.socialLinks.website && (
             <a href={token.socialLinks.website} target="_blank" rel="noopener noreferrer"
-              className="text-zinc-600 hover:text-white text-xs transition">🌐</a>
+              className="text-zinc-600 hover:text-white text-xs transition" title="Website">🌐</a>
+          )}
+          {token.socialLinks.twitter && (
+            <a href={token.socialLinks.twitter} target="_blank" rel="noopener noreferrer"
+              className="text-zinc-600 hover:text-blue-400 text-xs transition" title="Twitter/X">𝕏</a>
+          )}
+          {token.socialLinks.telegram && (
+            <a href={token.socialLinks.telegram} target="_blank" rel="noopener noreferrer"
+              className="text-zinc-600 hover:text-blue-300 text-xs transition" title="Telegram">✈️</a>
+          )}
+          {token.socialLinks.discord && (
+            <a href={token.socialLinks.discord} target="_blank" rel="noopener noreferrer"
+              className="text-zinc-600 hover:text-indigo-400 text-xs transition" title="Discord">💬</a>
           )}
           <a href={dexScreenerUrl} target="_blank" rel="noopener noreferrer"
-            className="text-zinc-600 hover:text-green-400 text-xs transition">📊</a>
+            className="text-zinc-600 hover:text-green-400 text-xs transition" title="DexScreener">📊</a>
           <a href={basescanUrl} target="_blank" rel="noopener noreferrer"
-            className="text-zinc-600 hover:text-white text-xs transition">⛓</a>
+            className="text-zinc-600 hover:text-white text-xs transition" title="Basescan">⛓</a>
         </div>
       </div>
     </div>
