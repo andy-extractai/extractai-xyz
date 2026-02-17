@@ -205,7 +205,12 @@ export default function TokensPage() {
   const [allTokens, setAllTokens] = useState<Token[]>([]);
   const [sort, setSort] = useState<SortOption>("volume");
   const [loading, setLoading] = useState(true);
-  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [autoRefresh, setAutoRefresh] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("tokens_live") === "true";
+    }
+    return false;
+  });
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [total, setTotal] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -274,12 +279,24 @@ export default function TokensPage() {
             </div>
 
             <button
-              onClick={() => setAutoRefresh(!autoRefresh)}
+              onClick={() => { setLoading(true); fetchTokens(); }}
+              className="px-2 py-1 rounded text-[10px] bg-zinc-800 text-zinc-400 hover:text-white transition"
+              title="Refresh now"
+            >
+              ↻
+            </button>
+
+            <button
+              onClick={() => {
+                const next = !autoRefresh;
+                setAutoRefresh(next);
+                localStorage.setItem("tokens_live", String(next));
+              }}
               className={`px-2 py-1 rounded text-[10px] transition ${
                 autoRefresh ? "bg-green-500/20 text-green-400" : "bg-zinc-800 text-zinc-500"
               }`}
             >
-              {autoRefresh ? "● LIVE" : "○ PAUSED"}
+              {autoRefresh ? "● LIVE 30s" : "○ OFF"}
             </button>
 
             {lastUpdated && (
