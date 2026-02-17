@@ -47,7 +47,7 @@ export default function ClockPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
-      <nav className="p-6">
+      <nav className="p-6 relative z-10">
         <Link
           href="/"
           className="text-zinc-500 hover:text-white transition-colors text-sm"
