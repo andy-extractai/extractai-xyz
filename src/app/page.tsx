@@ -19,6 +19,12 @@ const apps = [
     href: "/pokemon",
     emoji: "⚡",
   },
+  {
+    name: "Tokenized Agents",
+    description: "Live tracker for AI agent tokens on Base",
+    href: "/tokens",
+    emoji: "🪙",
+  },
 ];
 
 export default function Home() {
