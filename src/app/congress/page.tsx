@@ -196,7 +196,7 @@ function TradeRow({ trade }: { trade: Trade }) {
       href={pdfUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="grid grid-cols-[65px_45px_1fr_120px_90px] items-center gap-2 px-4 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30"
+      className="grid grid-cols-[60px_42px_1fr_110px_85px] items-center gap-1.5 px-3 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30"
     >
       {/* Ticker */}
       <div>
@@ -301,7 +301,7 @@ export default function CongressPage() {
   }
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+    <div className="h-screen bg-black text-white flex flex-col overflow-hidden max-w-full">
       {/* Header */}
       <header className="border-b border-zinc-800 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
