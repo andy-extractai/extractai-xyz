@@ -210,19 +210,19 @@ function TradeRow({ trade }: { trade: Trade }) {
       </div>
 
       {/* Politician */}
-      <div className="flex-1 min-w-0">
+      <div className="w-48 flex-shrink-0 min-w-0">
         <div className="text-zinc-300 text-xs truncate">{trade.politician}</div>
         <div className="text-zinc-600 text-[10px]">{trade.state_district}</div>
       </div>
 
       {/* Amount */}
-      <div className="w-36 flex-shrink-0">
+      <div className="flex-1 min-w-[100px]">
         <div className="text-zinc-300 text-xs font-mono">{formatAmount(trade.amount.min, trade.amount.max)}</div>
         <AmountBar min={trade.amount.min} max={trade.amount.max} />
       </div>
 
       {/* Date */}
-      <div className="w-16 text-right flex-shrink-0">
+      <div className="w-28 text-right flex-shrink-0">
         <div className="text-zinc-400 text-xs">{formatDate(trade.date)}</div>
         <div className={`text-[9px] ${days <= 7 ? "text-emerald-500" : days <= 30 ? "text-zinc-500" : "text-zinc-700"}`}>
           {days === 0 ? "today" : `${days}d ago`}
