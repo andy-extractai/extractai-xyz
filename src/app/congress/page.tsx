@@ -196,10 +196,10 @@ function TradeRow({ trade }: { trade: Trade }) {
       href={pdfUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="grid grid-cols-[60px_42px_1fr_110px_85px] items-center gap-1.5 px-3 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30"
+      className="flex items-center px-3 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30 overflow-hidden"
     >
       {/* Ticker */}
-      <div>
+      <div className="w-[60px] shrink-0 mr-2">
         <div className={`font-mono font-bold text-sm ${isBig ? "text-amber-300" : "text-white"}`}>
           {trade.ticker}
         </div>
@@ -207,24 +207,24 @@ function TradeRow({ trade }: { trade: Trade }) {
       </div>
 
       {/* Type badge */}
-      <div>
+      <div className="w-[42px] shrink-0 mr-2">
         <TagBadge type={trade.transaction} />
       </div>
 
       {/* Politician */}
-      <div className="min-w-0">
+      <div className="shrink min-w-0 mr-2" style={{ flex: "1 1 200px", maxWidth: "250px" }}>
         <div className="text-zinc-300 text-xs truncate">{trade.politician}</div>
         <div className="text-zinc-600 text-[10px]">{trade.state_district}</div>
       </div>
 
       {/* Amount */}
-      <div>
+      <div className="w-[120px] shrink-0 mr-2">
         <div className="text-zinc-300 text-xs font-mono">{formatAmount(trade.amount.min, trade.amount.max)}</div>
         <AmountBar min={trade.amount.min} max={trade.amount.max} />
       </div>
 
       {/* Date */}
-      <div className="text-right">
+      <div className="w-[80px] shrink-0 text-right">
         <div className="text-zinc-400 text-xs">{formatDate(trade.date)}</div>
         <div className={`text-[9px] ${days <= 7 ? "text-emerald-500" : days <= 30 ? "text-zinc-500" : "text-zinc-700"}`}>
           {days === 0 ? "today" : days > 0 ? `${days}d ago` : ""}
