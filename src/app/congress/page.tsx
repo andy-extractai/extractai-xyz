@@ -57,22 +57,26 @@ function formatAmount(min: number, max: number): string {
   return `${fmt(min)} – ${fmt(max)}`;
 }
 
+function parseDate(d: string): Date | null {
+  if (!d) return null;
+  // Handle MM/DD/YYYY format
+  const parts = d.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (parts) return new Date(+parts[3], +parts[1] - 1, +parts[2]);
+  // Fallback to ISO
+  const date = new Date(d);
+  return isNaN(date.getTime()) ? null : date;
+}
+
 function formatDate(d: string): string {
-  if (!d) return "";
-  try {
-    const date = new Date(d);
-    return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  } catch {
-    return d;
-  }
+  const date = parseDate(d);
+  if (!date) return d || "";
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }
 
 function daysAgo(d: string): number {
-  try {
-    return Math.floor((Date.now() - new Date(d).getTime()) / 86400000);
-  } catch {
-    return 999;
-  }
+  const date = parseDate(d);
+  if (!date) return 999;
+  return Math.floor((Date.now() - date.getTime()) / 86400000);
 }
 
 function TagBadge({ type }: { type: string }) {
@@ -212,7 +216,7 @@ function TradeRow({ trade }: { trade: Trade }) {
       </div>
 
       {/* Amount */}
-      <div className="w-32 flex-shrink-0 hidden sm:block">
+      <div className="w-36 flex-shrink-0">
         <div className="text-zinc-300 text-xs font-mono">{formatAmount(trade.amount.min, trade.amount.max)}</div>
         <AmountBar min={trade.amount.min} max={trade.amount.max} />
       </div>
@@ -262,6 +266,16 @@ export default function CongressPage() {
       const q = polFilter.toLowerCase();
       trades = trades.filter((t) => t.politician.toLowerCase().includes(q));
     }
+
+    // Sort by date, newest first
+    trades.sort((a, b) => {
+      const da = parseDate(a.date);
+      const db = parseDate(b.date);
+      if (!da && !db) return 0;
+      if (!da) return 1;
+      if (!db) return -1;
+      return db.getTime() - da.getTime();
+    });
 
     return trades;
   }, [data, filter, search, polFilter]);
