@@ -25,6 +25,12 @@ const apps = [
     href: "/tokens",
     emoji: "🪙",
   },
+  {
+    name: "Congress Trades",
+    description: "Track what politicians are buying & selling",
+    href: "/congress",
+    emoji: "🏛️",
+  },
 ];
 
 export default function Home() {
