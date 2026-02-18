@@ -1,0 +1,160 @@
+{
+  "last_updated": "2026-02-18T22:30:00Z",
+  "agent": {
+    "name": "Andy",
+    "emoji": "🐾",
+    "status": "online",
+    "current_task": "Building Mission Control dashboard",
+    "model": "claude-sonnet-4.6",
+    "uptime_since": "2026-02-15"
+  },
+  "tasks": {
+    "columns": ["backlog", "in_progress", "review", "done"],
+    "items": [
+      {
+        "id": "t1",
+        "title": "Congress Trade Tracker",
+        "description": "House STOCK Act filings — 4,658 trades parsed, live at /congress",
+        "status": "done",
+        "assigned": "andy",
+        "priority": "high",
+        "created": "2026-02-17",
+        "completed": "2026-02-18"
+      },
+      {
+        "id": "t2",
+        "title": "Mission Control Dashboard",
+        "description": "Build unified command center at /control",
+        "status": "in_progress",
+        "assigned": "andy",
+        "priority": "high",
+        "created": "2026-02-18"
+      },
+      {
+        "id": "t3",
+        "title": "Daily Briefing Email",
+        "description": "8AM daily email with crypto/AI/markets/tasks — cron active",
+        "status": "done",
+        "assigned": "andy",
+        "priority": "medium",
+        "created": "2026-02-18",
+        "completed": "2026-02-18"
+      },
+      {
+        "id": "t4",
+        "title": "Tokenized Agents Tracker",
+        "description": "AI agent tokens on Base — live at /tokens",
+        "status": "done",
+        "assigned": "andy",
+        "priority": "medium",
+        "created": "2026-02-17",
+        "completed": "2026-02-17"
+      },
+      {
+        "id": "t5",
+        "title": "Pokémon RPG",
+        "description": "Full browser RPG — 11,595 lines, 50 species, 8 gyms. Needs playthrough test.",
+        "status": "review",
+        "assigned": "andy",
+        "priority": "low",
+        "created": "2026-02-16",
+        "completed": "2026-02-17"
+      },
+      {
+        "id": "t6",
+        "title": "Fund Bankr Wallets",
+        "description": "EVM + SOL wallets created but empty. Need funding to enable trading.",
+        "status": "backlog",
+        "assigned": "kyle",
+        "priority": "medium",
+        "created": "2026-02-17"
+      },
+      {
+        "id": "t7",
+        "title": "Senate Trade Data",
+        "description": "Add Senate EFDS data to Congress tracker when it comes back online",
+        "status": "backlog",
+        "assigned": "andy",
+        "priority": "medium",
+        "created": "2026-02-18"
+      },
+      {
+        "id": "t8",
+        "title": "Consensus Signal Detector",
+        "description": "Flag when multiple politicians pile into the same ticker within a short window",
+        "status": "backlog",
+        "assigned": "andy",
+        "priority": "high",
+        "created": "2026-02-18"
+      },
+      {
+        "id": "t9",
+        "title": "Performance Tracker",
+        "description": "Track how congress trades perform 30/60/90 days later",
+        "status": "backlog",
+        "assigned": "andy",
+        "priority": "medium",
+        "created": "2026-02-18"
+      },
+      {
+        "id": "t10",
+        "title": "SMTP Email Setup",
+        "description": "Replace browser-based Gmail with SMTP for faster/reliable email sending",
+        "status": "backlog",
+        "assigned": "andy",
+        "priority": "medium",
+        "created": "2026-02-18"
+      }
+    ]
+  },
+  "cron_jobs": [
+    {
+      "name": "Daily Briefing",
+      "schedule": "8:00 AM EST daily",
+      "description": "Email morning briefing with crypto, AI, markets, tasks",
+      "status": "active",
+      "last_run": "2026-02-18T13:30:00Z",
+      "last_status": "timeout"
+    },
+    {
+      "name": "Workspace Backup",
+      "schedule": "Every 6 hours",
+      "description": "Push workspace to private GitHub repo",
+      "status": "active",
+      "last_run": "2026-02-18T06:00:00Z",
+      "last_status": "success"
+    }
+  ],
+  "projects": [
+    {
+      "name": "extractai.xyz",
+      "url": "https://extractai.xyz",
+      "repo": "https://github.com/andy-extractai/extractai-xyz",
+      "status": "live",
+      "pages": [
+        {"path": "/", "name": "Landing", "status": "live"},
+        {"path": "/clock", "name": "World Clock", "status": "live"},
+        {"path": "/tokens", "name": "Tokenized Agents", "status": "live"},
+        {"path": "/congress", "name": "Congress Trades", "status": "live"},
+        {"path": "/pokemon", "name": "Pokémon RPG", "status": "live"},
+        {"path": "/agents", "name": "Agents Dashboard", "status": "live"},
+        {"path": "/control", "name": "Mission Control", "status": "building"}
+      ]
+    }
+  ],
+  "team": [
+    {
+      "name": "Andy",
+      "role": "Lead Agent",
+      "emoji": "🐾",
+      "description": "Main AI assistant — handles everything from code to emails to research",
+      "status": "active"
+    }
+  ],
+  "contacts": [
+    {"name": "Zack", "status": "Owes $1,250 — no response", "last_contact": "2026-02-15"},
+    {"name": "Ben", "status": "Replied colorfully. AirPods still dirty.", "last_contact": "2026-02-16"},
+    {"name": "Colin", "status": "Promised festival link — hasn't sent", "last_contact": "2026-02-16"},
+    {"name": "Ted (Dad)", "status": "Intro email sent — awaiting reply", "last_contact": "2026-02-16"}
+  ]
+}

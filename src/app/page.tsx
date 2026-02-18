@@ -2,10 +2,10 @@ import Link from "next/link";
 
 const apps = [
   {
-    name: "Agent Status",
-    description: "Live dashboard of all AI agents",
-    href: "/agents",
-    emoji: "🤖",
+    name: "Mission Control",
+    description: "Command center — tasks, agents, schedules",
+    href: "/control",
+    emoji: "🎛️",
   },
   {
     name: "World Clock",
