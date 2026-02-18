@@ -187,45 +187,47 @@ function TradeRow({ trade }: { trade: Trade }) {
   const days = daysAgo(trade.date);
   const isOptions = trade.asset_type === "option";
   const isBig = trade.amount.max >= 1_000_000;
-  const pdfUrl = `https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${new Date(trade.date).getFullYear()}/${trade.doc_id}.pdf`;
+  const dateObj = parseDate(trade.date);
+  const year = dateObj ? dateObj.getFullYear() : 2026;
+  const pdfUrl = `https://disclosures-clerk.house.gov/public_disc/ptr-pdfs/${year}/${trade.doc_id}.pdf`;
 
   return (
     <a
       href={pdfUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="flex items-center gap-3 px-4 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30 group"
+      className="grid grid-cols-[70px_50px_1fr_140px_100px] items-center gap-2 px-4 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30"
     >
       {/* Ticker */}
-      <div className="w-16 flex-shrink-0">
-        <div className={`text-white font-mono font-bold text-sm ${isBig ? "text-amber-300" : ""}`}>
+      <div>
+        <div className={`font-mono font-bold text-sm ${isBig ? "text-amber-300" : "text-white"}`}>
           {trade.ticker}
         </div>
         {isOptions && <span className="text-[8px] text-purple-400 font-medium">OPTIONS</span>}
       </div>
 
       {/* Type badge */}
-      <div className="w-12 flex-shrink-0">
+      <div>
         <TagBadge type={trade.transaction} />
       </div>
 
       {/* Politician */}
-      <div className="w-48 flex-shrink-0 min-w-0">
+      <div className="min-w-0">
         <div className="text-zinc-300 text-xs truncate">{trade.politician}</div>
         <div className="text-zinc-600 text-[10px]">{trade.state_district}</div>
       </div>
 
       {/* Amount */}
-      <div className="flex-1 min-w-[100px]">
+      <div>
         <div className="text-zinc-300 text-xs font-mono">{formatAmount(trade.amount.min, trade.amount.max)}</div>
         <AmountBar min={trade.amount.min} max={trade.amount.max} />
       </div>
 
       {/* Date */}
-      <div className="w-28 text-right flex-shrink-0">
+      <div className="text-right">
         <div className="text-zinc-400 text-xs">{formatDate(trade.date)}</div>
         <div className={`text-[9px] ${days <= 7 ? "text-emerald-500" : days <= 30 ? "text-zinc-500" : "text-zinc-700"}`}>
-          {days === 0 ? "today" : `${days}d ago`}
+          {days === 0 ? "today" : days > 0 ? `${days}d ago` : ""}
         </div>
       </div>
     </a>
