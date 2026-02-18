@@ -196,7 +196,7 @@ function TradeRow({ trade }: { trade: Trade }) {
       href={pdfUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="grid grid-cols-[70px_50px_1fr_140px_100px] items-center gap-2 px-4 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30"
+      className="grid grid-cols-[65px_45px_1fr_120px_90px] items-center gap-2 px-4 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30"
     >
       {/* Ticker */}
       <div>
