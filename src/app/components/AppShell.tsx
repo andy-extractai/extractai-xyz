@@ -4,7 +4,9 @@ import { usePathname } from "next/navigation";
 import ThemeProvider from "./ThemeProvider";
 import Sidebar from "./Sidebar";
 
-const FULL_SCREEN_ROUTES = ["/pokemon"];
+// These routes render full-screen without the sidebar.
+// They are sub-pages under Projects accessed directly.
+const FULL_SCREEN_ROUTES = ["/pokemon", "/congress", "/tokens", "/clock"];
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

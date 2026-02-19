@@ -6,12 +6,12 @@ import { useState } from "react";
 import { useTheme } from "./ThemeProvider";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Home", emoji: "🏠" },
-  { href: "/control", label: "Mission Control", emoji: "🎛️" },
-  { href: "/congress", label: "Congress Trades", emoji: "🏛️" },
-  { href: "/tokens", label: "Agent Tokens", emoji: "🪙" },
-  { href: "/clock", label: "World Clock", emoji: "🕐" },
-  { href: "/pokemon", label: "Pokémon RPG", emoji: "⚡" },
+  { href: "/tasks",    label: "Tasks",    emoji: "📋" },
+  { href: "/calendar", label: "Calendar", emoji: "📅" },
+  { href: "/projects", label: "Projects", emoji: "🚀" },
+  { href: "/memory",   label: "Memory",   emoji: "🧠" },
+  { href: "/team",     label: "Team",     emoji: "👥" },
+  { href: "/people",   label: "People",   emoji: "📇" },
 ];
 
 export default function Sidebar() {
@@ -80,8 +80,15 @@ export default function Sidebar() {
           ${d ? "bg-zinc-950 border-zinc-800" : "bg-zinc-50 border-zinc-200"}
         `}
       >
+        {/* Mission Control label — muted, above nav */}
+        <div className={`px-4 pt-4 pb-1 ${d ? "text-zinc-600" : "text-zinc-400"}`}>
+          <span className="text-[10px] font-medium tracking-widest uppercase">
+            🎛️ Mission Control
+          </span>
+        </div>
+
         {/* Brand */}
-        <div className="px-4 py-5 border-b border-inherit">
+        <div className="px-4 py-4 border-b border-inherit">
           <Link href="/" onClick={() => setOpen(false)} className="block">
             <span className={`text-xl font-bold tracking-tight ${d ? "text-white" : "text-zinc-900"}`}>
               extract<span className="text-emerald-500">ai</span>
