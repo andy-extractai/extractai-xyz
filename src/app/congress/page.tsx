@@ -3,6 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 
+// ─── Data Types ────────────────────────────────────────────────────────────────
+
 interface Trade {
   ticker: string;
   company: string;
@@ -46,6 +48,8 @@ interface CongressData {
   hot_tickers: HotTicker[];
   top_politicians: TopPolitician[];
 }
+
+// ─── Helper Functions (unchanged) ─────────────────────────────────────────────
 
 function formatAmount(min: number, max: number): string {
   const fmt = (n: number) => {
@@ -96,7 +100,7 @@ function AmountBar({ min, max }: { min: number; max: number }) {
   );
 }
 
-// --- SECTIONS ---
+// ─── Sections ─────────────────────────────────────────────────────────────────
 
 function StatsBar({ data }: { data: CongressData }) {
   const totalBuys = data.trades.filter(t => t.transaction === "purchase").length;
@@ -105,16 +109,24 @@ function StatsBar({ data }: { data: CongressData }) {
   const totalMax = data.trades.reduce((s, t) => s + t.amount.max, 0);
   const uniquePols = new Set(data.trades.map(t => t.politician)).size;
 
+  const stats = [
+    { label: "Total Trades", value: data.total_trades.toLocaleString(), color: undefined, wide: false },
+    { label: "Buys", value: totalBuys.toLocaleString(), color: "text-green-400", wide: false },
+    { label: "Sells", value: totalSells.toLocaleString(), color: "text-red-400", wide: false },
+    { label: "Politicians", value: uniquePols.toString(), color: undefined, wide: false },
+    // Volume last so col-span-2 fills the bottom row cleanly on mobile
+    { label: "Volume Range", value: formatAmount(totalMin, totalMax), color: undefined, wide: true },
+  ];
+
   return (
+    // grid-cols-2 on mobile (375–767px), grid-cols-5 on sm+
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 px-4 py-3">
-      {[
-        { label: "Total Trades", value: data.total_trades.toLocaleString() },
-        { label: "Buys", value: totalBuys.toLocaleString(), color: "text-green-400" },
-        { label: "Sells", value: totalSells.toLocaleString(), color: "text-red-400" },
-        { label: "Volume Range", value: formatAmount(totalMin, totalMax) },
-        { label: "Politicians", value: uniquePols.toString() },
-      ].map((s) => (
-        <div key={s.label} className="bg-zinc-900 rounded-lg px-3 py-2">
+      {stats.map((s) => (
+        <div
+          key={s.label}
+          // Volume spans both columns on mobile for visual emphasis; reverts to 1 col on sm+
+          className={`bg-zinc-900 rounded-lg px-3 py-2 ${s.wide ? "col-span-2 sm:col-span-1" : ""}`}
+        >
           <div className="text-zinc-600 text-[9px] uppercase tracking-wider">{s.label}</div>
           <div className={`text-sm font-mono font-medium ${s.color || "text-white"}`}>{s.value}</div>
         </div>
@@ -130,6 +142,7 @@ function HotTickersPanel({ tickers }: { tickers: HotTicker[] }) {
         <h2 className="text-sm font-bold text-amber-400">🔥 Hot Tickers</h2>
         <p className="text-zinc-600 text-[10px]">Most traded by unique politicians</p>
       </div>
+      {/* overflow-x-auto keeps horizontal scroll on any screen; cards cap at min-w-[120px] on mobile */}
       <div className="flex gap-2 px-4 py-3 overflow-x-auto">
         {tickers.slice(0, 15).map((t) => (
           <a
@@ -137,7 +150,8 @@ function HotTickersPanel({ tickers }: { tickers: HotTicker[] }) {
             href={`https://finance.yahoo.com/quote/${t.ticker}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 hover:border-amber-500/50 transition min-w-[130px]"
+            // min-w slightly smaller on mobile so users can see there are more cards to scroll
+            className="flex-shrink-0 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 hover:border-amber-500/50 transition min-w-[115px] sm:min-w-[130px]"
           >
             <div className="flex items-center justify-between">
               <span className="text-white font-mono font-bold text-sm">{t.ticker}</span>
@@ -163,11 +177,12 @@ function TopPoliticiansPanel({ politicians }: { politicians: TopPolitician[] }) 
         <h2 className="text-sm font-bold text-purple-400">👤 Top Traders</h2>
         <p className="text-zinc-600 text-[10px]">Biggest movers by dollar volume</p>
       </div>
+      {/* overflow-x-auto keeps horizontal scroll; cards cap at min-w-[140px] on mobile */}
       <div className="flex gap-2 px-4 py-3 overflow-x-auto">
         {politicians.slice(0, 12).map((p) => (
           <div
             key={p.name}
-            className="flex-shrink-0 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 min-w-[150px]"
+            className="flex-shrink-0 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 min-w-[140px] sm:min-w-[150px]"
           >
             <div className="text-white text-sm font-medium truncate">{p.name}</div>
             <div className="text-zinc-600 text-[10px]">{p.state}</div>
@@ -196,45 +211,87 @@ function TradeRow({ trade }: { trade: Trade }) {
       href={pdfUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className="grid grid-cols-[60px_42px_minmax(0,1fr)_110px_85px] items-center gap-1.5 px-3 py-2.5 hover:bg-zinc-800/40 transition border-b border-zinc-800/30"
+      className="block border-b border-zinc-800/30 hover:bg-zinc-800/40 transition"
     >
-      {/* Ticker */}
-      <div>
-        <div className={`font-mono font-bold text-sm ${isBig ? "text-amber-300" : "text-white"}`}>
-          {trade.ticker}
+      {/* ── MOBILE CARD LAYOUT (< md / < 768px) ───────────────────────────── */}
+      <div className="md:hidden px-3 py-2.5">
+        {/* Row 1: Ticker + OPTIONS badge + BUY/SELL badge */}
+        <div className="flex items-center gap-2">
+          <span className={`font-mono font-bold text-sm leading-none ${isBig ? "text-amber-300" : "text-white"}`}>
+            {trade.ticker}
+          </span>
+          {isOptions && (
+            <span className="text-[8px] text-purple-400 font-medium">OPTIONS</span>
+          )}
+          <TagBadge type={trade.transaction} />
+          {/* Push amount to the right */}
+          <span className="ml-auto text-zinc-300 text-xs font-mono">
+            {formatAmount(trade.amount.min, trade.amount.max)}
+          </span>
         </div>
-        {isOptions && <span className="text-[8px] text-purple-400 font-medium">OPTIONS</span>}
-      </div>
 
-      {/* Type badge */}
-      <div>
-        <TagBadge type={trade.transaction} />
-      </div>
-
-      {/* Politician */}
-      <div className="min-w-0">
-        <div className="text-zinc-300 text-xs truncate">{trade.politician}</div>
-        <div className="text-zinc-600 text-[10px]">{trade.state_district}</div>
-      </div>
-
-      {/* Amount */}
-      <div>
-        <div className="text-zinc-300 text-xs font-mono">{formatAmount(trade.amount.min, trade.amount.max)}</div>
+        {/* Amount bar below row 1 */}
         <AmountBar min={trade.amount.min} max={trade.amount.max} />
+
+        {/* Row 2: Politician name + state + date */}
+        <div className="flex items-end justify-between mt-1.5">
+          <div className="min-w-0 mr-2">
+            <div className="text-zinc-300 text-xs truncate">{trade.politician}</div>
+            <div className="text-zinc-600 text-[10px]">{trade.state_district}</div>
+          </div>
+          <div className="text-right flex-shrink-0">
+            <div className="text-zinc-400 text-[10px]">{formatDate(trade.date)}</div>
+            <div className={`text-[9px] ${days <= 7 ? "text-emerald-500" : days <= 30 ? "text-zinc-500" : "text-zinc-700"}`}>
+              {days === 0 ? "today" : days > 0 ? `${days}d ago` : ""}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Date */}
-      <div className="text-right">
-        <div className="text-zinc-400 text-xs">{formatDate(trade.date)}</div>
-        <div className={`text-[9px] ${days <= 7 ? "text-emerald-500" : days <= 30 ? "text-zinc-500" : "text-zinc-700"}`}>
-          {days === 0 ? "today" : days > 0 ? `${days}d ago` : ""}
+      {/* ── DESKTOP GRID LAYOUT (md+ / ≥ 768px) ───────────────────────────── */}
+      <div className="hidden md:grid grid-cols-[60px_42px_minmax(0,1fr)_110px_85px] items-center gap-1.5 px-3 py-2.5">
+        {/* Ticker */}
+        <div>
+          <div className={`font-mono font-bold text-sm ${isBig ? "text-amber-300" : "text-white"}`}>
+            {trade.ticker}
+          </div>
+          {isOptions && <span className="text-[8px] text-purple-400 font-medium">OPTIONS</span>}
+        </div>
+
+        {/* Type badge */}
+        <div>
+          <TagBadge type={trade.transaction} />
+        </div>
+
+        {/* Politician */}
+        <div className="min-w-0">
+          <div className="text-zinc-300 text-xs truncate">{trade.politician}</div>
+          <div className="text-zinc-600 text-[10px]">{trade.state_district}</div>
+        </div>
+
+        {/* Amount */}
+        <div>
+          <div className="text-zinc-300 text-xs font-mono">{formatAmount(trade.amount.min, trade.amount.max)}</div>
+          <AmountBar min={trade.amount.min} max={trade.amount.max} />
+        </div>
+
+        {/* Date */}
+        <div className="text-right">
+          <div className="text-zinc-400 text-xs">{formatDate(trade.date)}</div>
+          <div className={`text-[9px] ${days <= 7 ? "text-emerald-500" : days <= 30 ? "text-zinc-500" : "text-zinc-700"}`}>
+            {days === 0 ? "today" : days > 0 ? `${days}d ago` : ""}
+          </div>
         </div>
       </div>
     </a>
   );
 }
 
+// ─── Filter type ──────────────────────────────────────────────────────────────
+
 type FilterType = "all" | "buys" | "sells" | "options" | "big";
+
+// ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CongressPage() {
   const [data, setData] = useState<CongressData | null>(null);
@@ -302,17 +359,19 @@ export default function CongressPage() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden max-w-full">
-      {/* Header */}
+      {/* ── Header ── */}
       <header className="border-b border-zinc-800 px-4 py-3 flex-shrink-0">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {/* sidebar handles nav */}
-            <h1 className="text-lg font-bold tracking-tight">🏛️ Congress Trades</h1>
-            <span className="text-zinc-600 text-[10px] bg-zinc-900 px-2 py-0.5 rounded hidden sm:inline">
+        <div className="flex items-center justify-between gap-2 min-w-0">
+          {/* Left: title + badge */}
+          <div className="flex items-center gap-2 min-w-0">
+            {/* min-w-0 + truncate prevent title overflow on narrow screens */}
+            <h1 className="text-base sm:text-lg font-bold tracking-tight whitespace-nowrap">🏛️ Congress Trades</h1>
+            <span className="text-zinc-600 text-[10px] bg-zinc-900 px-2 py-0.5 rounded hidden sm:inline flex-shrink-0">
               House • STOCK Act Filings
             </span>
           </div>
-          <div className="text-zinc-700 text-[10px]">
+          {/* Right: last updated — shrinks gracefully */}
+          <div className="text-zinc-700 text-[10px] flex-shrink-0 whitespace-nowrap">
             Updated {new Date(data.last_updated).toLocaleDateString()}
           </div>
         </div>
@@ -330,11 +389,20 @@ export default function CongressPage() {
 
         {/* Trade Feed */}
         <div className="border-b border-zinc-800">
-          <div className="px-4 py-3 bg-zinc-900/50 flex flex-col sm:flex-row items-start sm:items-center gap-2">
-            <h2 className="text-sm font-bold text-white">📋 All Trades</h2>
+          {/* ── Filter bar ───────────────────────────────────────────────────── */}
+          {/*
+            Mobile layout (< sm):
+              Row 1: "📋 All Trades" label + filter pills (wrap if needed)
+              Row 2: search inputs side-by-side, full-width
+              Row 3: trade count
+            sm+ layout: single row, same as before
+          */}
+          <div className="px-3 py-3 bg-zinc-900/50 flex flex-col sm:flex-row sm:items-center gap-2">
+            {/* Label */}
+            <h2 className="text-sm font-bold text-white flex-shrink-0">📋 All Trades</h2>
 
-            {/* Filters */}
-            <div className="flex bg-zinc-900 rounded-md p-0.5 text-[10px]">
+            {/* Filter pills — wrap on very small screens */}
+            <div className="flex flex-wrap sm:flex-nowrap bg-zinc-900 rounded-md p-0.5 text-[10px] gap-0.5">
               {([
                 ["all", "All"],
                 ["buys", "🟢 Buys"],
@@ -354,25 +422,28 @@ export default function CongressPage() {
               ))}
             </div>
 
-            {/* Search */}
-            <div className="flex gap-2 ml-auto">
+            {/* Search inputs:
+                  mobile: row with two equal-width inputs (each flex-1)
+                  sm+: push to right (ml-auto), fixed widths as before */}
+            <div className="flex gap-2 w-full sm:w-auto sm:ml-auto">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Ticker..."
-                className="bg-zinc-900 border border-zinc-800 text-white px-2 py-1 rounded text-[11px] w-24 focus:outline-none focus:border-zinc-600 placeholder:text-zinc-700"
+                className="flex-1 sm:flex-none bg-zinc-900 border border-zinc-800 text-white px-2 py-1 rounded text-[11px] sm:w-24 focus:outline-none focus:border-zinc-600 placeholder:text-zinc-700"
               />
               <input
                 type="text"
                 value={polFilter}
                 onChange={(e) => setPolFilter(e.target.value)}
                 placeholder="Politician..."
-                className="bg-zinc-900 border border-zinc-800 text-white px-2 py-1 rounded text-[11px] w-28 focus:outline-none focus:border-zinc-600 placeholder:text-zinc-700"
+                className="flex-1 sm:flex-none bg-zinc-900 border border-zinc-800 text-white px-2 py-1 rounded text-[11px] sm:w-28 focus:outline-none focus:border-zinc-600 placeholder:text-zinc-700"
               />
             </div>
 
-            <span className="text-zinc-600 text-[10px]">{filteredTrades.length} trades</span>
+            {/* Trade count */}
+            <span className="text-zinc-600 text-[10px] sm:flex-shrink-0">{filteredTrades.length} trades</span>
           </div>
 
           {/* Trade list */}
@@ -389,7 +460,7 @@ export default function CongressPage() {
         </div>
       </div>
 
-      {/* Footer */}
+      {/* ── Footer ── */}
       <footer className="border-t border-zinc-800 px-4 py-2 text-center text-zinc-700 text-[10px] flex-shrink-0">
         Source: U.S. House Financial Disclosures (STOCK Act) • extractai.xyz 🐾
       </footer>

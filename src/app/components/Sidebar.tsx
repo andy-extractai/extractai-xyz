@@ -23,28 +23,62 @@ export default function Sidebar() {
 
   return (
     <>
-      {/* Mobile hamburger */}
+      {/* ─────────────────────────────────────────────
+          Mobile hamburger button
+          — min 44×44 px touch target (p-3 + icon ≈ 44px)
+          — sits above overlay (z-50)
+      ───────────────────────────────────────────── */}
       <button
+        aria-label={open ? "Close menu" : "Open menu"}
+        aria-expanded={open}
         onClick={() => setOpen(!open)}
-        className={`fixed top-3 left-3 z-50 lg:hidden p-2 rounded-lg transition ${
-          d ? "bg-zinc-900 text-white hover:bg-zinc-800" : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-        }`}
+        className={`
+          fixed top-3 left-3 z-50 lg:hidden
+          p-3 rounded-xl
+          min-w-[44px] min-h-[44px] flex items-center justify-center
+          text-lg font-semibold
+          transition-colors duration-150
+          ${d
+            ? "bg-zinc-900 text-white hover:bg-zinc-800 active:bg-zinc-700"
+            : "bg-white text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200 shadow-sm border border-zinc-200"
+          }
+        `}
       >
         {open ? "✕" : "☰"}
       </button>
 
-      {/* Overlay for mobile */}
-      {open && (
-        <div className="fixed inset-0 bg-black/50 z-40 lg:hidden" onClick={() => setOpen(false)} />
-      )}
+      {/* ─────────────────────────────────────────────
+          Backdrop overlay
+          — always rendered, toggled via opacity + pointer-events
+          — smooth 200ms fade in/out (no layout jump)
+      ───────────────────────────────────────────── */}
+      <div
+        aria-hidden="true"
+        onClick={() => setOpen(false)}
+        className={`
+          fixed inset-0 z-40 lg:hidden
+          bg-black/50 backdrop-blur-[2px]
+          transition-opacity duration-200
+          ${open ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}
+        `}
+      />
 
-      {/* Sidebar */}
+      {/* ─────────────────────────────────────────────
+          Sidebar panel
+          — mobile: slides in from left (translate-x-0 / -translate-x-full)
+          — desktop (lg+): always visible, no translate
+          — w-56 on desktop; full-width up to 280px on mobile for
+            comfortable thumb reach
+      ───────────────────────────────────────────── */}
       <aside
-        className={`fixed top-0 left-0 h-full z-40 flex flex-col transition-transform duration-200 ${
-          open ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 w-56 border-r ${
-          d ? "bg-zinc-950 border-zinc-800" : "bg-zinc-50 border-zinc-200"
-        }`}
+        className={`
+          fixed top-0 left-0 h-full z-40 flex flex-col
+          w-[280px] sm:w-64 lg:w-56
+          border-r
+          transition-transform duration-200 ease-in-out
+          ${open ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0
+          ${d ? "bg-zinc-950 border-zinc-800" : "bg-zinc-50 border-zinc-200"}
+        `}
       >
         {/* Brand */}
         <div className="px-4 py-5 border-b border-inherit">
@@ -58,7 +92,10 @@ export default function Sidebar() {
           </Link>
         </div>
 
-        {/* Nav */}
+        {/* Nav
+            — each item: min-h-[44px] for touch compliance
+            — py-3 gives ~44px with text-sm line-height
+        */}
         <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
@@ -67,34 +104,45 @@ export default function Sidebar() {
                 key={item.href}
                 href={item.href}
                 onClick={() => setOpen(false)}
-                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition ${
-                  active
+                className={`
+                  flex items-center gap-3 px-3 rounded-lg text-sm
+                  min-h-[44px]
+                  transition-colors duration-150
+                  ${active
                     ? d
                       ? "bg-zinc-800 text-white font-medium"
                       : "bg-emerald-50 text-emerald-700 font-medium"
                     : d
-                    ? "text-zinc-400 hover:text-white hover:bg-zinc-800/50"
-                    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100"
-                }`}
+                    ? "text-zinc-400 hover:text-white hover:bg-zinc-800/50 active:bg-zinc-800"
+                    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200"
+                  }
+                `}
               >
-                <span className="text-base">{item.emoji}</span>
+                {/* emoji: slightly larger for mobile readability */}
+                <span className="text-lg leading-none">{item.emoji}</span>
                 <span>{item.label}</span>
               </Link>
             );
           })}
         </nav>
 
-        {/* Footer: Theme toggle */}
+        {/* Footer: theme toggle + attribution
+            — min-h-[44px] on the button for touch compliance
+        */}
         <div className={`px-3 py-3 border-t ${d ? "border-zinc-800" : "border-zinc-200"}`}>
           <button
             onClick={toggle}
-            className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm transition ${
-              d
-                ? "text-zinc-500 hover:text-white hover:bg-zinc-800/50"
-                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
-            }`}
+            className={`
+              flex items-center gap-2 w-full px-3 rounded-lg text-sm
+              min-h-[44px]
+              transition-colors duration-150
+              ${d
+                ? "text-zinc-500 hover:text-white hover:bg-zinc-800/50 active:bg-zinc-800"
+                : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200"
+              }
+            `}
           >
-            <span>{d ? "🌙" : "☀️"}</span>
+            <span className="text-base">{d ? "🌙" : "☀️"}</span>
             <span>{d ? "Dark Mode" : "Light Mode"}</span>
           </button>
           <div className={`text-[9px] px-3 mt-2 ${d ? "text-zinc-700" : "text-zinc-400"}`}>
