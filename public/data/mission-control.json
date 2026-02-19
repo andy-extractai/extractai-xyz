@@ -1,20 +1,25 @@
 {
-  "last_updated": "2026-02-18T22:30:00Z",
+  "last_updated": "2026-02-19T04:55:00.930388Z",
   "agent": {
     "name": "Andy",
-    "emoji": "🐾",
+    "emoji": "\ud83d\udc3e",
     "status": "online",
-    "current_task": "Building Mission Control dashboard",
+    "current_task": "Idle \u2014 awaiting next task",
     "model": "claude-sonnet-4.6",
     "uptime_since": "2026-02-15"
   },
   "tasks": {
-    "columns": ["backlog", "in_progress", "review", "done"],
+    "columns": [
+      "backlog",
+      "in_progress",
+      "review",
+      "done"
+    ],
     "items": [
       {
         "id": "t1",
         "title": "Congress Trade Tracker",
-        "description": "House STOCK Act filings — 4,658 trades parsed, live at /congress",
+        "description": "House STOCK Act filings \u2014 4,658 trades parsed, live at /congress",
         "status": "done",
         "assigned": "andy",
         "priority": "high",
@@ -25,15 +30,16 @@
         "id": "t2",
         "title": "Mission Control Dashboard",
         "description": "Build unified command center at /control",
-        "status": "in_progress",
+        "status": "done",
         "assigned": "andy",
         "priority": "high",
-        "created": "2026-02-18"
+        "created": "2026-02-18",
+        "completed": "2026-02-18"
       },
       {
         "id": "t3",
         "title": "Daily Briefing Email",
-        "description": "8AM daily email with crypto/AI/markets/tasks — cron active",
+        "description": "8AM daily email with crypto/AI/markets/tasks \u2014 cron active",
         "status": "done",
         "assigned": "andy",
         "priority": "medium",
@@ -43,7 +49,7 @@
       {
         "id": "t4",
         "title": "Tokenized Agents Tracker",
-        "description": "AI agent tokens on Base — live at /tokens",
+        "description": "AI agent tokens on Base \u2014 live at /tokens",
         "status": "done",
         "assigned": "andy",
         "priority": "medium",
@@ -52,8 +58,8 @@
       },
       {
         "id": "t5",
-        "title": "Pokémon RPG",
-        "description": "Full browser RPG — 11,595 lines, 50 species, 8 gyms. Needs playthrough test.",
+        "title": "Pok\u00e9mon RPG",
+        "description": "Full browser RPG \u2014 11,595 lines, 50 species, 8 gyms. Needs playthrough test.",
         "status": "review",
         "assigned": "andy",
         "priority": "low",
@@ -104,6 +110,15 @@
         "assigned": "andy",
         "priority": "medium",
         "created": "2026-02-18"
+      },
+      {
+        "id": "t11",
+        "title": "Twitch VOD Transcription Pipeline",
+        "description": "Transcribe Twitch streams via cloud Whisper API (Groq). Blocked: need Groq API key \u2014 GitHub OAuth required.",
+        "status": "backlog",
+        "assigned": "andy",
+        "priority": "medium",
+        "created": "2026-02-18"
       }
     ]
   },
@@ -132,13 +147,41 @@
       "repo": "https://github.com/andy-extractai/extractai-xyz",
       "status": "live",
       "pages": [
-        {"path": "/", "name": "Landing", "status": "live"},
-        {"path": "/clock", "name": "World Clock", "status": "live"},
-        {"path": "/tokens", "name": "Tokenized Agents", "status": "live"},
-        {"path": "/congress", "name": "Congress Trades", "status": "live"},
-        {"path": "/pokemon", "name": "Pokémon RPG", "status": "live"},
-        {"path": "/agents", "name": "Agents Dashboard", "status": "live"},
-        {"path": "/control", "name": "Mission Control", "status": "building"}
+        {
+          "path": "/",
+          "name": "Landing",
+          "status": "live"
+        },
+        {
+          "path": "/clock",
+          "name": "World Clock",
+          "status": "live"
+        },
+        {
+          "path": "/tokens",
+          "name": "Tokenized Agents",
+          "status": "live"
+        },
+        {
+          "path": "/congress",
+          "name": "Congress Trades",
+          "status": "live"
+        },
+        {
+          "path": "/pokemon",
+          "name": "Pok\u00e9mon RPG",
+          "status": "live"
+        },
+        {
+          "path": "/agents",
+          "name": "Agents Dashboard",
+          "status": "live"
+        },
+        {
+          "path": "/control",
+          "name": "Mission Control",
+          "status": "building"
+        }
       ]
     }
   ],
@@ -146,15 +189,31 @@
     {
       "name": "Andy",
       "role": "Lead Agent",
-      "emoji": "🐾",
-      "description": "Main AI assistant — handles everything from code to emails to research",
+      "emoji": "\ud83d\udc3e",
+      "description": "Main AI assistant \u2014 handles everything from code to emails to research",
       "status": "active"
     }
   ],
   "contacts": [
-    {"name": "Zack", "status": "Owes $1,250 — no response", "last_contact": "2026-02-15"},
-    {"name": "Ben", "status": "Replied colorfully. AirPods still dirty.", "last_contact": "2026-02-16"},
-    {"name": "Colin", "status": "Promised festival link — hasn't sent", "last_contact": "2026-02-16"},
-    {"name": "Ted (Dad)", "status": "Intro email sent — awaiting reply", "last_contact": "2026-02-16"}
+    {
+      "name": "Zack",
+      "status": "Owes $1,250 \u2014 no response",
+      "last_contact": "2026-02-15"
+    },
+    {
+      "name": "Ben",
+      "status": "Replied colorfully. AirPods still dirty.",
+      "last_contact": "2026-02-16"
+    },
+    {
+      "name": "Colin",
+      "status": "Promised festival link \u2014 hasn't sent",
+      "last_contact": "2026-02-16"
+    },
+    {
+      "name": "Ted (Dad)",
+      "status": "Intro email sent \u2014 awaiting reply",
+      "last_contact": "2026-02-16"
+    }
   ]
 }
