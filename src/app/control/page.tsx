@@ -488,6 +488,14 @@ export default function MissionControlPage() {
       <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
         {tab === "overview" && (
           <>
+            {/* Mission Statement */}
+            <div className={`rounded-xl px-4 sm:px-5 py-3 sm:py-4 border ${t(d, "border-emerald-500/20 bg-emerald-500/5", "border-emerald-500/30 bg-emerald-50")}`}>
+              <div className={`text-[10px] uppercase tracking-widest font-medium mb-1 ${t(d, "text-emerald-500/70", "text-emerald-600/70")}`}>Mission</div>
+              <div className={`text-sm sm:text-base font-medium leading-relaxed ${t(d, "text-emerald-300", "text-emerald-700")}`}>
+                Build an autonomous organization of AI agents that does work for me and produces value 24/7
+              </div>
+            </div>
+
             {/* Agent status — full-width on all sizes */}
             <AgentStatus agent={data.agent} d={d} />
 
