@@ -153,7 +153,7 @@ function TaskBoard({ tasks, d }: { tasks: MCData["tasks"]; d: boolean }) {
         <h2 className={`text-sm font-bold ${t(d, "text-white", "text-zinc-900")}`}>📋 Tasks</h2>
         <p className={`text-[10px] ${t(d, "text-zinc-600", "text-zinc-400")}`}>{tasks.items.length} total • {tasks.items.filter(t => t.status === "done").length} completed</p>
       </div>
-      <div className={`grid grid-cols-4 gap-0 divide-x ${t(d, "divide-zinc-800", "divide-zinc-200")}`}>
+      <div className={`grid grid-cols-4 gap-0 divide-x overflow-x-auto ${t(d, "divide-zinc-800", "divide-zinc-200")}`} style={{ gridTemplateColumns: "repeat(4, minmax(220px, 1fr))" }}>
         {columns.map((col) => {
           const cfg = COLUMN_CONFIG[col] || { label: col, dColor: "border-zinc-700", lColor: "border-zinc-300", icon: "📌" };
           const items = tasksByColumn[col] || [];
