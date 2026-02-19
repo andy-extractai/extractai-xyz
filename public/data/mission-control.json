@@ -1,10 +1,10 @@
 {
-  "last_updated": "2026-02-19T05:03:58.572012+00:00Z",
+  "last_updated": "2026-02-19T05:48:11.520042+00:00Z",
   "agent": {
     "name": "Andy",
     "emoji": "\ud83d\udc3e",
     "status": "online",
-    "current_task": "Site overhaul complete \u2014 sidebar nav + theme toggle live",
+    "current_task": "Orchestrating mobile responsive overhaul \u2014 5 sub-agents",
     "model": "claude-sonnet-4.6",
     "uptime_since": "2026-02-15"
   },
@@ -129,6 +129,15 @@
         "priority": "high",
         "created": "2026-02-18",
         "completed": "2026-02-18"
+      },
+      {
+        "id": "t13",
+        "title": "Mobile Responsive Overhaul",
+        "description": "Make all pages work on phones. Sub-agents coding each page, Andy reviewing.",
+        "status": "in_progress",
+        "assigned": "andy",
+        "priority": "high",
+        "created": "2026-02-18"
       }
     ]
   },
@@ -198,9 +207,44 @@
   "team": [
     {
       "name": "Andy",
-      "role": "Lead Agent",
+      "role": "Lead / Reviewer",
       "emoji": "\ud83d\udc3e",
-      "description": "Main AI assistant \u2014 handles everything from code to emails to research",
+      "description": "Orchestrates sub-agents, does final review and merge",
+      "status": "active"
+    },
+    {
+      "name": "Coder-Home",
+      "role": "Sub-agent",
+      "emoji": "\ud83c\udfe0",
+      "description": "Home page + Sidebar responsive",
+      "status": "active"
+    },
+    {
+      "name": "Coder-MC",
+      "role": "Sub-agent",
+      "emoji": "\ud83c\udf9b\ufe0f",
+      "description": "Mission Control responsive",
+      "status": "active"
+    },
+    {
+      "name": "Coder-Congress",
+      "role": "Sub-agent",
+      "emoji": "\ud83c\udfdb\ufe0f",
+      "description": "Congress Trades responsive",
+      "status": "active"
+    },
+    {
+      "name": "Coder-Tokens",
+      "role": "Sub-agent",
+      "emoji": "\ud83e\ude99",
+      "description": "Tokenized Agents responsive",
+      "status": "active"
+    },
+    {
+      "name": "Coder-Clock",
+      "role": "Sub-agent",
+      "emoji": "\ud83d\udd50",
+      "description": "Clock page responsive",
       "status": "active"
     }
   ],
