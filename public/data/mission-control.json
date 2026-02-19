@@ -1,10 +1,10 @@
 {
-  "last_updated": "2026-02-19T04:55:00.930388Z",
+  "last_updated": "2026-02-19T05:03:58.572012+00:00Z",
   "agent": {
     "name": "Andy",
     "emoji": "\ud83d\udc3e",
     "status": "online",
-    "current_task": "Idle \u2014 awaiting next task",
+    "current_task": "Site overhaul complete \u2014 sidebar nav + theme toggle live",
     "model": "claude-sonnet-4.6",
     "uptime_since": "2026-02-15"
   },
@@ -119,6 +119,16 @@
         "assigned": "andy",
         "priority": "medium",
         "created": "2026-02-18"
+      },
+      {
+        "id": "t12",
+        "title": "Site Overhaul \u2014 Sidebar Nav + Theme",
+        "description": "Added persistent left sidebar with page links, dark/light mode toggle, responsive layout",
+        "status": "done",
+        "assigned": "andy",
+        "priority": "high",
+        "created": "2026-02-18",
+        "completed": "2026-02-18"
       }
     ]
   },
@@ -180,7 +190,7 @@
         {
           "path": "/control",
           "name": "Mission Control",
-          "status": "building"
+          "status": "live"
         }
       ]
     }
