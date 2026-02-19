@@ -301,12 +301,12 @@ export default function CongressPage() {
   }
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden max-w-full">
+    <div className="h-screen flex flex-col overflow-hidden max-w-full">
       {/* Header */}
       <header className="border-b border-zinc-800 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-zinc-600 hover:text-white transition text-sm">←</Link>
+            {/* sidebar handles nav */}
             <h1 className="text-lg font-bold tracking-tight">🏛️ Congress Trades</h1>
             <span className="text-zinc-600 text-[10px] bg-zinc-900 px-2 py-0.5 rounded hidden sm:inline">
               House • STOCK Act Filings

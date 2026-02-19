@@ -319,12 +319,12 @@ export default function MissionControlPage() {
   }
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+    <div className="h-screen flex flex-col overflow-hidden">
       {/* Header */}
       <header className="border-b border-zinc-800 px-4 py-3 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="text-zinc-600 hover:text-white transition text-sm">←</Link>
+            {/* sidebar handles nav */}
             <h1 className="text-lg font-bold tracking-tight">🎛️ Mission Control</h1>
           </div>
           <div className="flex items-center gap-4">

@@ -248,7 +248,7 @@ export default function TokensPage() {
   }, [autoRefresh, fetchTokens]);
 
   return (
-    <div className="h-screen bg-black text-white flex flex-col overflow-hidden">
+    <div className="h-screen  flex flex-col overflow-hidden">
       {/* Header */}
       <header className="border-b border-zinc-800 px-4 py-3 flex-shrink-0">
         <div className="flex items-center justify-between">

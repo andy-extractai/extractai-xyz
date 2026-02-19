@@ -46,7 +46,7 @@ export default function ClockPage() {
   const activeLabel = TIMEZONES.find((tz) => tz.zone === selected)?.label;
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col">
+    <div className="min-h-screen  flex flex-col">
       <nav className="p-6 relative z-10">
         <Link
           href="/"
