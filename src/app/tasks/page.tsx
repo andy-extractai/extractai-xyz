@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import Link from "next/link";
 import { useTheme } from "../components/ThemeProvider";
 
 interface Task {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   status: string;
@@ -15,10 +17,7 @@ interface Task {
   completed?: string;
 }
 
-interface MCData {
-  last_updated: string;
-  tasks: { columns: string[]; items: Task[] };
-}
+const COLUMNS = ["backlog", "in_progress", "review", "done"];
 
 const COLUMN_CONFIG: Record<string, { label: string; dColor: string; lColor: string; icon: string; accent: string }> = {
   backlog:     { label: "Backlog",     dColor: "border-zinc-700",   lColor: "border-zinc-400",   icon: "📋", accent: "text-zinc-400" },
@@ -109,7 +108,7 @@ function MobileColumnSection({ col, items, d }: { col: string; items: Task[]; d:
           {items.length === 0 ? (
             <div className={`text-xs text-center py-6 ${t(d, "text-zinc-700", "text-zinc-400")}`}>No tasks here</div>
           ) : (
-            items.map((task) => <TaskCard key={task.id} task={task} d={d} />)
+            items.map((task) => <TaskCard key={task._id} task={task} d={d} />)
           )}
         </div>
       )}
@@ -121,7 +120,6 @@ function DesktopColumn({ col, items, d }: { col: string; items: Task[]; d: boole
   const cfg = COLUMN_CONFIG[col] ?? { label: col, dColor: "border-zinc-700", lColor: "border-zinc-300", icon: "📌", accent: "text-zinc-400" };
   return (
     <div className={`flex flex-col border rounded-xl overflow-hidden ${t(d, "border-zinc-800", "border-zinc-200")}`}>
-      {/* Column header */}
       <div className={`px-4 py-3 border-b-2 flex items-center gap-2 ${d ? cfg.dColor : cfg.lColor} ${t(d, "bg-zinc-900/60", "bg-zinc-50")}`}>
         <span className="text-base">{cfg.icon}</span>
         <span className={`text-sm font-semibold ${t(d, "text-white", "text-zinc-800")}`}>{cfg.label}</span>
@@ -129,12 +127,11 @@ function DesktopColumn({ col, items, d }: { col: string; items: Task[]; d: boole
           {items.length}
         </span>
       </div>
-      {/* Cards */}
       <div className="flex-1 p-3 space-y-2 overflow-y-auto">
         {items.length === 0 ? (
           <div className={`text-xs text-center py-8 ${t(d, "text-zinc-700", "text-zinc-400")}`}>No tasks</div>
         ) : (
-          items.map((task) => <TaskCard key={task.id} task={task} d={d} />)
+          items.map((task) => <TaskCard key={task._id} task={task} d={d} />)
         )}
       </div>
     </div>
@@ -142,29 +139,21 @@ function DesktopColumn({ col, items, d }: { col: string; items: Task[]; d: boole
 }
 
 export default function TasksPage() {
-  const [data, setData] = useState<MCData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const tasks = useQuery(api.tasks.list);
   const { theme } = useTheme();
   const d = theme === "dark";
 
-  useEffect(() => {
-    fetch("/data/mission-control.json")
-      .then((r) => r.json())
-      .then((json) => { setData(json); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
-
   const tasksByColumn = useMemo(() => {
-    if (!data) return {};
+    if (!tasks) return {};
     const map: Record<string, Task[]> = {};
-    data.tasks.columns.forEach((col) => { map[col] = []; });
-    data.tasks.items.forEach((tk) => {
-      if (map[tk.status]) map[tk.status].push(tk);
+    COLUMNS.forEach((col) => { map[col] = []; });
+    tasks.forEach((tk) => {
+      if (map[tk.status]) map[tk.status].push(tk as Task);
     });
     return map;
-  }, [data]);
+  }, [tasks]);
 
-  if (loading) {
+  if (tasks === undefined) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className={`text-sm animate-pulse ${t(d, "text-zinc-500", "text-zinc-400")}`}>Loading tasks…</div>
@@ -172,7 +161,7 @@ export default function TasksPage() {
     );
   }
 
-  if (!data) {
+  if (tasks === null) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-3">
         <div className="text-4xl">📋</div>
@@ -182,14 +171,13 @@ export default function TasksPage() {
     );
   }
 
-  const total = data.tasks.items.length;
-  const done = data.tasks.items.filter((tk) => tk.status === "done").length;
-  const inProg = data.tasks.items.filter((tk) => tk.status === "in_progress").length;
+  const total = tasks.length;
+  const done = tasks.filter((tk) => tk.status === "done").length;
+  const inProg = tasks.filter((tk) => tk.status === "in_progress").length;
   const pct = total > 0 ? Math.round((done / total) * 100) : 0;
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Header */}
       <header className={`border-b px-4 md:px-6 py-4 ${t(d, "border-zinc-800", "border-zinc-200")}`}>
         <div className="flex items-center justify-between gap-4 flex-wrap">
           <div>
@@ -198,45 +186,24 @@ export default function TasksPage() {
               {total} tasks · {inProg} in progress · {done} done
             </p>
           </div>
-          {/* Progress bar */}
           <div className="flex items-center gap-3 min-w-[160px]">
             <div className={`flex-1 h-2 rounded-full overflow-hidden ${t(d, "bg-zinc-800", "bg-zinc-200")}`}>
-              <div
-                className="h-full rounded-full bg-green-500 transition-all"
-                style={{ width: `${pct}%` }}
-              />
+              <div className="h-full rounded-full bg-green-500 transition-all" style={{ width: `${pct}%` }} />
             </div>
             <span className={`text-xs font-bold tabular-nums ${t(d, "text-zinc-400", "text-zinc-600")}`}>{pct}%</span>
           </div>
         </div>
       </header>
 
-      {/* Content */}
       <div className="flex-1 p-4 md:p-6">
-        {/* Mobile: vertical collapsible stack */}
         <div className="md:hidden space-y-3">
-          {data.tasks.columns.map((col) => (
-            <MobileColumnSection
-              key={col}
-              col={col}
-              items={tasksByColumn[col] ?? []}
-              d={d}
-            />
+          {COLUMNS.map((col) => (
+            <MobileColumnSection key={col} col={col} items={tasksByColumn[col] ?? []} d={d} />
           ))}
         </div>
-
-        {/* Desktop: 4-column grid */}
-        <div
-          className="hidden md:grid gap-4"
-          style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}
-        >
-          {data.tasks.columns.map((col) => (
-            <DesktopColumn
-              key={col}
-              col={col}
-              items={tasksByColumn[col] ?? []}
-              d={d}
-            />
+        <div className="hidden md:grid gap-4" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))" }}>
+          {COLUMNS.map((col) => (
+            <DesktopColumn key={col} col={col} items={tasksByColumn[col] ?? []} d={d} />
           ))}
         </div>
       </div>

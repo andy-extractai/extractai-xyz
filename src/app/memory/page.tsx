@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "../../../convex/_generated/api";
 import { useTheme } from "../components/ThemeProvider";
 
 function t(d: boolean, dark: string, light: string) {
@@ -9,7 +10,7 @@ function t(d: boolean, dark: string, light: string) {
 }
 
 interface Task {
-  id: string;
+  _id: string;
   title: string;
   description: string;
   status: string;
@@ -17,11 +18,6 @@ interface Task {
   priority: string;
   created: string;
   completed?: string;
-}
-
-interface MCData {
-  last_updated: string;
-  tasks: { columns: string[]; items: Task[] };
 }
 
 // ── Key Facts ────────────────────────────────────────────────────────────────
@@ -148,24 +144,17 @@ export default function MemoryPage() {
   const { theme } = useTheme();
   const d = theme === "dark";
 
-  const [data, setData] = useState<MCData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetch("/data/mission-control.json")
-      .then((r) => r.json())
-      .then((json) => { setData(json); setLoading(false); })
-      .catch(() => setLoading(false));
-  }, []);
+  const tasks = useQuery(api.tasks.list);
+  const loading = tasks === undefined;
 
   // Completed tasks, reverse-chronological
-  const completed = (data?.tasks.items ?? [])
+  const completed = (tasks ?? [])
     .filter((tk) => tk.status === "done" && (tk.completed || tk.created))
     .sort((a, b) => {
       const da = a.completed ?? a.created;
       const db = b.completed ?? b.created;
       return db.localeCompare(da);
-    });
+    }) as Task[];
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -229,7 +218,7 @@ export default function MemoryPage() {
                 <div>
                   {completed.map((task, i) => (
                     <TimelineEntry
-                      key={task.id}
+                      key={task._id}
                       task={task}
                       d={d}
                       isLast={i === completed.length - 1}

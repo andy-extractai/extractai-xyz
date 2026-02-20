@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import AuthGate from "./components/AuthGate";
 import AppShell from "./components/AppShell";
+import ConvexClientProvider from "./components/ConvexClientProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,9 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} antialiased`}>
-        <AuthGate>
-          <AppShell>{children}</AppShell>
-        </AuthGate>
+        <ConvexClientProvider>
+          <AuthGate>
+            <AppShell>{children}</AppShell>
+          </AuthGate>
+        </ConvexClientProvider>
       </body>
     </html>
   );
