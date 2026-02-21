@@ -1,5 +1,6 @@
 "use client";
 
+import { use } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -38,12 +39,13 @@ function formatDate(dateStr: string): string {
 export default function LessonPlanDetailPage({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = use(params);
   const { theme } = useTheme();
   const d = theme === "dark";
   const plan = useQuery(api.lessonPlans.get, {
-    id: params.id as AnyId,
+    id: id as AnyId,
   }) as LessonPlan | undefined | null;
 
   // Loading
