@@ -11,7 +11,8 @@ const NAV_ITEMS = [
   { href: "/projects", label: "Projects", emoji: "🚀" },
   { href: "/memory",   label: "Memory",   emoji: "🧠" },
   { href: "/team",     label: "Team",     emoji: "👥" },
-  { href: "/people",   label: "People",   emoji: "📇" },
+  { href: "/people",          label: "People",         emoji: "📇" },
+  { href: "/lesson-planner", label: "Lesson Planner",  emoji: "📚" },
 ];
 
 export default function Sidebar() {

@@ -135,4 +135,52 @@ http.route({
   }),
 });
 
+// ── Lesson Plans ─────────────────────────────────────────────────────────────
+http.route({
+  path: "/lesson-plans",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    return json(await ctx.runQuery(api.lessonPlans.list));
+  }),
+});
+
+http.route({
+  path: "/lesson-plans",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const id = await ctx.runMutation(api.lessonPlans.create, await req.json());
+    return json({ id });
+  }),
+});
+
+http.route({
+  pathPrefix: "/lesson-plans/",
+  method: "GET",
+  handler: httpAction(async (ctx, req) => {
+    const url = new URL(req.url);
+    const id = url.pathname.split("/lesson-plans/")[1];
+    if (!id) return json({ error: "missing id" }, 400);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plan = await ctx.runQuery(api.lessonPlans.get, { id: id as any });
+    return json(plan);
+  }),
+});
+
+http.route({
+  pathPrefix: "/lesson-plans/",
+  method: "PATCH",
+  handler: httpAction(async (ctx, req) => {
+    const url = new URL(req.url);
+    const id = url.pathname.split("/lesson-plans/")[1];
+    if (!id) return json({ error: "missing id" }, 400);
+    const { generatedPlan, status } = await req.json() as {
+      generatedPlan: string;
+      status: string;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ctx.runMutation(api.lessonPlans.updatePlan, { id: id as any, generatedPlan, status });
+    return json({ ok: true });
+  }),
+});
+
 export default http;

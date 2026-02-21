@@ -57,6 +57,20 @@ export default defineSchema({
     is_lead: v.optional(v.boolean()),
   }),
 
+  // Lesson Plans
+  lessonPlans: defineTable({
+    title: v.string(),
+    subject: v.string(),
+    gradeLevel: v.string(),
+    assignmentTypes: v.array(v.string()),
+    duration: v.string(),
+    learningObjectives: v.string(),
+    additionalNotes: v.optional(v.string()),
+    generatedPlan: v.optional(v.string()),
+    status: v.string(), // "pending" | "generating" | "done" | "error"
+    createdAt: v.string(),
+  }).index("by_status", ["status"]),
+
   // Projects
   projects: defineTable({
     name: v.string(),
