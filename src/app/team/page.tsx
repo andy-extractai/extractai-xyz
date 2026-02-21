@@ -13,18 +13,22 @@ function t(d: boolean, dark: string, light: string) {
 const AGENT_VISUAL: Record<string, { avatarBg: string; skillColor: string }> = {
   Andy:   { avatarBg: "bg-emerald-500", skillColor: "emerald" },
   Scout:  { avatarBg: "bg-blue-500",    skillColor: "blue"    },
-  Ledger: { avatarBg: "bg-amber-500",   skillColor: "amber"   },
-  Mint:   { avatarBg: "bg-purple-500",  skillColor: "purple"  },
-  Scribe: { avatarBg: "bg-rose-500",    skillColor: "rose"    },
+  Dev:    { avatarBg: "bg-violet-500",  skillColor: "violet"  },
+  Canvas: { avatarBg: "bg-pink-500",    skillColor: "pink"    },
+  Quill:  { avatarBg: "bg-amber-500",   skillColor: "amber"   },
+  Sage:   { avatarBg: "bg-teal-500",    skillColor: "teal"    },
+  Ops:    { avatarBg: "bg-orange-500",  skillColor: "orange"  },
 };
 
 function skillPillClass(color: string, d: boolean) {
   const map: Record<string, string> = {
     emerald: d ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/25" : "bg-emerald-100 text-emerald-700 border-emerald-300/50",
     blue:    d ? "bg-blue-500/15 text-blue-400 border-blue-500/25"         : "bg-blue-100 text-blue-700 border-blue-300/50",
+    violet:  d ? "bg-violet-500/15 text-violet-400 border-violet-500/25"   : "bg-violet-100 text-violet-700 border-violet-300/50",
+    pink:    d ? "bg-pink-500/15 text-pink-400 border-pink-500/25"         : "bg-pink-100 text-pink-700 border-pink-300/50",
     amber:   d ? "bg-amber-500/15 text-amber-400 border-amber-500/25"      : "bg-amber-100 text-amber-700 border-amber-300/50",
-    purple:  d ? "bg-purple-500/15 text-purple-400 border-purple-500/25"   : "bg-purple-100 text-purple-700 border-purple-300/50",
-    rose:    d ? "bg-rose-500/15 text-rose-400 border-rose-500/25"         : "bg-rose-100 text-rose-700 border-rose-300/50",
+    teal:    d ? "bg-teal-500/15 text-teal-400 border-teal-500/25"         : "bg-teal-100 text-teal-700 border-teal-300/50",
+    orange:  d ? "bg-orange-500/15 text-orange-400 border-orange-500/25"   : "bg-orange-100 text-orange-700 border-orange-300/50",
   };
   return map[color] ?? (d ? "bg-zinc-500/15 text-zinc-400 border-zinc-500/25" : "bg-zinc-100 text-zinc-500 border-zinc-300/50");
 }

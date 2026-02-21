@@ -8,6 +8,13 @@ export const list = query({
   },
 });
 
+export const remove = mutation({
+  args: { id: v.id("team") },
+  handler: async (ctx, args) => {
+    await ctx.db.delete(args.id);
+  },
+});
+
 export const upsertByName = mutation({
   args: {
     name: v.string(),

@@ -90,6 +90,21 @@ http.route({
   }),
 });
 
+// ── Team delete by name ───────────────────────────────────────────────────────
+http.route({
+  path: "/team/delete",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const { name } = await req.json() as { name: string };
+    const members = await ctx.runQuery(api.team.list);
+    const match = members.find((m) => m.name === name);
+    if (!match) return json({ ok: false, error: "not found" }, 404);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ctx.runMutation(api.team.remove, { id: match._id as any });
+    return json({ ok: true, deleted: name });
+  }),
+});
+
 // ── Bulk Seed ─────────────────────────────────────────────────────────────────
 http.route({
   path: "/seed",
