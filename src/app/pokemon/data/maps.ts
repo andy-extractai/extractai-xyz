@@ -69,9 +69,9 @@ export interface MapData {
   encounterZone?: string; // key into ROUTE_ENCOUNTERS
 }
 
-// Pallet Town: 20x18
+// Pallet Town: 20x22
 const palletTownTiles: number[][] = (() => {
-  const w = 20, h = 18;
+  const w = 20, h = 22;
   const tiles: number[][] = [];
   for (let y = 0; y < h; y++) {
     tiles[y] = [];
@@ -84,11 +84,15 @@ const palletTownTiles: number[][] = (() => {
   for (let x = 0; x < w; x++) { tiles[0][x] = TILE.TREE; }
   for (let y = 0; y < h; y++) { tiles[y][0] = TILE.TREE; tiles[y][w - 1] = TILE.TREE; }
 
-  // Water at bottom
-  for (let x = 0; x < w; x++) { tiles[h - 1][x] = TILE.WATER; tiles[h - 2][x] = TILE.WATER; }
+  // Water at bottom (3 rows: y:19-21)
+  for (let x = 0; x < w; x++) {
+    tiles[h - 1][x] = TILE.WATER;
+    tiles[h - 2][x] = TILE.WATER;
+    tiles[h - 3][x] = TILE.WATER;
+  }
 
-  // Main path (vertical center)
-  for (let y = 1; y < h - 2; y++) {
+  // Main path (vertical center, y:1 to y:18)
+  for (let y = 1; y < h - 3; y++) {
     tiles[y][9] = TILE.PATH;
     tiles[y][10] = TILE.PATH;
   }
@@ -108,11 +112,10 @@ const palletTownTiles: number[][] = (() => {
   for (let y = 5; y <= 6; y++) for (let x = 12; x <= 16; x++) tiles[y][x] = TILE.BUILDING_WALL;
   tiles[6][14] = TILE.DOOR;
 
-  // Oak's Lab (bottom center, rows 10-14, cols 7-13)
+  // Oak's Lab (rows 10-14, cols 7-13)
   for (let y = 10; y <= 11; y++) for (let x = 7; x <= 13; x++) tiles[y][x] = TILE.BUILDING_ROOF;
   for (let y = 12; y <= 14; y++) for (let x = 7; x <= 13; x++) tiles[y][x] = TILE.BUILDING_WALL;
-  tiles[14][10] = TILE.BUILDING_WALL;
-  tiles[10][10] = TILE.DOOR;
+  tiles[14][10] = TILE.DOOR; // south-facing door
 
   // Flowers near houses
   tiles[7][4] = TILE.FLOWER;
@@ -120,9 +123,9 @@ const palletTownTiles: number[][] = (() => {
   tiles[7][13] = TILE.FLOWER;
   tiles[7][15] = TILE.FLOWER;
 
-  // Fence along south edge above water
+  // Fence along south edge above water (y:18)
   for (let x = 1; x < w - 1; x++) {
-    if (tiles[h - 3][x] === TILE.GRASS) tiles[h - 3][x] = TILE.FENCE;
+    if (tiles[h - 4][x] === TILE.GRASS) tiles[h - 4][x] = TILE.FENCE;
   }
 
   // North exit path
@@ -466,7 +469,7 @@ export const MAPS: Record<string, MapData> = {
     id: 'palletTown',
     name: 'PALLET TOWN',
     width: 20,
-    height: 18,
+    height: 22,
     tiles: palletTownTiles,
     collision: palletTownCollision,
     connections: [
@@ -491,7 +494,7 @@ export const MAPS: Record<string, MapData> = {
       },
     ],
     doors: [
-      { x: 10, y: 10, targetMap: 'oaksLab', targetX: 4, targetY: 10 },
+      { x: 10, y: 14, targetMap: 'oaksLab', targetX: 4, targetY: 10 },
       { x: 5, y: 6, targetMap: 'playerHouse', targetX: 4, targetY: 8 },
       { x: 14, y: 6, targetMap: 'rivalHouse', targetX: 4, targetY: 8 },
     ],
@@ -626,8 +629,8 @@ export const MAPS: Record<string, MapData> = {
       },
     ],
     doors: [
-      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 9 },
-      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 9 },
+      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
+      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
     ],
   },
   playerHouse: {
