@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, FONT_FAMILY, COLORS, FADE_DURATION } from '../constants';
-import { hasSaveData } from '../utils/save';
+import { hasSaveData, loadGame, SaveData } from '../utils/save';
+import { MAPS } from '../data/maps';
 
 export class TitleScene extends Phaser.Scene {
   private blinkTimer?: Phaser.Time.TimerEvent;
@@ -10,6 +11,8 @@ export class TitleScene extends Phaser.Scene {
   private cursor?: Phaser.GameObjects.Text;
   private hasSave = false;
   private menuContainer?: Phaser.GameObjects.Container;
+  private saveSummary?: Phaser.GameObjects.Container;
+  private saveData?: SaveData | null;
 
   constructor() {
     super({ key: 'TitleScene' });
@@ -237,6 +240,78 @@ export class TitleScene extends Phaser.Scene {
     this.menuContainer.add(this.cursor);
 
     this.menuIndex = 0;
+
+    // Show save summary if there's a save
+    if (this.hasSave) {
+      this.saveData = loadGame();
+      this.showSaveSummary();
+    }
+  }
+
+  showSaveSummary() {
+    if (!this.saveData) return;
+    this.saveSummary?.destroy();
+    this.saveSummary = this.add.container(0, 0);
+
+    const panelX = GAME_WIDTH / 2 - 140;
+    const panelY = GAME_HEIGHT - 320;
+    const panelW = 280;
+    const panelH = 120;
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0xf8f8f8, 0.95);
+    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 4);
+    bg.lineStyle(3, COLORS.DIALOG_BORDER, 1);
+    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 4);
+    bg.lineStyle(2, 0xd8d8d8, 1);
+    bg.strokeRoundedRect(panelX + 4, panelY + 4, panelW - 8, panelH - 8, 3);
+    this.saveSummary.add(bg);
+
+    const lead = this.saveData.party[0];
+    const mapName = MAPS[this.saveData.currentMap]?.name || this.saveData.currentMap;
+    const badgeCount = this.saveData.badges.length;
+    const dexCount = this.saveData.pokedexCaught.length;
+
+    // Player name
+    this.saveSummary.add(this.add.text(panelX + 14, panelY + 12, 'RED', {
+      fontFamily: FONT_FAMILY, fontSize: '11px', color: '#181818',
+    }));
+
+    // Badge count
+    this.saveSummary.add(this.add.text(panelX + panelW - 14, panelY + 12, `${badgeCount} BADGE${badgeCount !== 1 ? 'S' : ''}`, {
+      fontFamily: FONT_FAMILY, fontSize: '9px', color: '#505050',
+    }).setOrigin(1, 0));
+
+    // Lead Pokemon info
+    if (lead) {
+      // Pokemon sprite
+      const sprite = this.add.image(panelX + 34, panelY + 58, `pokemon-front-${lead.id}`);
+      sprite.setScale(1.2);
+      this.saveSummary.add(sprite);
+
+      this.saveSummary.add(this.add.text(panelX + 70, panelY + 40, lead.name, {
+        fontFamily: FONT_FAMILY, fontSize: '10px', color: '#181818',
+      }));
+
+      this.saveSummary.add(this.add.text(panelX + 70, panelY + 58, `Lv${lead.level}`, {
+        fontFamily: FONT_FAMILY, fontSize: '9px', color: '#505050',
+      }));
+    }
+
+    // Location
+    this.saveSummary.add(this.add.text(panelX + 14, panelY + 82, mapName, {
+      fontFamily: FONT_FAMILY, fontSize: '9px', color: '#3060a0',
+    }));
+
+    // Pokedex count
+    this.saveSummary.add(this.add.text(panelX + panelW - 14, panelY + 82, `POKéDEX: ${dexCount}`, {
+      fontFamily: FONT_FAMILY, fontSize: '9px', color: '#505050',
+    }).setOrigin(1, 0));
+
+    // Party count
+    this.saveSummary.add(this.add.text(panelX + 14, panelY + panelH - 16, `PARTY: ${this.saveData.party.length}`, {
+      fontFamily: FONT_FAMILY, fontSize: '8px', color: '#808080',
+    }));
   }
 
   handleMenuInput(event: KeyboardEvent) {
@@ -254,6 +329,11 @@ export class TitleScene extends Phaser.Scene {
   updateCursor() {
     if (this.cursor && this.menuItems[this.menuIndex]) {
       this.cursor.setY(this.menuItems[this.menuIndex].y);
+    }
+    // Show/hide save summary based on cursor position
+    if (this.saveSummary) {
+      const selectedText = this.menuItems[this.menuIndex]?.text;
+      this.saveSummary.setVisible(selectedText === 'CONTINUE');
     }
   }
 
