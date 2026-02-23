@@ -83,9 +83,9 @@ async function downloadPptx(plan: LessonPlan, sections: Section[]) {
       slide.addText(plain, { x: 0.6, y: 1.2, w: 8.8, h: 3.5, fontSize: 14, color: "ccccdd", valign: "top", wrap: true });
     }
 
-    // Slide number
-    slide.addText(`${pptx.slides.length}`, {
-      x: 9.2, y: 5.1, w: 0.5, h: 0.25, fontSize: 9, color: BORDER, align: "right",
+    // Footer
+    slide.addText(plan.title, {
+      x: 0.6, y: 5.1, w: 8.8, h: 0.25, fontSize: 9, color: BORDER, align: "left",
     });
   }
 
