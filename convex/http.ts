@@ -183,4 +183,33 @@ http.route({
   }),
 });
 
+// ── Chat ─────────────────────────────────────────────────────────────────────
+http.route({
+  path: "/chat/pending",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    const pending = await ctx.runQuery(api.chatMessages.getPending);
+    return json(pending);
+  }),
+});
+
+http.route({
+  path: "/chat/respond",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const { userMessageId, agentId, content } = await req.json() as {
+      userMessageId: string;
+      agentId: string;
+      content: string;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ctx.runMutation(api.chatMessages.addAgentResponse, {
+      userMessageId: userMessageId as any,
+      agentId,
+      content,
+    });
+    return json({ ok: true });
+  }),
+});
+
 export default http;

@@ -71,6 +71,15 @@ export default defineSchema({
     createdAt: v.string(),
   }).index("by_status", ["status"]),
 
+  // Chat Messages
+  chatMessages: defineTable({
+    agentId: v.string(),
+    role: v.string(),           // 'user' | 'agent'
+    content: v.string(),
+    status: v.string(),         // 'pending' | 'done' | 'error'
+    timestamp: v.string(),
+  }).index("by_agent", ["agentId"]).index("by_status", ["status"]),
+
   // Projects
   projects: defineTable({
     name: v.string(),
