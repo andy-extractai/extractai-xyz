@@ -26,7 +26,6 @@ const NAV_ITEMS: NavItem[] = [
   },
   { href: "/memory",   label: "Memory",   emoji: "🧠" },
   { href: "/team",     label: "Team",     emoji: "👥" },
-  { href: "/people",   label: "People",   emoji: "📇" },
   { href: "/chat",     label: "Chat",     emoji: "💬" },
 ];
 
