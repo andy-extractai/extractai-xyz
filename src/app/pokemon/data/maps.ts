@@ -341,6 +341,125 @@ const oaksLabCollision: boolean[][] = oaksLabTiles.map(row =>
   row.map(tile => ([TILE.BUILDING_WALL, TILE.SHELF, TILE.TABLE, TILE.PC_MACHINE] as number[]).includes(tile))
 );
 
+// Player's House Interior: 10x10
+const playerHouseTiles: number[][] = (() => {
+  const w = 10, h = 10;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.BUILDING_FLOOR;
+    }
+  }
+
+  // Walls: top row and left/right columns
+  for (let x = 0; x < w; x++) { tiles[0][x] = TILE.BUILDING_WALL; }
+  for (let y = 0; y < h; y++) { tiles[y][0] = TILE.BUILDING_WALL; tiles[y][w - 1] = TILE.BUILDING_WALL; }
+
+  // Bed
+  tiles[2][3] = TILE.TABLE;
+  tiles[2][4] = TILE.TABLE;
+
+  // PC
+  tiles[1][7] = TILE.PC_MACHINE;
+
+  // Shelves
+  tiles[1][8] = TILE.SHELF;
+  tiles[1][9] = TILE.SHELF;
+
+  // TV area
+  tiles[4][3] = TILE.TABLE;
+  tiles[4][4] = TILE.TABLE;
+
+  // Exit mat
+  tiles[9][4] = TILE.MAT;
+  tiles[9][5] = TILE.MAT;
+
+  return tiles;
+})();
+
+const playerHouseCollision: boolean[][] = playerHouseTiles.map(row =>
+  row.map(tile => ([TILE.BUILDING_WALL, TILE.PC_MACHINE, TILE.SHELF, TILE.TABLE] as number[]).includes(tile))
+);
+
+// Rival's House Interior: 10x10
+const rivalHouseTiles: number[][] = (() => {
+  const w = 10, h = 10;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.BUILDING_FLOOR;
+    }
+  }
+
+  // Walls: top row and left/right columns
+  for (let x = 0; x < w; x++) { tiles[0][x] = TILE.BUILDING_WALL; }
+  for (let y = 0; y < h; y++) { tiles[y][0] = TILE.BUILDING_WALL; tiles[y][w - 1] = TILE.BUILDING_WALL; }
+
+  // Bed
+  tiles[2][3] = TILE.TABLE;
+  tiles[2][4] = TILE.TABLE;
+
+  // PC
+  tiles[1][7] = TILE.PC_MACHINE;
+
+  // Shelves
+  tiles[1][8] = TILE.SHELF;
+  tiles[1][9] = TILE.SHELF;
+
+  // TV area
+  tiles[4][3] = TILE.TABLE;
+  tiles[4][4] = TILE.TABLE;
+
+  // Exit mat
+  tiles[9][4] = TILE.MAT;
+  tiles[9][5] = TILE.MAT;
+
+  return tiles;
+})();
+
+const rivalHouseCollision: boolean[][] = rivalHouseTiles.map(row =>
+  row.map(tile => ([TILE.BUILDING_WALL, TILE.PC_MACHINE, TILE.SHELF, TILE.TABLE] as number[]).includes(tile))
+);
+
+// Poké Mart Interior: 12x10
+const pokeMartTiles: number[][] = (() => {
+  const w = 12, h = 10;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.BUILDING_FLOOR;
+    }
+  }
+
+  // Walls: top row and side columns
+  for (let x = 0; x < w; x++) { tiles[0][x] = TILE.BUILDING_WALL; }
+  for (let y = 0; y < h; y++) { tiles[y][0] = TILE.BUILDING_WALL; tiles[y][w - 1] = TILE.BUILDING_WALL; }
+
+  // Counter across x:2-9 at y:2
+  for (let x = 2; x <= 9; x++) tiles[2][x] = TILE.COUNTER;
+
+  // Shelves
+  tiles[1][1] = TILE.SHELF;
+  tiles[1][10] = TILE.SHELF;
+  tiles[4][1] = TILE.SHELF;
+  tiles[5][1] = TILE.SHELF;
+  tiles[4][10] = TILE.SHELF;
+  tiles[5][10] = TILE.SHELF;
+
+  // Exit mat
+  tiles[9][5] = TILE.MAT;
+  tiles[9][6] = TILE.MAT;
+
+  return tiles;
+})();
+
+const pokeMartCollision: boolean[][] = pokeMartTiles.map(row =>
+  row.map(tile => ([TILE.BUILDING_WALL, TILE.COUNTER, TILE.SHELF] as number[]).includes(tile))
+);
+
 export const MAPS: Record<string, MapData> = {
   palletTown: {
     id: 'palletTown',
@@ -372,6 +491,8 @@ export const MAPS: Record<string, MapData> = {
     ],
     doors: [
       { x: 10, y: 14, targetMap: 'oaksLab', targetX: 4, targetY: 10 },
+      { x: 5, y: 6, targetMap: 'playerHouse', targetX: 4, targetY: 8 },
+      { x: 14, y: 6, targetMap: 'rivalHouse', targetX: 4, targetY: 8 },
     ],
   },
   route1: {
@@ -454,6 +575,7 @@ export const MAPS: Record<string, MapData> = {
     ],
     doors: [
       { x: 6, y: 8, targetMap: 'pokemonCenter', targetX: 5, targetY: 8 },
+      { x: 19, y: 8, targetMap: 'pokeMart', targetX: 5, targetY: 8 },
     ],
   },
   pokemonCenter: {
@@ -503,8 +625,83 @@ export const MAPS: Record<string, MapData> = {
       },
     ],
     doors: [
-      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 8 },
-      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 8 },
+      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
+      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
+    ],
+  },
+  playerHouse: {
+    id: 'playerHouse',
+    name: "PLAYER'S HOUSE",
+    width: 10,
+    height: 10,
+    tiles: playerHouseTiles,
+    collision: playerHouseCollision,
+    connections: [],
+    signs: [],
+    npcs: [
+      {
+        x: 5, y: 5, name: 'Mom',
+        dialog: [
+          'You should not run inside!',
+          'Have you been to see PROF. OAK?',
+          'Your POKeMON journey is just beginning!',
+        ],
+        direction: 'down',
+      },
+    ],
+    doors: [
+      { x: 4, y: 9, targetMap: 'palletTown', targetX: 5, targetY: 7 },
+      { x: 5, y: 9, targetMap: 'palletTown', targetX: 5, targetY: 7 },
+    ],
+  },
+  rivalHouse: {
+    id: 'rivalHouse',
+    name: "RIVAL'S HOUSE",
+    width: 10,
+    height: 10,
+    tiles: rivalHouseTiles,
+    collision: rivalHouseCollision,
+    connections: [],
+    signs: [],
+    npcs: [
+      {
+        x: 5, y: 5, name: 'Sister',
+        dialog: [
+          'My brother BLUE went to PROF. OAK.',
+          'He said something about a POKeMON!',
+          'You should go see the PROFESSOR too!',
+        ],
+        direction: 'down',
+      },
+    ],
+    doors: [
+      { x: 4, y: 9, targetMap: 'palletTown', targetX: 14, targetY: 7 },
+      { x: 5, y: 9, targetMap: 'palletTown', targetX: 14, targetY: 7 },
+    ],
+  },
+  pokeMart: {
+    id: 'pokeMart',
+    name: 'POKe MART',
+    width: 12,
+    height: 10,
+    tiles: pokeMartTiles,
+    collision: pokeMartCollision,
+    connections: [],
+    signs: [],
+    npcs: [
+      {
+        x: 5, y: 3, name: 'Clerk',
+        dialog: [
+          'Welcome to the POKe MART!',
+          'We have all your POKeMON needs!',
+          'Come back anytime!',
+        ],
+        direction: 'down',
+      },
+    ],
+    doors: [
+      { x: 5, y: 9, targetMap: 'viridianCity', targetX: 19, targetY: 9 },
+      { x: 6, y: 9, targetMap: 'viridianCity', targetX: 19, targetY: 9 },
     ],
   },
 };
