@@ -14,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/people",          label: "People",         emoji: "📇" },
   { href: "/lesson-planner", label: "Lesson Planner",  emoji: "📚" },
   { href: "/chat",            label: "Chat",            emoji: "💬" },
+  { href: "/consensus",      label: "Signals",         emoji: "📡" },
 ];
 
 export default function Sidebar() {

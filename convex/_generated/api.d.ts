@@ -15,8 +15,10 @@ import type * as cronJobs from "../cronJobs.js";
 import type * as http from "../http.js";
 import type * as lessonPlans from "../lessonPlans.js";
 import type * as projects from "../projects.js";
+import type * as signals from "../signals.js";
 import type * as tasks from "../tasks.js";
 import type * as team from "../team.js";
+import type * as topics from "../topics.js";
 
 import type {
   ApiFromModules,
@@ -32,8 +34,10 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   lessonPlans: typeof lessonPlans;
   projects: typeof projects;
+  signals: typeof signals;
   tasks: typeof tasks;
   team: typeof team;
+  topics: typeof topics;
 }>;
 
 /**

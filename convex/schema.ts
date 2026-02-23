@@ -80,6 +80,35 @@ export default defineSchema({
     timestamp: v.string(),
   }).index("by_agent", ["agentId"]).index("by_status", ["status"]),
 
+  // ── Consensus Signal Detector ──────────────────────────────────────────────
+
+  // Topics being tracked (BTC, AI, Tesla, etc.)
+  topics: defineTable({
+    name: v.string(),           // "BTC", "AI", "Nvidia"
+    description: v.optional(v.string()),
+    status: v.string(),         // "active" | "paused"
+    addedAt: v.string(),
+  }).index("by_status", ["status"]),
+
+  // Signal snapshots — one per topic per scan
+  signals: defineTable({
+    topicId: v.id("topics"),
+    topicName: v.string(),
+    timestamp: v.string(),
+    // Per-source scores (-100 bearish → +100 bullish)
+    socialScore: v.number(),
+    socialSummary: v.string(),
+    newsScore: v.number(),
+    newsSummary: v.string(),
+    momentumScore: v.number(),
+    momentumSummary: v.string(),
+    // Sage's consensus calculation
+    consensusScore: v.number(),   // 0–100 signal strength
+    direction: v.string(),        // "bullish" | "bearish" | "neutral" | "mixed"
+    strength: v.string(),         // "strong" | "moderate" | "weak"
+    explanation: v.string(),      // 1-sentence plain-English summary
+  }).index("by_topic", ["topicId"]).index("by_timestamp", ["timestamp"]),
+
   // Projects
   projects: defineTable({
     name: v.string(),

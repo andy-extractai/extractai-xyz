@@ -183,6 +183,45 @@ http.route({
   }),
 });
 
+// ── Consensus: Topics ─────────────────────────────────────────────────────────
+http.route({
+  path: "/consensus/topics",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    return json(await ctx.runQuery(api.topics.list));
+  }),
+});
+
+http.route({
+  path: "/consensus/topics",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const body = await req.json() as { name: string; description?: string };
+    const id = await ctx.runMutation(api.topics.upsertByName, body);
+    return json({ id });
+  }),
+});
+
+// ── Consensus: Signals ────────────────────────────────────────────────────────
+http.route({
+  path: "/consensus/signals",
+  method: "GET",
+  handler: httpAction(async (ctx) => {
+    return json(await ctx.runQuery(api.signals.latestAll));
+  }),
+});
+
+http.route({
+  path: "/consensus/signals",
+  method: "POST",
+  handler: httpAction(async (ctx, req) => {
+    const body = await req.json() as Parameters<typeof ctx.runMutation>[1];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const id = await ctx.runMutation(api.signals.store, body as any);
+    return json({ id });
+  }),
+});
+
 // ── Chat ─────────────────────────────────────────────────────────────────────
 http.route({
   path: "/chat/pending",
