@@ -433,13 +433,13 @@ export class OverworldScene extends Phaser.Scene {
     // Check for door interaction (facing a door)
     const tile = this.currentMap.tiles[checkY]?.[checkX];
     if (tile === TILE.DOOR) {
+      // Gym door special case (locked, no door entry in map data)
+      if (this.currentMap.id === 'viridianCity' && checkX === 12 && checkY === 4) {
+        this.showDialogSequence(["The door is locked..."]);
+        return;
+      }
       const door = this.currentMap.doors.find(d => d.x === checkX && d.y === checkY);
       if (door) {
-        // Gym door special case
-        if (this.currentMap.id === 'viridianCity' && checkX === 12 && checkY === 3) {
-          this.showDialogSequence(["The door is locked..."]);
-          return;
-        }
         this.transitionToMap(door.targetMap, door.targetX, door.targetY);
       }
     }

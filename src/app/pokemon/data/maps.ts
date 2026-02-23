@@ -239,10 +239,10 @@ const viridianCityTiles: number[][] = (() => {
   for (let y = 6; y <= 8; y++) for (let x = 16; x <= 21; x++) tiles[y][x] = TILE.BUILDING_WALL;
   tiles[8][19] = TILE.DOOR;
 
-  // Gym (top center, rows 1-3, cols 10-15) - with sign saying locked
-  for (let y = 1; y <= 1; y++) for (let x = 9; x <= 15; x++) tiles[y][x] = TILE.BUILDING_ROOF;
-  for (let y = 2; y <= 3; y++) for (let x = 9; x <= 15; x++) tiles[y][x] = TILE.BUILDING_WALL;
-  tiles[3][12] = TILE.DOOR;
+  // Gym (top center, rows 2-4, cols 9-15) - locked
+  for (let y = 2; y <= 2; y++) for (let x = 9; x <= 15; x++) tiles[y][x] = TILE.BUILDING_ROOF;
+  for (let y = 3; y <= 4; y++) for (let x = 9; x <= 15; x++) tiles[y][x] = TILE.BUILDING_WALL;
+  tiles[4][12] = TILE.DOOR;
 
   // Some flowers and trees
   tiles[12][5] = TILE.FLOWER;
@@ -253,9 +253,9 @@ const viridianCityTiles: number[][] = (() => {
   tiles[14][20] = TILE.TREE;
   tiles[14][21] = TILE.TREE;
 
-  // Sign
-  tiles[9][6] = TILE.SIGN;
-  tiles[9][19] = TILE.SIGN;
+  // Signs (offset from door exits to avoid spawn-on-collision)
+  tiles[9][5] = TILE.SIGN;
+  tiles[9][18] = TILE.SIGN;
 
   return tiles;
 })();
@@ -562,8 +562,8 @@ export const MAPS: Record<string, MapData> = {
       },
     ],
     signs: [
-      { x: 6, y: 9, text: 'VIRIDIAN CITY POKéMON CENTER\nHeal your POKéMON!' },
-      { x: 19, y: 9, text: 'VIRIDIAN CITY POKé MART' },
+      { x: 5, y: 9, text: 'VIRIDIAN CITY POKéMON CENTER\nHeal your POKéMON!' },
+      { x: 18, y: 9, text: 'VIRIDIAN CITY POKé MART' },
     ],
     npcs: [
       {
