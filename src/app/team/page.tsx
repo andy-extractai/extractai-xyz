@@ -35,7 +35,9 @@ interface TeamMember {
   emoji: string;
   role: string;
   description: string;
-  status: string; // "active" | "standby" | "inactive"
+  status: string; // derived: "active" | "standby"
+  currentTask: string | null; // derived from in_progress tasks
+  activeTaskCount: number;
   skills?: string[];
   is_lead?: boolean;
 }
@@ -131,11 +133,11 @@ function DeskCard({ member, d, isLead = false }: { member: TeamMember; d: boolea
           )}
         </div>
 
-        {/* Activity line */}
+        {/* Activity line — shows actual task title when active */}
         <div className="h-5 flex items-center">
           {isActive ? (
             <span className={`text-[10px] font-medium ${accentCls.text} text-center leading-tight line-clamp-2 max-w-[120px]`}>
-              {member.role}
+              {member.currentTask ?? member.role}
             </span>
           ) : (
             <span className={`text-[10px] ${t(d, "text-zinc-600", "text-zinc-400")} italic`}>
@@ -156,11 +158,11 @@ function DeskCard({ member, d, isLead = false }: { member: TeamMember; d: boolea
         <div className={`text-[10px] mt-0.5 flex items-center gap-1.5`}>
           <span
             className={`inline-block w-1.5 h-1.5 rounded-full flex-shrink-0 ${
-              isActive ? "bg-emerald-400" : t(d, "bg-zinc-600", "bg-zinc-400")
+              isActive ? "bg-emerald-400 animate-pulse" : t(d, "bg-zinc-600", "bg-zinc-400")
             }`}
           />
           <span className={isActive ? accentCls.text : t(d, "text-zinc-500", "text-zinc-500")}>
-            {isActive ? "active" : "idle"}
+            {isActive ? `${member.activeTaskCount} task${member.activeTaskCount !== 1 ? "s" : ""}` : "idle"}
           </span>
           <span className={`mx-0.5 ${t(d, "text-zinc-700", "text-zinc-300")}`}>·</span>
           <span className={t(d, "text-zinc-600", "text-zinc-400")}>{member.role}</span>
@@ -173,7 +175,7 @@ function DeskCard({ member, d, isLead = false }: { member: TeamMember; d: boolea
 export default function TeamPage() {
   const { theme } = useTheme();
   const d = theme === "dark";
-  const team = useQuery(api.team.list);
+  const team = useQuery(api.team.listWithTaskStatus);
 
   const lead = team?.find((m) => m.is_lead);
   const workers = team?.filter((m) => !m.is_lead) ?? [];

@@ -54,6 +54,42 @@ http.route({
   }),
 });
 
+http.route({
+  pathPrefix: "/tasks/",
+  method: "PATCH",
+  handler: httpAction(async (ctx, req) => {
+    const url = new URL(req.url);
+    const id = url.pathname.split("/tasks/")[1];
+    if (!id) return json({ error: "missing id" }, 400);
+    const patch = await req.json() as {
+      status?: string;
+      title?: string;
+      description?: string;
+      assigned?: string;
+      priority?: string;
+      completed?: string;
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await ctx.runMutation(api.tasks.update, { id: id as any, ...patch });
+    return json({ ok: true });
+  }),
+});
+
+http.route({
+  pathPrefix: "/tasks/",
+  method: "OPTIONS",
+  handler: httpAction(async () => {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      },
+    });
+  }),
+});
+
 // ── Contacts ─────────────────────────────────────────────────────────────────
 http.route({
   path: "/contacts",
