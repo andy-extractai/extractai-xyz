@@ -15,6 +15,7 @@ export interface SaveData {
   visitedMaps: string[];
   pokedexSeen: number[];
   pokedexCaught: number[];
+  defeatedTrainers?: string[];
 }
 
 export function saveGame(data: SaveData): void {

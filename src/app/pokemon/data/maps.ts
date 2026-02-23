@@ -44,7 +44,9 @@ export interface MapNPC {
   y: number;
   name: string;
   dialog: string[];
+  defeatedDialog?: string[];
   direction: 'down' | 'up' | 'left' | 'right';
+  team?: { id: number; level: number }[];
 }
 
 export interface MapDoor {
@@ -538,6 +540,27 @@ export const MAPS: Record<string, MapData> = {
           'POKéMON CENTER.',
         ],
         direction: 'left',
+      },
+      {
+        x: 6, y: 8, name: 'Bug Catcher',
+        dialog: ['Hey! You have POKéMON!', 'Come on, let\'s battle!'],
+        defeatedDialog: ['You\'re pretty good!'],
+        direction: 'right',
+        team: [{ id: 10, level: 5 }, { id: 13, level: 5 }],
+      },
+      {
+        x: 14, y: 18, name: 'Youngster Joey',
+        dialog: ['I just got my POKéMON!', 'Let me test them out!'],
+        defeatedDialog: ['Wow, you\'re strong!'],
+        direction: 'left',
+        team: [{ id: 19, level: 6 }, { id: 16, level: 6 }],
+      },
+      {
+        x: 5, y: 24, name: 'Lass',
+        dialog: ['My POKéMON is so cute!', 'But it\'s also strong!'],
+        defeatedDialog: ['Oh no, I lost...'],
+        direction: 'right',
+        team: [{ id: 39, level: 7 }],
       },
     ],
     doors: [],

@@ -2,7 +2,7 @@ import Phaser from 'phaser';
 import { GAME_WIDTH, GAME_HEIGHT, FONT_FAMILY, COLORS } from '../constants';
 
 // All Pokémon IDs we need sprites for
-const POKEMON_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 16, 17, 18, 19, 20, 21, 22, 25, 35, 39, 43, 44, 52, 53, 54, 55, 56, 57, 63, 64, 69, 70];
+const POKEMON_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 13, 16, 17, 18, 19, 20, 21, 22, 25, 35, 39, 43, 44, 52, 53, 54, 55, 56, 57, 63, 64, 69, 70];
 
 export class BootScene extends Phaser.Scene {
   constructor() {

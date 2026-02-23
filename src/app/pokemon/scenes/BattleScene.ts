@@ -23,7 +23,11 @@ interface BattleData {
     visitedMaps: string[];
     pokedexSeen: number[];
     pokedexCaught: number[];
+    defeatedTrainers: string[];
   };
+  trainerName?: string;
+  trainerTeam?: GamePokemon[];
+  trainerKey?: string;
 }
 
 // Status condition display info
@@ -88,6 +92,12 @@ export class BattleScene extends Phaser.Scene {
   private playerStatStages = { atk: 0, def: 0, spAtk: 0, spDef: 0, speed: 0 };
   private enemyStatStages = { atk: 0, def: 0, spAtk: 0, spDef: 0, speed: 0 };
 
+  // Trainer battle fields
+  private trainerName?: string;
+  private trainerTeam: GamePokemon[] = [];
+  private trainerKey?: string;
+  private isTrainerBattle = false;
+
   constructor() {
     super({ key: 'BattleScene' });
   }
@@ -97,6 +107,10 @@ export class BattleScene extends Phaser.Scene {
     this.items = data.items;
     this.returnData = data.returnData;
     this.enemyPokemon = data.wildPokemon;
+    this.trainerName = data.trainerName;
+    this.trainerTeam = data.trainerTeam || [];
+    this.trainerKey = data.trainerKey;
+    this.isTrainerBattle = !!data.trainerName;
 
     // Find first non-fainted party member
     this.activePartyIndex = this.party.findIndex(p => p.currentHp > 0);
@@ -154,8 +168,11 @@ export class BattleScene extends Phaser.Scene {
       duration: 600,
       ease: 'Power2',
       onComplete: () => {
+        const introMsg = this.isTrainerBattle
+          ? `${this.trainerName} sent out ${this.enemyPokemon.name}!`
+          : `A wild ${this.enemyPokemon.name} appeared!`;
         this.showMessages([
-          `A wild ${this.enemyPokemon.name} appeared!`,
+          introMsg,
           `Go! ${this.playerPokemon.name}!`,
         ], () => {
           this.showActionMenu();
@@ -1295,6 +1312,38 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
+    // Trainer battle: send out next Pokemon or mark defeated
+    if (this.isTrainerBattle && this.trainerTeam.length > 0) {
+      const nextPokemon = this.trainerTeam.shift()!;
+      this.phase = 'ended';
+      this.showMessages(messages, () => {
+        this.showMessages([`${this.trainerName} sent out ${nextPokemon.name}!`], () => {
+          this.scene.restart({
+            wildPokemon: nextPokemon,
+            party: this.party,
+            items: this.items,
+            returnData: this.returnData,
+            trainerName: this.trainerName,
+            trainerTeam: this.trainerTeam,
+            trainerKey: this.trainerKey,
+          } as BattleData);
+        });
+      });
+      return;
+    }
+
+    // Trainer defeated — record and award prize money
+    if (this.isTrainerBattle && this.trainerKey) {
+      if (!this.returnData.defeatedTrainers.includes(this.trainerKey)) {
+        this.returnData.defeatedTrainers.push(this.trainerKey);
+      }
+      // Award prize money based on enemy level
+      const prize = this.enemyPokemon.level * 40;
+      this.returnData.money += prize;
+      messages.push(`You defeated ${this.trainerName}!`);
+      messages.push(`Got $${prize} for winning!`);
+    }
+
     this.phase = 'ended';
     this.showMessages(messages, () => {
       this.endBattle();
@@ -1362,6 +1411,9 @@ export class BattleScene extends Phaser.Scene {
         party: this.party,
         items: this.items,
         returnData: this.returnData,
+        trainerName: this.trainerName,
+        trainerTeam: this.trainerTeam,
+        trainerKey: this.trainerKey,
       } as BattleData);
     });
   }
@@ -1369,6 +1421,13 @@ export class BattleScene extends Phaser.Scene {
   attemptRun() {
     this.phase = 'animating';
     this.hideMenuPanels();
+
+    if (this.isTrainerBattle) {
+      this.showMessages(["No! There's no running from a TRAINER battle!"], () => {
+        this.showActionMenu();
+      });
+      return;
+    }
 
     const playerSpeed = this.getEffectiveStat(this.playerPokemon, 'speed', this.playerStatStages);
     const enemySpeed = this.getEffectiveStat(this.enemyPokemon, 'speed', this.enemyStatStages);
@@ -1428,6 +1487,12 @@ export class BattleScene extends Phaser.Scene {
         this.enemyTurnAfterItem();
       });
     } else if (data.effect?.type === 'catch') {
+      if (this.isTrainerBattle) {
+        this.showMessages(["You can't catch another TRAINER's POKéMON!"], () => {
+          this.showActionMenu();
+        });
+        return;
+      }
       item.count--;
       const catchRate = POKEMON_DATA[this.enemyPokemon.id]?.catchRate || 45;
       const hpFactor = (3 * this.enemyPokemon.maxHp - 2 * this.enemyPokemon.currentHp) / (3 * this.enemyPokemon.maxHp);
@@ -1500,6 +1565,7 @@ export class BattleScene extends Phaser.Scene {
       visitedMaps: this.returnData.visitedMaps,
       pokedexSeen: this.returnData.pokedexSeen,
       pokedexCaught: this.returnData.pokedexCaught,
+      defeatedTrainers: this.returnData.defeatedTrainers,
     };
     saveGame(saveData);
 

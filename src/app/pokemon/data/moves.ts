@@ -110,6 +110,12 @@ export const MOVE_DATA: Record<string, MoveData> = {
     power: 50, accuracy: 95, pp: 30,
     description: 'The target is cut with a scythe or claw.',
   },
+  'Poison Sting': {
+    name: 'Poison Sting', type: 'Poison', category: 'Physical',
+    power: 15, accuracy: 100, pp: 35,
+    description: 'The user stabs the target with a poisonous stinger.',
+    effect: { type: 'poison', chance: 30 },
+  },
   'Poison Powder': {
     name: 'Poison Powder', type: 'Poison', category: 'Status',
     power: 0, accuracy: 75, pp: 35,

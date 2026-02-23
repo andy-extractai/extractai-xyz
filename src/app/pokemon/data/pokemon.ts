@@ -120,6 +120,24 @@ export const POKEMON_DATA: Record<number, PokemonData> = {
       { level: 1, move: 'Bite' },
     ],
   },
+  10: {
+    id: 10, name: 'Caterpie', types: ['Bug'],
+    baseStats: { hp: 45, atk: 30, def: 35, spAtk: 20, spDef: 20, speed: 45 },
+    catchRate: 255, expYield: 39,
+    levelUpMoves: [
+      { level: 1, move: 'Tackle' },
+    ],
+    evolutionLevel: 7, evolvesTo: 11,
+  },
+  13: {
+    id: 13, name: 'Weedle', types: ['Bug', 'Poison'],
+    baseStats: { hp: 40, atk: 35, def: 30, spAtk: 20, spDef: 20, speed: 50 },
+    catchRate: 255, expYield: 39,
+    levelUpMoves: [
+      { level: 1, move: 'Poison Sting' },
+    ],
+    evolutionLevel: 7, evolvesTo: 14,
+  },
   16: {
     id: 16, name: 'Pidgey', types: ['Normal', 'Flying'],
     baseStats: { hp: 40, atk: 45, def: 40, spAtk: 35, spDef: 35, speed: 56 },

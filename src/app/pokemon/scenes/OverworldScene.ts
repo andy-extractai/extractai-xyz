@@ -53,6 +53,7 @@ export class OverworldScene extends Phaser.Scene {
   private visitedMaps: string[] = ['palletTown'];
   private pokedexSeen: number[] = [];
   private pokedexCaught: number[] = [];
+  private defeatedTrainers: string[] = [];
 
   // UI state
   private dialogActive = false;
@@ -87,6 +88,7 @@ export class OverworldScene extends Phaser.Scene {
         this.visitedMaps = save.visitedMaps;
         this.pokedexSeen = save.pokedexSeen;
         this.pokedexCaught = save.pokedexCaught;
+        this.defeatedTrainers = save.defeatedTrainers || [];
         this.currentMap = MAPS[save.currentMap] || MAPS.palletTown;
         this.playerGridX = save.playerX;
         this.playerGridY = save.playerY;
@@ -121,6 +123,7 @@ export class OverworldScene extends Phaser.Scene {
         this.visitedMaps = save.visitedMaps;
         this.pokedexSeen = save.pokedexSeen;
         this.pokedexCaught = save.pokedexCaught;
+        this.defeatedTrainers = save.defeatedTrainers || [];
       }
       this.currentMap = MAPS[data.fromMap] || MAPS.palletTown;
       this.playerGridX = data.fromX ?? 9;
@@ -440,6 +443,51 @@ export class OverworldScene extends Phaser.Scene {
         });
         return;
       }
+      // Check if this is a trainer NPC
+      if (npc.team && npc.team.length > 0) {
+        const trainerKey = `${this.currentMap.id}_${npc.x}_${npc.y}`;
+        if (this.defeatedTrainers.includes(trainerKey)) {
+          // Already defeated — show defeated dialog
+          this.showDialogSequence(npc.defeatedDialog || ['...']);
+          return;
+        }
+        // Start trainer battle after dialog
+        this.showDialogSequence(npc.dialog, () => {
+          const team = npc.team!.map(t => createPokemon(t.id, t.level));
+          const firstPokemon = team.shift()!;
+          // Add to pokedex seen
+          for (const p of [firstPokemon, ...team]) {
+            if (!this.pokedexSeen.includes(p.id)) {
+              this.pokedexSeen.push(p.id);
+            }
+          }
+          this.doSave();
+          this.cameras.main.fadeOut(FADE_DURATION, 0, 0, 0);
+          this.cameras.main.once('camerafadeoutcomplete', () => {
+            this.scene.start('BattleScene', {
+              wildPokemon: firstPokemon,
+              party: this.party,
+              items: this.items,
+              returnData: {
+                currentMap: this.currentMap.id,
+                playerX: this.playerGridX,
+                playerY: this.playerGridY,
+                money: this.money,
+                badges: this.badges,
+                visitedMaps: this.visitedMaps,
+                pokedexSeen: this.pokedexSeen,
+                pokedexCaught: this.pokedexCaught,
+                defeatedTrainers: this.defeatedTrainers,
+              },
+              trainerName: npc.name,
+              trainerTeam: team,
+              trainerKey,
+            });
+          });
+        });
+        return;
+      }
+
       this.showDialogSequence(npc.dialog);
       return;
     }
@@ -655,6 +703,7 @@ export class OverworldScene extends Phaser.Scene {
               visitedMaps: this.visitedMaps,
               pokedexSeen: this.pokedexSeen,
               pokedexCaught: this.pokedexCaught,
+              defeatedTrainers: this.defeatedTrainers,
             },
           });
         });
@@ -676,6 +725,7 @@ export class OverworldScene extends Phaser.Scene {
       visitedMaps: this.visitedMaps,
       pokedexSeen: this.pokedexSeen,
       pokedexCaught: this.pokedexCaught,
+      defeatedTrainers: this.defeatedTrainers,
     };
     saveGame(saveData);
   }
