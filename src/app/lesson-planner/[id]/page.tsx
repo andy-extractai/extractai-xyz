@@ -9,6 +9,211 @@ import Link from "next/link";
 import { useTheme } from "../../components/ThemeProvider";
 import { motion } from "framer-motion";
 
+// ── Document generation ───────────────────────────────────────────────────────
+
+async function downloadPptx(plan: LessonPlan, sections: Section[]) {
+  const PptxGenJS = (await import("pptxgenjs")).default;
+  const pptx = new PptxGenJS();
+  pptx.layout = "LAYOUT_WIDE";
+
+  const BG_DARK  = "0f0f13";
+  const BG_SLIDE = "16161d";
+  const INDIGO   = "6366f1";
+  const WHITE    = "ffffff";
+  const MUTED    = "9999bb";
+  const BORDER   = "2a2a3a";
+
+  // ── Title slide ──
+  const title = pptx.addSlide();
+  title.background = { color: BG_DARK };
+  title.addShape(pptx.ShapeType.rect, { x: 0, y: 3.8, w: 10, h: 0.04, fill: { color: INDIGO } });
+  title.addText(plan.subject.toUpperCase(), {
+    x: 0.6, y: 1.4, w: 8.8, h: 0.4, fontSize: 12, bold: true,
+    color: INDIGO, charSpacing: 4,
+  });
+  title.addText(plan.title, {
+    x: 0.6, y: 1.9, w: 8.8, h: 1.6, fontSize: 36, bold: true, color: WHITE,
+    breakLine: false, wrap: true,
+  });
+  const meta = [plan.gradeLevel, plan.duration].filter(Boolean).join("  ·  ");
+  if (meta) title.addText(meta, { x: 0.6, y: 3.55, w: 8.8, h: 0.3, fontSize: 13, color: MUTED });
+
+  // ── Objectives slide ──
+  if (plan.learningObjectives) {
+    const obj = pptx.addSlide();
+    obj.background = { color: BG_SLIDE };
+    obj.addText("🎯  LEARNING OBJECTIVES", { x: 0.6, y: 0.4, w: 8.8, h: 0.5, fontSize: 11, bold: true, color: INDIGO, charSpacing: 3 });
+    obj.addShape(pptx.ShapeType.rect, { x: 0.6, y: 0.95, w: 8.8, h: 0.025, fill: { color: BORDER } });
+    obj.addText(plan.learningObjectives, { x: 0.6, y: 1.15, w: 8.8, h: 3.5, fontSize: 16, color: WHITE, valign: "top", wrap: true });
+  }
+
+  // ── Section slides ──
+  const ICONS: Record<string, string> = {
+    "overview": "📋", "learning objectives": "🎯", "materials needed": "📦",
+    "materials": "📦", "lesson outline": "🕐", "activities & exercises": "🔬",
+    "activities and exercises": "🔬", "activities": "🔬", "assessment": "📊",
+    "differentiation strategies": "♿", "homework/extension": "📝", "homework": "📝",
+  };
+
+  for (const section of sections) {
+    if (section.title.toLowerCase().includes("overview") && plan.learningObjectives) {
+      // Skip re-adding objectives already shown
+    }
+    const slide = pptx.addSlide();
+    slide.background = { color: BG_SLIDE };
+    const icon = ICONS[section.title.toLowerCase()] ?? "📄";
+    slide.addText(`${icon}  ${section.title.toUpperCase()}`, {
+      x: 0.6, y: 0.4, w: 8.8, h: 0.5, fontSize: 11, bold: true, color: INDIGO, charSpacing: 3,
+    });
+    slide.addShape(pptx.ShapeType.rect, { x: 0.6, y: 0.95, w: 8.8, h: 0.025, fill: { color: BORDER } });
+
+    // Parse bullets from content
+    const lines = parseContentLines(section.content)
+      .filter(l => l.type !== "blank")
+      .slice(0, 14);
+
+    if (lines.length > 0) {
+      const bullets = lines.map(l => ({
+        text: l.type === "timeline" ? `${l.time}  —  ${l.content}` : l.content,
+        options: { bullet: l.type === "bullet" || l.type === "numbered", fontSize: 14, color: l.type === "timeline" ? "aaaaee" : "ccccdd" }
+      }));
+      slide.addText(bullets, { x: 0.6, y: 1.2, w: 8.8, h: 3.5, valign: "top", wrap: true });
+    } else {
+      const plain = section.content.trim().slice(0, 600);
+      slide.addText(plain, { x: 0.6, y: 1.2, w: 8.8, h: 3.5, fontSize: 14, color: "ccccdd", valign: "top", wrap: true });
+    }
+
+    // Slide number
+    slide.addText(`${pptx.slides.length}`, {
+      x: 9.2, y: 5.1, w: 0.5, h: 0.25, fontSize: 9, color: BORDER, align: "right",
+    });
+  }
+
+  await pptx.writeFile({ fileName: `${plan.title.replace(/[^a-z0-9 ]/gi, "")}.pptx` });
+}
+
+async function downloadDocx(plan: LessonPlan, sections: Section[]) {
+  const { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, BorderStyle } = await import("docx");
+
+  const children: InstanceType<typeof Paragraph>[] = [];
+
+  // Title
+  children.push(
+    new Paragraph({
+      children: [new TextRun({ text: plan.title, bold: true, size: 56, color: "1e1e2e" })],
+      heading: HeadingLevel.TITLE,
+      spacing: { after: 200 },
+    })
+  );
+
+  // Meta line
+  const metaParts = [plan.subject, plan.gradeLevel, plan.duration].filter(Boolean).join("  ·  ");
+  children.push(
+    new Paragraph({
+      children: [new TextRun({ text: metaParts, size: 22, color: "6366f1", bold: true })],
+      spacing: { after: 120 },
+    })
+  );
+
+  // Assignment types
+  if (plan.assignmentTypes.length > 0) {
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: plan.assignmentTypes.join("  ·  "), size: 20, color: "888888" })],
+        spacing: { after: 300 },
+      })
+    );
+  }
+
+  // Objectives callout
+  if (plan.learningObjectives) {
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: "🎯  Learning Objectives", bold: true, size: 26, color: "4f46e5" })],
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 200, after: 160 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "e0e0f0" } },
+      })
+    );
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: plan.learningObjectives, size: 22 })],
+        spacing: { after: 300 },
+      })
+    );
+  }
+
+  // Sections
+  const SECTION_ICONS: Record<string, string> = {
+    "overview": "📋", "learning objectives": "🎯", "materials needed": "📦",
+    "lesson outline": "🕐", "activities & exercises": "🔬", "assessment": "📊",
+    "differentiation strategies": "♿", "homework/extension": "📝",
+  };
+
+  for (const section of sections) {
+    const icon = SECTION_ICONS[section.title.toLowerCase()] ?? "📄";
+    children.push(
+      new Paragraph({
+        children: [new TextRun({ text: `${icon}  ${section.title}`, bold: true, size: 28, color: "4f46e5" })],
+        heading: HeadingLevel.HEADING_1,
+        spacing: { before: 400, after: 160 },
+        border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: "e0e0f0" } },
+      })
+    );
+
+    const lines = parseContentLines(section.content);
+    for (const line of lines) {
+      if (line.type === "blank") {
+        children.push(new Paragraph({ children: [], spacing: { after: 80 } }));
+        continue;
+      }
+      if (line.type === "bullet") {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: line.content, size: 22 })],
+          bullet: { level: 0 },
+          spacing: { after: 80 },
+        }));
+      } else if (line.type === "numbered") {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: `${line.num}. ${line.content}`, size: 22 })],
+          spacing: { after: 80 },
+        }));
+      } else if (line.type === "timeline") {
+        children.push(new Paragraph({
+          children: [
+            new TextRun({ text: `${line.time}  — `, bold: true, color: "6366f1", size: 22 }),
+            new TextRun({ text: line.content, size: 22 }),
+          ],
+          spacing: { after: 100 },
+        }));
+      } else {
+        children.push(new Paragraph({
+          children: [new TextRun({ text: line.content, size: 22 })],
+          spacing: { after: 80 },
+          alignment: AlignmentType.LEFT,
+        }));
+      }
+    }
+  }
+
+  const doc = new Document({
+    styles: {
+      default: {
+        document: { run: { font: "Calibri", size: 22 } },
+      },
+    },
+    sections: [{ properties: {}, children }],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${plan.title.replace(/[^a-z0-9 ]/gi, "")}.docx`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function t(d: boolean, dark: string, light: string) {
   return d ? dark : light;
 }
@@ -303,6 +508,17 @@ export default function LessonPlanDetailPage({ params }: { params: Promise<{ id:
   const { theme } = useTheme();
   const d = theme === "dark";
   const plan = useQuery(api.lessonPlans.get, { id: id as AnyId }) as LessonPlan | undefined | null;
+  const [pptxLoading, setPptxLoading] = useState(false);
+  const [docxLoading, setDocxLoading] = useState(false);
+
+  async function handlePptx(plan: LessonPlan, sections: Section[]) {
+    setPptxLoading(true);
+    try { await downloadPptx(plan, sections); } finally { setPptxLoading(false); }
+  }
+  async function handleDocx(plan: LessonPlan, sections: Section[]) {
+    setDocxLoading(true);
+    try { await downloadDocx(plan, sections); } finally { setDocxLoading(false); }
+  }
 
   if (plan === undefined) {
     return (
@@ -341,7 +557,7 @@ export default function LessonPlanDetailPage({ params }: { params: Promise<{ id:
             ← Lesson Planner
           </Link>
 
-          <div className="mt-3 flex items-start justify-between gap-4">
+          <div className="mt-3 flex items-start justify-between gap-4 flex-wrap">
             <div className="min-w-0">
               <p className={`text-[10px] font-bold tracking-widest uppercase mb-1 ${t(d, "text-indigo-400", "text-indigo-500")}`}>
                 {plan.subject}
@@ -350,13 +566,31 @@ export default function LessonPlanDetailPage({ params }: { params: Promise<{ id:
                 {plan.title}
               </h1>
             </div>
-            {/* Print button */}
-            <button
-              onClick={() => window.print()}
-              className={`flex-shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400")}`}
-            >
-              🖨 Print
-            </button>
+            {/* Action buttons — only when plan is done */}
+            {plan.status === "done" && sections.length > 0 && (
+              <div className="flex items-center gap-2 flex-shrink-0">
+                <button
+                  onClick={() => handleDocx(plan, sections)}
+                  disabled={docxLoading}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-40", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 disabled:opacity-40")}`}
+                >
+                  {docxLoading ? "⏳" : "📄"} {docxLoading ? "Generating…" : "Word"}
+                </button>
+                <button
+                  onClick={() => handlePptx(plan, sections)}
+                  disabled={pptxLoading}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-40", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 disabled:opacity-40")}`}
+                >
+                  {pptxLoading ? "⏳" : "📊"} {pptxLoading ? "Generating…" : "PowerPoint"}
+                </button>
+                <button
+                  onClick={() => window.print()}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400")}`}
+                >
+                  🖨 Print
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Meta pills */}

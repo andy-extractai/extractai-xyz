@@ -11,8 +11,10 @@
   },
   "dependencies": {
     "convex": "^1.32.0",
+    "docx": "^9.5.3",
     "framer-motion": "^12.34.3",
     "next": "16.1.6",
+    "pptxgenjs": "^4.0.1",
     "react": "19.2.3",
     "react-dom": "19.2.3"
   },
