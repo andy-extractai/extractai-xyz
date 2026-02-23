@@ -8,10 +8,8 @@ const PokemonGame = dynamic(() => import('./Game'), { ssr: false });
 export default function PokemonPage() {
   return (
     <MobileGate>
-      <div className="min-h-screen bg-black flex flex-col">
-        <div className="flex-1">
-          <PokemonGame />
-        </div>
+      <div style={{ background: '#000', width: '100vw', height: '100vh', overflow: 'hidden' }}>
+        <PokemonGame />
       </div>
     </MobileGate>
   );

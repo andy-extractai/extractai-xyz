@@ -503,8 +503,8 @@ export const MAPS: Record<string, MapData> = {
       },
     ],
     doors: [
-      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
-      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
+      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 8 },
+      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 8 },
     ],
   },
 };

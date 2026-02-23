@@ -35,14 +35,14 @@ export default function Game() {
       const P = Phaser as any;
       const config = {
         type: P.AUTO,
-        width: GAME_WIDTH,
-        height: GAME_HEIGHT,
         parent: containerRef.current!,
         pixelArt: true,
         backgroundColor: '#000000',
         scale: {
           mode: P.Scale.FIT,
           autoCenter: P.Scale.CENTER_BOTH,
+          width: GAME_WIDTH,
+          height: GAME_HEIGHT,
         },
         scene: [BootScene, TitleScene, StarterSelectScene, OverworldScene, BattleScene, PokemonCenterScene],
       };
@@ -64,12 +64,12 @@ export default function Game() {
     <div
       ref={containerRef}
       style={{
-        width: '100%',
+        position: 'fixed',
+        inset: 0,
+        width: '100vw',
         height: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
         background: '#000',
+        overflow: 'hidden',
       }}
     />
   );
