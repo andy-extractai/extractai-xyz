@@ -5,6 +5,7 @@ import {
 } from '../constants';
 import { MAPS, MapData, TILE } from '../data/maps';
 import { ROUTE_ENCOUNTERS, createPokemon, GamePokemon } from '../data/pokemon';
+import { SHOP_INVENTORY } from '../data/items';
 import { saveGame, loadGame, SaveData } from '../utils/save';
 
 const TILE_TEXTURES: Record<number, string> = {
@@ -416,6 +417,26 @@ export class OverworldScene extends Phaser.Scene {
       if (npc.name === 'Nurse Joy') {
         this.showDialogSequence(npc.dialog, () => {
           this.healParty();
+        });
+        return;
+      }
+      // Check if Clerk for shopping
+      if (npc.name === 'Clerk') {
+        this.doSave();
+        this.scene.start('ShopScene', {
+          shopItems: SHOP_INVENTORY.viridian,
+          money: this.money,
+          items: this.items,
+          returnData: {
+            currentMap: this.currentMap.id,
+            playerX: this.playerGridX,
+            playerY: this.playerGridY,
+            party: this.party,
+            badges: this.badges,
+            visitedMaps: this.visitedMaps,
+            pokedexSeen: this.pokedexSeen,
+            pokedexCaught: this.pokedexCaught,
+          },
         });
         return;
       }

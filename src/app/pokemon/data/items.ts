@@ -59,8 +59,13 @@ export const ITEM_DATA: Record<string, ItemData> = {
     category: 'status',
     effect: { type: 'revive', value: 0.5 },
   },
+  'escape-rope': {
+    id: 'escape-rope', name: 'Escape Rope', price: 550,
+    description: 'A long, durable rope. Use it to escape from caves or dungeons.',
+    category: 'key',
+  },
 };
 
 export const SHOP_INVENTORY: Record<string, string[]> = {
-  viridian: ['poke-ball', 'potion', 'antidote', 'paralyze-heal', 'awakening'],
+  viridian: ['poke-ball', 'potion', 'super-potion', 'antidote', 'paralyze-heal', 'escape-rope'],
 };

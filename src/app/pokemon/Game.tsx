@@ -27,6 +27,7 @@ export default function Game() {
       const { OverworldScene } = await import('./scenes/OverworldScene');
       const { BattleScene } = await import('./scenes/BattleScene');
       const { PokemonCenterScene } = await import('./scenes/PokemonCenterScene');
+      const { ShopScene } = await import('./scenes/ShopScene');
 
       // Wait for font to be available
       await document.fonts.ready;
@@ -43,7 +44,7 @@ export default function Game() {
         scale: {
           mode: P.Scale.NONE,
         },
-        scene: [BootScene, TitleScene, StarterSelectScene, OverworldScene, BattleScene, PokemonCenterScene],
+        scene: [BootScene, TitleScene, StarterSelectScene, OverworldScene, BattleScene, PokemonCenterScene, ShopScene],
       };
 
       gameRef.current = new P.Game(config);
