@@ -1,82 +1,66 @@
-import { ItemData } from './types';
-
-export const ITEMS: Record<string, ItemData> = {
-  pokeball:    { id: 'pokeball', name: 'Poké Ball', description: 'A device for catching wild Pokémon.', category: 'pokeball', price: 200 },
-  greatball:   { id: 'greatball', name: 'Great Ball', description: 'A good ball with a higher catch rate.', category: 'pokeball', price: 600 },
-  ultraball:   { id: 'ultraball', name: 'Ultra Ball', description: 'A high-performance ball.', category: 'pokeball', price: 1200 },
-  potion:      { id: 'potion', name: 'Potion', description: 'Restores 20 HP.', category: 'medicine', price: 300, effect: 'heal20' },
-  superPotion: { id: 'superPotion', name: 'Super Potion', description: 'Restores 50 HP.', category: 'medicine', price: 700, effect: 'heal50' },
-  hyperPotion: { id: 'hyperPotion', name: 'Hyper Potion', description: 'Restores 200 HP.', category: 'medicine', price: 1200, effect: 'heal200' },
-  antidote:    { id: 'antidote', name: 'Antidote', description: 'Cures poison.', category: 'medicine', price: 100, effect: 'curePoison' },
-  paralyzeHeal:{ id: 'paralyzeHeal', name: 'Parlyz Heal', description: 'Cures paralysis.', category: 'medicine', price: 200, effect: 'cureParalyze' },
-  awakening:   { id: 'awakening', name: 'Awakening', description: 'Wakes a sleeping Pokémon.', category: 'medicine', price: 250, effect: 'cureSleep' },
-  revive:      { id: 'revive', name: 'Revive', description: 'Revives a fainted Pokémon to half HP.', category: 'medicine', price: 1500, effect: 'revive' },
-  fullRestore: { id: 'fullRestore', name: 'Full Restore', description: 'Fully restores HP and status.', category: 'medicine', price: 3000, effect: 'fullRestore' },
-  repel:       { id: 'repel', name: 'Repel', description: 'Prevents wild encounters for 100 steps.', category: 'battle', price: 350, effect: 'repel' },
-  bicycle:     { id: 'bicycle', name: 'Bicycle', description: 'A folding bike. Doubles movement speed.', category: 'key', price: 0 },
-  oldRod:      { id: 'oldRod', name: 'Old Rod', description: 'Use to fish in water.', category: 'key', price: 0 },
-};
-
-export interface ShopInventory {
-  items: { itemId: string; }[];
+export interface ItemData {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  category: 'pokeball' | 'potion' | 'status' | 'key';
+  effect?: {
+    type: 'heal' | 'catch' | 'cureStatus' | 'revive';
+    value?: number; // heal amount or catch rate modifier
+  };
 }
 
-export const MART_INVENTORY: Record<string, ShopInventory> = {
-  viridian: {
-    items: [
-      { itemId: 'pokeball' }, { itemId: 'potion' }, { itemId: 'antidote' },
-      { itemId: 'paralyzeHeal' }, { itemId: 'repel' },
-    ],
+export const ITEM_DATA: Record<string, ItemData> = {
+  'poke-ball': {
+    id: 'poke-ball', name: 'Poké Ball', price: 200,
+    description: 'A device for catching wild Pokémon.',
+    category: 'pokeball',
+    effect: { type: 'catch', value: 1 },
   },
-  pewter: {
-    items: [
-      { itemId: 'pokeball' }, { itemId: 'greatball' }, { itemId: 'potion' },
-      { itemId: 'superPotion' }, { itemId: 'antidote' }, { itemId: 'paralyzeHeal' },
-      { itemId: 'awakening' }, { itemId: 'repel' },
-    ],
+  'great-ball': {
+    id: 'great-ball', name: 'Great Ball', price: 600,
+    description: 'A good, high-performance Poké Ball.',
+    category: 'pokeball',
+    effect: { type: 'catch', value: 1.5 },
   },
-  cerulean: {
-    items: [
-      { itemId: 'greatball' }, { itemId: 'superPotion' }, { itemId: 'revive' },
-      { itemId: 'antidote' }, { itemId: 'repel' },
-    ],
+  'potion': {
+    id: 'potion', name: 'Potion', price: 300,
+    description: 'Restores 20 HP.',
+    category: 'potion',
+    effect: { type: 'heal', value: 20 },
   },
-  vermilion: {
-    items: [
-      { itemId: 'greatball' }, { itemId: 'ultraball' }, { itemId: 'superPotion' },
-      { itemId: 'hyperPotion' }, { itemId: 'revive' }, { itemId: 'fullRestore' },
-    ],
+  'super-potion': {
+    id: 'super-potion', name: 'Super Potion', price: 700,
+    description: 'Restores 50 HP.',
+    category: 'potion',
+    effect: { type: 'heal', value: 50 },
   },
-  celadon: {
-    items: [
-      { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
-      { itemId: 'revive' }, { itemId: 'repel' },
-    ],
+  'antidote': {
+    id: 'antidote', name: 'Antidote', price: 100,
+    description: 'Cures a poisoned Pokémon.',
+    category: 'status',
+    effect: { type: 'cureStatus' },
   },
-  lavender: {
-    items: [
-      { itemId: 'greatball' }, { itemId: 'superPotion' }, { itemId: 'antidote' },
-      { itemId: 'paralyzeHeal' }, { itemId: 'awakening' }, { itemId: 'revive' },
-      { itemId: 'repel' },
-    ],
+  'awakening': {
+    id: 'awakening', name: 'Awakening', price: 250,
+    description: 'Awakens a sleeping Pokémon.',
+    category: 'status',
+    effect: { type: 'cureStatus' },
   },
-  fuchsia: {
-    items: [
-      { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
-      { itemId: 'revive' }, { itemId: 'antidote' }, { itemId: 'repel' },
-    ],
+  'paralyze-heal': {
+    id: 'paralyze-heal', name: 'Paralyze Heal', price: 200,
+    description: 'Cures a paralyzed Pokémon.',
+    category: 'status',
+    effect: { type: 'cureStatus' },
   },
-  saffron: {
-    items: [
-      { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
-      { itemId: 'revive' }, { itemId: 'paralyzeHeal' }, { itemId: 'awakening' },
-      { itemId: 'repel' },
-    ],
+  'revive': {
+    id: 'revive', name: 'Revive', price: 1500,
+    description: 'Revives a fainted Pokémon with half its max HP.',
+    category: 'status',
+    effect: { type: 'revive', value: 0.5 },
   },
-  cinnabar: {
-    items: [
-      { itemId: 'ultraball' }, { itemId: 'hyperPotion' }, { itemId: 'fullRestore' },
-      { itemId: 'revive' }, { itemId: 'repel' },
-    ],
-  },
+};
+
+export const SHOP_INVENTORY: Record<string, string[]> = {
+  viridian: ['poke-ball', 'potion', 'antidote', 'paralyze-heal', 'awakening'],
 };

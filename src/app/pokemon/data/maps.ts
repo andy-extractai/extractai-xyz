@@ -1,1448 +1,510 @@
-// Map system - each map is a 2D tile grid
-// Tile types: 0=grass, 1=path, 2=tallgrass, 3=water, 4=tree, 5=building, 6=door, 7=wall, 
-// 8=ledge, 9=sign, 10=flower, 11=fence, 12=counter, 13=shelf, 14=pc, 15=healpad, 16=cuttree
+// Tile types
+export const TILE = {
+  GRASS: 0,
+  PATH: 1,
+  TREE: 2,
+  BUILDING_WALL: 3,
+  BUILDING_ROOF: 4,
+  WATER: 5,
+  TALL_GRASS: 6,
+  DOOR: 7,
+  SIGN: 8,
+  LEDGE: 9,
+  FENCE: 10,
+  FLOWER: 11,
+  BUILDING_FLOOR: 12,
+  COUNTER: 13,
+  HEAL_MACHINE: 14,
+  PC_MACHINE: 15,
+  SHELF: 16,
+  TABLE: 17,
+  MAT: 18,
+} as const;
 
-export interface MapTile {
-  type: number;
-  walkable: boolean;
-  encounter?: boolean;  // can trigger wild encounter
-  interaction?: string; // NPC id or sign text
-  door?: { map: string; x: number; y: number }; // warp to another map
-  trainer?: string; // trainer id
+export type TileType = (typeof TILE)[keyof typeof TILE];
+
+export interface MapConnection {
+  direction: 'north' | 'south' | 'east' | 'west';
+  targetMap: string;
+  targetX: number;
+  targetY: number;
+  fromXMin: number;
+  fromXMax: number;
+  fromY: number;
 }
 
-export interface WildEncounter {
-  speciesId: string;
-  minLevel: number;
-  maxLevel: number;
-  weight: number; // relative probability
-}
-
-export interface NPCData {
-  id: string;
-  name: string;
+export interface MapSign {
   x: number;
   y: number;
-  direction: 'up' | 'down' | 'left' | 'right';
-  dialog: string[];
-  spriteType: string;
-  stationary?: boolean;
+  text: string;
 }
 
-export interface GameMap {
+export interface MapNPC {
+  x: number;
+  y: number;
+  name: string;
+  dialog: string[];
+  direction: 'down' | 'up' | 'left' | 'right';
+}
+
+export interface MapDoor {
+  x: number;
+  y: number;
+  targetMap: string;
+  targetX: number;
+  targetY: number;
+}
+
+export interface MapData {
   id: string;
   name: string;
   width: number;
   height: number;
-  tiles: number[][]; // just tile type numbers for compactness
-  encounters: WildEncounter[];
-  encounterRate: number; // 0-100 chance per step in tall grass
-  npcs: NPCData[];
-  trainers: string[]; // trainer ids present on this map
-  music?: string;
+  tiles: number[][];
+  collision: boolean[][];
+  connections: MapConnection[];
+  signs: MapSign[];
+  npcs: MapNPC[];
+  doors: MapDoor[];
+  encounterZone?: string; // key into ROUTE_ENCOUNTERS
 }
 
-// Tile definitions
-export const TILE_DEFS: Record<number, { walkable: boolean; encounter?: boolean; color: string; label: string }> = {
-  0:  { walkable: true,  color: '#4a7c3f', label: 'grass' },
-  1:  { walkable: true,  color: '#c4a86b', label: 'path' },
-  2:  { walkable: true,  encounter: true, color: '#2d5a1e', label: 'tallgrass' },
-  3:  { walkable: false, color: '#3498db', label: 'water' },
-  4:  { walkable: false, color: '#1a5e20', label: 'tree' },
-  5:  { walkable: false, color: '#8b4513', label: 'building' },
-  6:  { walkable: true,  color: '#654321', label: 'door' },
-  7:  { walkable: false, color: '#555', label: 'wall' },
-  8:  { walkable: true,  color: '#8b7355', label: 'ledge' },
-  9:  { walkable: false, color: '#888', label: 'sign' },
-  10: { walkable: true,  color: '#e74c3c', label: 'flower' },
-  11: { walkable: false, color: '#795548', label: 'fence' },
-  12: { walkable: false, color: '#8d6e63', label: 'counter' },
-  13: { walkable: false, color: '#5d4037', label: 'shelf' },
-  14: { walkable: false, color: '#2196f3', label: 'pc' },
-  15: { walkable: true,  color: '#e91e63', label: 'healpad' },
-  16: { walkable: false, color: '#33691e', label: 'cuttree' },
-  17: { walkable: false, color: '#6d4c41', label: 'bed' },
-  18: { walkable: false, color: '#8d6e63', label: 'table' },
-  19: { walkable: false, color: '#37474f', label: 'machine' },
-};
-
-// Helper to create a filled 2D array
-function fillMap(w: number, h: number, fill: number): number[][] {
-  return Array.from({ length: h }, () => Array(w).fill(fill));
-}
-
-function setRect(map: number[][], x: number, y: number, w: number, h: number, tile: number) {
-  for (let dy = 0; dy < h; dy++)
-    for (let dx = 0; dx < w; dx++)
-      if (y + dy < map.length && x + dx < map[0].length)
-        map[y + dy][x + dx] = tile;
-}
-
-function setRow(map: number[][], y: number, x1: number, x2: number, tile: number) {
-  for (let x = x1; x <= x2; x++) if (x < map[0].length) map[y][x] = tile;
-}
-
-function setCol(map: number[][], x: number, y1: number, y2: number, tile: number) {
-  for (let y = y1; y <= y2; y++) if (y < map.length) map[y][x] = tile;
-}
-
-// ===== PALLET TOWN =====
-function createPalletTown(): GameMap {
-  const w = 20, h = 20;
-  const tiles = fillMap(w, h, 0);
-  
-  // Border trees
-  setRect(tiles, 0, 0, w, 1, 4);
-  setRect(tiles, 0, 0, 1, h, 4);
-  setRect(tiles, w-1, 0, 1, h, 4);
-  setRect(tiles, 0, h-1, w, 1, 4);
-  
-  // Paths
-  setCol(tiles, 10, 1, 18, 1);
-  setRow(tiles, 10, 3, 17, 1);
-  setRow(tiles, 5, 5, 15, 1);
-  
-  // Player's house (top-left area)
-  setRect(tiles, 3, 2, 5, 4, 5);
-  tiles[5][5] = 6; // door
-  
-  // Oak's Lab (bottom-right area)
-  setRect(tiles, 12, 12, 6, 5, 5);
-  tiles[16][15] = 6; // door
-  
-  // Rival's house
-  setRect(tiles, 12, 2, 5, 4, 5);
-  tiles[5][14] = 6;
-  
-  // Flowers
-  setRect(tiles, 5, 7, 3, 2, 10);
-  setRect(tiles, 14, 7, 3, 2, 10);
-  
-  // Signs
-  tiles[10][8] = 9;
-  tiles[16][12] = 9;
-  
-  // Exit north to Route 1 (gap in trees)
-  tiles[0][9] = 1;
-  tiles[0][10] = 1;
-  tiles[0][11] = 1;
-
-  return {
-    id: 'pallet_town',
-    name: 'Pallet Town',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'mom', name: 'Mom', x: 5, y: 8, direction: 'down', dialog: ['Be careful out there, dear!', 'Come home if you need rest!'], spriteType: 'woman', stationary: true },
-      { id: 'oak_outside', name: 'Villager', x: 8, y: 12, direction: 'right', dialog: ['Professor Oak\'s lab is to the east!', 'He studies Pokémon.'], spriteType: 'man' },
-      { id: 'sign_pallet', name: 'Sign', x: 8, y: 10, direction: 'down', dialog: ['PALLET TOWN', 'Shades of your journey await!'], spriteType: 'sign', stationary: true },
-      { id: 'sign_oak_lab', name: 'Sign', x: 12, y: 16, direction: 'down', dialog: ['OAK POKÉMON RESEARCH LAB'], spriteType: 'sign', stationary: true },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== OAK'S LAB (interior) =====
-function createOakLab(): GameMap {
-  const w = 12, h = 10;
-  const tiles = fillMap(w, h, 1);
-  
-  // Walls
-  setRect(tiles, 0, 0, w, 1, 7);
-  setRect(tiles, 0, 0, 1, h, 7);
-  setRect(tiles, w-1, 0, 1, h, 7);
-  
-  // Shelves at top
-  setRow(tiles, 1, 1, 4, 13);
-  setRow(tiles, 1, 7, 10, 13);
-  
-  // Table with pokeballs in middle
-  setRect(tiles, 4, 3, 4, 2, 12);
-  
-  // PC
-  tiles[2][1] = 14;
-  
-  // Research machines
-  tiles[2][10] = 19;
-  tiles[3][10] = 19;
-  tiles[2][9] = 19;
-  
-  // Door at bottom
-  tiles[h-1][5] = 6;
-  tiles[h-1][6] = 6;
-  
-  return {
-    id: 'oak_lab',
-    name: "Oak's Lab",
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'oak', name: 'Prof. Oak', x: 5, y: 2, direction: 'down', dialog: ['Welcome to the world of Pokémon!'], spriteType: 'oak', stationary: true },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== PLAYER'S HOUSE =====
-function createPlayerHouse(): GameMap {
-  const w = 8, h = 8;
-  const tiles = fillMap(w, h, 1);
-  setRect(tiles, 0, 0, w, 1, 7);
-  setRect(tiles, 0, 0, 1, h, 7);
-  setRect(tiles, w-1, 0, 1, h, 7);
-  // Furniture
-  tiles[1][1] = 13; tiles[1][2] = 13; // shelf
-  tiles[2][6] = 14; // TV/PC
-  tiles[1][5] = 17; tiles[1][6] = 17; // bed
-  tiles[3][1] = 18; tiles[3][2] = 18; // table
-  // Door
-  tiles[h-1][3] = 6;
-  tiles[h-1][4] = 6;
-  
-  return {
-    id: 'player_house',
-    name: "Your House",
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'mom_inside', name: 'Mom', x: 3, y: 3, direction: 'down', 
-        dialog: ['Good morning, sweetie!', 'Prof. Oak was looking for you.', 'He\'s in his lab south of here.'], 
-        spriteType: 'woman', stationary: true },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== ROUTE 1 =====
-function createRoute1(): GameMap {
-  const w = 20, h = 30;
-  const tiles = fillMap(w, h, 0);
-  
-  // Trees on sides
-  setRect(tiles, 0, 0, 3, h, 4);
-  setRect(tiles, w-3, 0, 3, h, 4);
-  
-  // Main path
-  setCol(tiles, 9, 0, h-1, 1);
-  setCol(tiles, 10, 0, h-1, 1);
-  setCol(tiles, 11, 0, h-1, 1);
-  
-  // Tall grass patches
-  setRect(tiles, 4, 3, 4, 4, 2);
-  setRect(tiles, 13, 8, 3, 5, 2);
-  setRect(tiles, 5, 15, 3, 4, 2);
-  setRect(tiles, 13, 18, 3, 4, 2);
-  setRect(tiles, 4, 23, 5, 3, 2);
-  
-  // Ledges
-  setRow(tiles, 12, 4, 7, 8);
-  setRow(tiles, 22, 13, 15, 8);
-  
-  // Exit south to Pallet
-  tiles[h-1][9] = 1; tiles[h-1][10] = 1; tiles[h-1][11] = 1;
-  // Exit north to Viridian
-  tiles[0][9] = 1; tiles[0][10] = 1; tiles[0][11] = 1;
-
-  return {
-    id: 'route1',
-    name: 'Route 1',
-    width: w, height: h,
-    tiles,
-    encounters: [
-      { speciesId: 'rattipaw', minLevel: 2, maxLevel: 5, weight: 50 },
-      { speciesId: 'pidglit', minLevel: 2, maxLevel: 5, weight: 50 },
-    ],
-    encounterRate: 20,
-    npcs: [
-      { id: 'route1_npc', name: 'Youngster', x: 12, y: 15, direction: 'left',
-        dialog: ['The tall grass is full of wild Pokémon!', 'Be careful out there!'],
-        spriteType: 'youngster' },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== VIRIDIAN CITY =====
-function createViridianCity(): GameMap {
-  const w = 25, h = 20;
-  const tiles = fillMap(w, h, 0);
-  
-  // Border trees
-  setRect(tiles, 0, 0, 2, h, 4);
-  setRect(tiles, w-2, 0, 2, h, 4);
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
-  // Main roads
-  setRow(tiles, 10, 2, w-3, 1);
-  setCol(tiles, 12, 2, h-3, 1);
-  setCol(tiles, 13, 2, h-3, 1);
-  
-  // Pokécenter
-  setRect(tiles, 4, 4, 5, 4, 5);
-  tiles[7][6] = 6; // door
-  
-  // Pokémart
-  setRect(tiles, 16, 4, 5, 4, 5);
-  tiles[7][18] = 6;
-  
-  // Gym (locked until 7 badges)
-  setRect(tiles, 4, 12, 6, 4, 5);
-  tiles[15][7] = 6;
-  
-  // Flowers
-  setRect(tiles, 10, 3, 2, 2, 10);
-  
-  // Signs
-  tiles[10][5] = 9;
-  tiles[10][16] = 9;
-  
-  // Exits
-  // South to Route 1
-  tiles[h-2][12] = 1; tiles[h-2][13] = 1; tiles[h-1][12] = 1; tiles[h-1][13] = 1;
-  // North to Route 2
-  tiles[0][12] = 1; tiles[0][13] = 1; tiles[1][12] = 1; tiles[1][13] = 1;
-
-  return {
-    id: 'viridian_city',
-    name: 'Viridian City',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'viridian_npc1', name: 'Old Man', x: 10, y: 8, direction: 'down',
-        dialog: ['The Pokémart sells useful items.', 'Stock up before heading north!'],
-        spriteType: 'oldman' },
-      { id: 'sign_pokecenter', name: 'Sign', x: 5, y: 10, direction: 'down',
-        dialog: ['POKÉMON CENTER', 'Heal your Pokémon for free!'], spriteType: 'sign', stationary: true },
-      { id: 'sign_mart', name: 'Sign', x: 16, y: 10, direction: 'down',
-        dialog: ['POKÉ MART', 'For all your Pokémon needs!'], spriteType: 'sign', stationary: true },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== POKECENTER INTERIOR =====
-function createPokecenter(): GameMap {
-  const w = 10, h = 8;
-  const tiles = fillMap(w, h, 1);
-  setRect(tiles, 0, 0, w, 1, 7);
-  setRect(tiles, 0, 0, 1, h, 7);
-  setRect(tiles, w-1, 0, 1, h, 7);
-  
-  // Healing counter
-  setRow(tiles, 2, 3, 6, 12);
-  tiles[2][5] = 15; // heal pad
-  
-  // PC
-  tiles[1][8] = 14;
-  
-  // Door
-  tiles[h-1][4] = 6; tiles[h-1][5] = 6;
-
-  return {
-    id: 'pokecenter',
-    name: 'Pokémon Center',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'nurse', name: 'Nurse Joy', x: 5, y: 1, direction: 'down',
-        dialog: ['Welcome to the Pokémon Center!', 'I\'ll heal your Pokémon right up!', '...', 'Your Pokémon are fully healed!'],
-        spriteType: 'nurse', stationary: true },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== POKEMART INTERIOR =====
-function createPokemart(): GameMap {
-  const w = 8, h = 8;
-  const tiles = fillMap(w, h, 1);
-  setRect(tiles, 0, 0, w, 1, 7);
-  setRect(tiles, 0, 0, 1, h, 7);
-  setRect(tiles, w-1, 0, 1, h, 7);
-  
-  // Counter
-  setRow(tiles, 2, 2, 5, 12);
-  
-  // Shelves
-  tiles[1][1] = 13; tiles[1][6] = 13;
-  setRow(tiles, 4, 5, 6, 13);
-  
-  // Door
-  tiles[h-1][3] = 6; tiles[h-1][4] = 6;
-
-  return {
-    id: 'pokemart',
-    name: 'Poké Mart',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'clerk', name: 'Clerk', x: 4, y: 1, direction: 'down',
-        dialog: ['Welcome! How may I help you?'],
-        spriteType: 'clerk', stationary: true },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== ROUTE 2 =====
-function createRoute2(): GameMap {
-  const w = 20, h = 25;
-  const tiles = fillMap(w, h, 0);
-  
-  setRect(tiles, 0, 0, 3, h, 4);
-  setRect(tiles, w-3, 0, 3, h, 4);
-  
-  setCol(tiles, 9, 0, h-1, 1);
-  setCol(tiles, 10, 0, h-1, 1);
-  
-  // Tall grass
-  setRect(tiles, 4, 2, 4, 5, 2);
-  setRect(tiles, 13, 6, 3, 6, 2);
-  setRect(tiles, 5, 14, 3, 4, 2);
-  setRect(tiles, 12, 17, 4, 4, 2);
-  
-  // Cut tree blocking side path
-  tiles[10][5] = 16;
-  
-  // Exits
-  tiles[h-1][9] = 1; tiles[h-1][10] = 1;
-  tiles[0][9] = 1; tiles[0][10] = 1;
-
-  return {
-    id: 'route2',
-    name: 'Route 2',
-    width: w, height: h,
-    tiles,
-    encounters: [
-      { speciesId: 'rattipaw', minLevel: 3, maxLevel: 6, weight: 30 },
-      { speciesId: 'pidglit', minLevel: 3, maxLevel: 6, weight: 30 },
-      { speciesId: 'buglin', minLevel: 3, maxLevel: 5, weight: 25 },
-      { speciesId: 'snekil', minLevel: 4, maxLevel: 6, weight: 15 },
-    ],
-    encounterRate: 25,
-    npcs: [],
-    trainers: ['route2_bug1'],
-  };
-}
-
-// ===== PEWTER CITY =====
-function createPewterCity(): GameMap {
-  const w = 25, h = 22;
-  const tiles = fillMap(w, h, 0);
-  
-  setRect(tiles, 0, 0, 2, h, 4);
-  setRect(tiles, w-2, 0, 2, h, 4);
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
-  // Roads
-  setRow(tiles, 10, 2, w-3, 1);
-  setCol(tiles, 12, 2, h-3, 1);
-  
-  // Pokécenter
-  setRect(tiles, 4, 4, 5, 4, 5);
-  tiles[7][6] = 6;
-  
-  // Gym
-  setRect(tiles, 15, 4, 6, 5, 5);
-  tiles[8][18] = 6;
-  
-  // Mart
-  setRect(tiles, 4, 12, 5, 4, 5);
-  tiles[15][6] = 6;
-  
-  // Museum
-  setRect(tiles, 15, 12, 6, 4, 5);
-  tiles[15][18] = 6;
-  
-  // Exits
-  tiles[h-2][12] = 1; tiles[h-1][12] = 1;
-  tiles[0][12] = 1; tiles[1][12] = 1;
-  // East to Route 3
-  tiles[10][w-2] = 1; tiles[10][w-1] = 1;
-
-  return {
-    id: 'pewter_city',
-    name: 'Pewter City',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'pewter_npc', name: 'Hiker', x: 10, y: 8, direction: 'right',
-        dialog: ['The Pewter Gym is tough!', 'Brock uses Rock-type Pokémon.', 'Water or Grass types work best!'],
-        spriteType: 'hiker' },
-    ],
-    trainers: [],
-  };
-}
-
-// ===== GYM INTERIOR (generic, reused) =====
-function createGymInterior(gymId: string): GameMap {
-  const w = 12, h = 14;
-  const tiles = fillMap(w, h, 1);
-  
-  setRect(tiles, 0, 0, w, 1, 7); // top wall
-  setRect(tiles, 0, 0, 1, h, 7); // left wall
-  setRect(tiles, w-1, 0, 1, h, 7); // right wall
-  
-  // Door
-  tiles[h-1][5] = 6; tiles[h-1][6] = 6;
-
-  // Gym-specific layouts, trainers, and NPCs
-  const gymConfigs: Record<string, { name: string; trainers: string[]; setupLayout: () => void; npcs: NPCData[] }> = {
-    gym_pewter: {
-      name: 'Pewter Gym',
-      trainers: ['pewter_trainer1', 'pewter_trainer2', 'gym_brock'],
-      npcs: [{ id: 'pewter_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Pewter City Gym!', 'Brock uses Rock-type Pokémon.', 'Water and Grass types work well here!'] }],
-      setupLayout: () => {
-        // Rocky terrain - scattered boulders
-        setRect(tiles, 2, 3, 3, 1, 11); setRect(tiles, 7, 3, 3, 1, 11);
-        tiles[5][2] = 7; tiles[5][9] = 7; // side boulders
-        tiles[7][3] = 7; tiles[7][8] = 7;
-        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
-        setCol(tiles, 5, 4, h-1, 1); setCol(tiles, 6, 4, h-1, 1); // center path
-      },
-    },
-    gym_cerulean: {
-      name: 'Cerulean Gym',
-      trainers: ['cerulean_trainer1', 'cerulean_trainer2', 'cerulean_trainer3', 'gym_misty'],
-      npcs: [{ id: 'cerulean_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Cerulean City Gym!', 'Misty uses Water-type Pokémon.', 'Electric and Grass types are super effective!'] }],
-      setupLayout: () => {
-        // Pool layout - water tiles around path
-        setRect(tiles, 1, 4, 4, 4, 3); setRect(tiles, 7, 4, 4, 4, 3); // water pools
-        setRect(tiles, 2, 9, 3, 2, 3); setRect(tiles, 7, 9, 3, 2, 3); // lower pools
-        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
-        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1); // center walkway
-      },
-    },
-    gym_vermilion: {
-      name: 'Vermilion Gym',
-      trainers: ['vermilion_trainer1', 'vermilion_trainer2', 'gym_surge'],
-      npcs: [{ id: 'vermilion_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Vermilion City Gym!', 'Lt. Surge uses Electric-type Pokémon.', 'Ground types are immune to Electric moves!'] }],
-      setupLayout: () => {
-        // Electric fence maze
-        setRow(tiles, 4, 1, 4, 7); setRow(tiles, 4, 7, 10, 7); // horizontal barriers
-        setRow(tiles, 7, 2, 6, 7); setRow(tiles, 7, 8, 10, 7);
-        setRow(tiles, 10, 1, 5, 7); setRow(tiles, 10, 7, 10, 7);
-        tiles[4][5] = 1; tiles[7][7] = 1; tiles[10][6] = 1; // gaps
-        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
-        setCol(tiles, 5, 2, h-1, 1); setCol(tiles, 6, 2, h-1, 1);
-      },
-    },
-    gym_celadon: {
-      name: 'Celadon Gym',
-      trainers: ['celadon_trainer1', 'celadon_trainer2', 'celadon_trainer3', 'gym_erika'],
-      npcs: [{ id: 'celadon_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Celadon City Gym!', 'Erika uses Grass-type Pokémon.', 'Fire, Ice, and Flying types are effective!'] }],
-      setupLayout: () => {
-        // Garden layout - trees/hedges forming winding path
-        setRect(tiles, 1, 3, 3, 1, 4); setRect(tiles, 8, 3, 3, 1, 4); // hedges
-        setRect(tiles, 3, 5, 2, 3, 4); setRect(tiles, 7, 5, 2, 3, 4);
-        setRect(tiles, 1, 9, 3, 1, 4); setRect(tiles, 8, 9, 3, 1, 4);
-        tiles[6][5] = 2; tiles[6][6] = 2; // decorative grass
-        setRect(tiles, 4, 1, 4, 2, 11); // leader platform
-        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
-      },
-    },
-    gym_fuchsia: {
-      name: 'Fuchsia Gym',
-      trainers: ['fuchsia_trainer1', 'fuchsia_trainer2', 'fuchsia_trainer3', 'gym_koga'],
-      npcs: [{ id: 'fuchsia_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Fuchsia City Gym!', 'Koga uses Poison-type Pokémon.', 'Ground and Psychic types are super effective!'] }],
-      setupLayout: () => {
-        // Invisible walls / ninja maze
-        setRect(tiles, 2, 3, 1, 4, 7); setRect(tiles, 4, 5, 1, 4, 7);
-        setRect(tiles, 6, 3, 1, 3, 7); setRect(tiles, 8, 5, 1, 5, 7);
-        setRect(tiles, 9, 3, 2, 1, 7); setRect(tiles, 3, 10, 5, 1, 7);
-        tiles[3][3] = 1; tiles[8][5] = 1; tiles[10][5] = 1; // passages
-        setRect(tiles, 4, 1, 4, 2, 11);
-        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
-      },
-    },
-    gym_saffron: {
-      name: 'Saffron Gym',
-      trainers: ['saffron_trainer1', 'saffron_trainer2', 'saffron_trainer3', 'gym_sabrina'],
-      npcs: [{ id: 'saffron_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Saffron City Gym!', 'Sabrina uses Psychic-type Pokémon.', 'Bug, Ghost, and Dark types work well!'] }],
-      setupLayout: () => {
-        // Teleporter pad layout (decorative tiles)
-        tiles[4][2] = 11; tiles[4][9] = 11; // warp pads (visual only)
-        tiles[7][3] = 11; tiles[7][8] = 11;
-        tiles[10][2] = 11; tiles[10][9] = 11;
-        setRect(tiles, 3, 5, 2, 1, 7); setRect(tiles, 7, 5, 2, 1, 7); // barriers
-        setRect(tiles, 2, 8, 3, 1, 7); setRect(tiles, 7, 8, 3, 1, 7);
-        setRect(tiles, 4, 1, 4, 2, 11);
-        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
-      },
-    },
-    gym_cinnabar: {
-      name: 'Cinnabar Gym',
-      trainers: ['cinnabar_trainer1', 'cinnabar_trainer2', 'cinnabar_trainer3', 'gym_blaine'],
-      npcs: [{ id: 'cinnabar_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Cinnabar Island Gym!', 'Blaine uses Fire-type Pokémon.', 'Water, Ground, and Rock types are effective!'] }],
-      setupLayout: () => {
-        // Lava/fire theme - hazard tiles around edges
-        setRect(tiles, 1, 3, 2, 2, 11); setRect(tiles, 9, 3, 2, 2, 11);
-        setRect(tiles, 1, 7, 2, 2, 11); setRect(tiles, 9, 7, 2, 2, 11);
-        setRect(tiles, 3, 10, 2, 2, 11); setRect(tiles, 7, 10, 2, 2, 11);
-        setRect(tiles, 4, 1, 4, 2, 11);
-        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
-      },
-    },
-    gym_viridian: {
-      name: 'Viridian Gym',
-      trainers: ['viridian_trainer1', 'viridian_trainer2', 'viridian_trainer3', 'gym_giovanni'],
-      npcs: [{ id: 'viridian_guide', name: 'Gym Guide', x: 2, y: 12, direction: 'up' as const, spriteType: 'youngster', dialog: ['This is the Viridian City Gym!', 'Giovanni uses Ground-type Pokémon.', 'Water, Grass, and Ice types are super effective!'] }],
-      setupLayout: () => {
-        // Ground/earth maze with spinning arrows (decorative)
-        setRect(tiles, 1, 3, 4, 1, 7); setRect(tiles, 7, 3, 4, 1, 7);
-        setRect(tiles, 3, 5, 1, 3, 7); setRect(tiles, 8, 5, 1, 3, 7);
-        setRect(tiles, 1, 9, 3, 1, 7); setRect(tiles, 8, 9, 3, 1, 7);
-        tiles[5][5] = 11; tiles[5][6] = 11; tiles[8][5] = 11; tiles[8][6] = 11;
-        setRect(tiles, 4, 1, 4, 2, 11);
-        setCol(tiles, 5, 3, h-1, 1); setCol(tiles, 6, 3, h-1, 1);
-      },
-    },
-  };
-
-  const config = gymConfigs[gymId];
-  if (config) {
-    config.setupLayout();
-    return {
-      id: gymId,
-      name: config.name,
-      width: w, height: h,
-      tiles,
-      encounters: [],
-      encounterRate: 0,
-      npcs: config.npcs,
-      trainers: config.trainers,
-    };
+// Pallet Town: 20x18
+const palletTownTiles: number[][] = (() => {
+  const w = 20, h = 18;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.GRASS;
+    }
   }
 
-  // Fallback for unknown gym IDs
-  setRect(tiles, 3, 3, 6, 1, 11);
-  setRect(tiles, 3, 8, 6, 1, 11);
-  setCol(tiles, 5, 8, h-1, 1); setCol(tiles, 6, 8, h-1, 1);
+  // Trees border (top, left, right)
+  for (let x = 0; x < w; x++) { tiles[0][x] = TILE.TREE; }
+  for (let y = 0; y < h; y++) { tiles[y][0] = TILE.TREE; tiles[y][w - 1] = TILE.TREE; }
 
-  return {
-    id: gymId,
-    name: 'Gym',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [],
-    trainers: [],
-  };
-}
+  // Water at bottom
+  for (let x = 0; x < w; x++) { tiles[h - 1][x] = TILE.WATER; tiles[h - 2][x] = TILE.WATER; }
 
-// ===== ROUTE 3 =====
-function createRoute3(): GameMap {
-  const w = 30, h = 15;
-  const tiles = fillMap(w, h, 0);
-  
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
+  // Main path (vertical center)
+  for (let y = 1; y < h - 2; y++) {
+    tiles[y][9] = TILE.PATH;
+    tiles[y][10] = TILE.PATH;
+  }
+
+  // Horizontal path connecting buildings
+  for (let x = 3; x < 17; x++) {
+    tiles[7][x] = TILE.PATH;
+  }
+
+  // Player's house (left, rows 3-6, cols 3-7)
+  for (let y = 3; y <= 4; y++) for (let x = 3; x <= 7; x++) tiles[y][x] = TILE.BUILDING_ROOF;
+  for (let y = 5; y <= 6; y++) for (let x = 3; x <= 7; x++) tiles[y][x] = TILE.BUILDING_WALL;
+  tiles[6][5] = TILE.DOOR; // door
+
+  // Rival's house (right, rows 3-6, cols 12-16)
+  for (let y = 3; y <= 4; y++) for (let x = 12; x <= 16; x++) tiles[y][x] = TILE.BUILDING_ROOF;
+  for (let y = 5; y <= 6; y++) for (let x = 12; x <= 16; x++) tiles[y][x] = TILE.BUILDING_WALL;
+  tiles[6][14] = TILE.DOOR;
+
+  // Oak's Lab (bottom center, rows 10-14, cols 7-13)
+  for (let y = 10; y <= 11; y++) for (let x = 7; x <= 13; x++) tiles[y][x] = TILE.BUILDING_ROOF;
+  for (let y = 12; y <= 14; y++) for (let x = 7; x <= 13; x++) tiles[y][x] = TILE.BUILDING_WALL;
+  tiles[14][10] = TILE.DOOR;
+
+  // Flowers near houses
+  tiles[7][4] = TILE.FLOWER;
+  tiles[7][6] = TILE.FLOWER;
+  tiles[7][13] = TILE.FLOWER;
+  tiles[7][15] = TILE.FLOWER;
+
+  // Fence along south edge above water
+  for (let x = 1; x < w - 1; x++) {
+    if (tiles[h - 3][x] === TILE.GRASS) tiles[h - 3][x] = TILE.FENCE;
+  }
+
+  // North exit path
+  tiles[0][9] = TILE.PATH;
+  tiles[0][10] = TILE.PATH;
+
+  return tiles;
+})();
+
+const palletTownCollision: boolean[][] = palletTownTiles.map(row =>
+  row.map(tile => ([TILE.TREE, TILE.BUILDING_WALL, TILE.BUILDING_ROOF, TILE.WATER, TILE.FENCE, TILE.SIGN] as number[]).includes(tile))
+);
+
+// Route 1: 20x30
+const route1Tiles: number[][] = (() => {
+  const w = 20, h = 30;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.GRASS;
+    }
+  }
+
+  // Tree borders
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < 3; x++) tiles[y][x] = TILE.TREE;
+    for (let x = w - 3; x < w; x++) tiles[y][x] = TILE.TREE;
+  }
+
+  // Main path
+  for (let y = 0; y < h; y++) {
+    tiles[y][9] = TILE.PATH;
+    tiles[y][10] = TILE.PATH;
+  }
+
+  // Tall grass patches
+  // Patch 1: left side
+  for (let y = 4; y <= 8; y++) {
+    for (let x = 4; x <= 7; x++) tiles[y][x] = TILE.TALL_GRASS;
+  }
+  // Patch 2: right side
+  for (let y = 10; y <= 14; y++) {
+    for (let x = 12; x <= 15; x++) tiles[y][x] = TILE.TALL_GRASS;
+  }
+  // Patch 3: left side again
+  for (let y = 17; y <= 21; y++) {
+    for (let x = 4; x <= 8; x++) tiles[y][x] = TILE.TALL_GRASS;
+  }
+  // Patch 4: right side
+  for (let y = 23; y <= 26; y++) {
+    for (let x = 11; x <= 15; x++) tiles[y][x] = TILE.TALL_GRASS;
+  }
+
+  // Some ledges
+  for (let x = 4; x <= 8; x++) tiles[15][x] = TILE.LEDGE;
+
+  // Scattered trees for variety
+  tiles[6][11] = TILE.TREE;
+  tiles[6][12] = TILE.TREE;
+  tiles[16][13] = TILE.TREE;
+  tiles[16][14] = TILE.TREE;
+  tiles[22][4] = TILE.TREE;
+  tiles[22][5] = TILE.TREE;
+
+  return tiles;
+})();
+
+const route1Collision: boolean[][] = route1Tiles.map(row =>
+  row.map(tile => ([TILE.TREE, TILE.WATER, TILE.LEDGE] as number[]).includes(tile))
+);
+
+// Viridian City: 25x22
+const viridianCityTiles: number[][] = (() => {
+  const w = 25, h = 22;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.GRASS;
+    }
+  }
+
+  // Tree borders
+  for (let x = 0; x < w; x++) { tiles[0][x] = TILE.TREE; tiles[h - 1][x] = TILE.TREE; }
+  for (let y = 0; y < h; y++) { tiles[y][0] = TILE.TREE; tiles[y][w - 1] = TILE.TREE; }
+
+  // Main paths
+  // Vertical path from south entrance
+  for (let y = 1; y < h - 1; y++) {
+    tiles[y][12] = TILE.PATH;
+    tiles[y][13] = TILE.PATH;
+  }
   // Horizontal path
-  setRow(tiles, 7, 0, w-1, 1);
-  
-  // Tall grass
-  setRect(tiles, 3, 3, 5, 3, 2);
-  setRect(tiles, 12, 9, 5, 3, 2);
-  setRect(tiles, 20, 3, 4, 4, 2);
-  setRect(tiles, 24, 9, 4, 3, 2);
-  
-  // Exits
-  tiles[7][0] = 1;
-  tiles[7][w-1] = 1;
+  for (let x = 1; x < w - 1; x++) {
+    tiles[10][x] = TILE.PATH;
+    tiles[11][x] = TILE.PATH;
+  }
 
-  return {
-    id: 'route3',
-    name: 'Route 3',
-    width: w, height: h,
-    tiles,
-    encounters: [
-      { speciesId: 'geodon', minLevel: 7, maxLevel: 10, weight: 30 },
-      { speciesId: 'snekil', minLevel: 7, maxLevel: 10, weight: 25 },
-      { speciesId: 'punchub', minLevel: 8, maxLevel: 10, weight: 20 },
-      { speciesId: 'zaprat', minLevel: 8, maxLevel: 11, weight: 15 },
-      { speciesId: 'meowzy', minLevel: 8, maxLevel: 10, weight: 10 },
+  // South exit
+  tiles[h - 1][12] = TILE.PATH;
+  tiles[h - 1][13] = TILE.PATH;
+
+  // Pokémon Center (left side, rows 4-8, cols 3-8)
+  for (let y = 4; y <= 5; y++) for (let x = 3; x <= 8; x++) tiles[y][x] = TILE.BUILDING_ROOF;
+  for (let y = 6; y <= 8; y++) for (let x = 3; x <= 8; x++) tiles[y][x] = TILE.BUILDING_WALL;
+  tiles[8][6] = TILE.DOOR;
+
+  // Poké Mart (right side, rows 4-8, cols 16-21)
+  for (let y = 4; y <= 5; y++) for (let x = 16; x <= 21; x++) tiles[y][x] = TILE.BUILDING_ROOF;
+  for (let y = 6; y <= 8; y++) for (let x = 16; x <= 21; x++) tiles[y][x] = TILE.BUILDING_WALL;
+  tiles[8][19] = TILE.DOOR;
+
+  // Gym (top center, rows 1-3, cols 10-15) - with sign saying locked
+  for (let y = 1; y <= 1; y++) for (let x = 9; x <= 15; x++) tiles[y][x] = TILE.BUILDING_ROOF;
+  for (let y = 2; y <= 3; y++) for (let x = 9; x <= 15; x++) tiles[y][x] = TILE.BUILDING_WALL;
+  tiles[3][12] = TILE.DOOR;
+
+  // Some flowers and trees
+  tiles[12][5] = TILE.FLOWER;
+  tiles[12][6] = TILE.FLOWER;
+  tiles[12][7] = TILE.FLOWER;
+  tiles[14][3] = TILE.TREE;
+  tiles[14][4] = TILE.TREE;
+  tiles[14][20] = TILE.TREE;
+  tiles[14][21] = TILE.TREE;
+
+  // Sign
+  tiles[9][6] = TILE.SIGN;
+  tiles[9][19] = TILE.SIGN;
+
+  return tiles;
+})();
+
+const viridianCityCollision: boolean[][] = viridianCityTiles.map(row =>
+  row.map(tile => ([TILE.TREE, TILE.BUILDING_WALL, TILE.BUILDING_ROOF, TILE.WATER, TILE.FENCE, TILE.SIGN, TILE.COUNTER, TILE.SHELF] as number[]).includes(tile))
+);
+
+// Pokemon Center Interior: 12x10
+const pokemonCenterTiles: number[][] = (() => {
+  const w = 12, h = 10;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.BUILDING_FLOOR;
+    }
+  }
+
+  // Walls
+  for (let x = 0; x < w; x++) { tiles[0][x] = TILE.BUILDING_WALL; }
+  for (let y = 0; y < h; y++) { tiles[y][0] = TILE.BUILDING_WALL; tiles[y][w - 1] = TILE.BUILDING_WALL; }
+
+  // Counter
+  for (let x = 3; x <= 8; x++) tiles[2][x] = TILE.COUNTER;
+
+  // Healing machine behind counter
+  tiles[1][5] = TILE.HEAL_MACHINE;
+  tiles[1][6] = TILE.HEAL_MACHINE;
+
+  // PC machine
+  tiles[1][9] = TILE.PC_MACHINE;
+
+  // Entrance mat
+  tiles[h - 1][5] = TILE.MAT;
+  tiles[h - 1][6] = TILE.MAT;
+
+  // Some shelves
+  tiles[1][2] = TILE.SHELF;
+  tiles[4][1] = TILE.TABLE;
+  tiles[4][2] = TILE.TABLE;
+  tiles[6][1] = TILE.TABLE;
+  tiles[6][2] = TILE.TABLE;
+
+  return tiles;
+})();
+
+const pokemonCenterCollision: boolean[][] = pokemonCenterTiles.map(row =>
+  row.map(tile => ([TILE.BUILDING_WALL, TILE.COUNTER, TILE.HEAL_MACHINE, TILE.SHELF, TILE.TABLE, TILE.PC_MACHINE] as number[]).includes(tile))
+);
+
+// Oak's Lab Interior: 10x12
+const oaksLabTiles: number[][] = (() => {
+  const w = 10, h = 12;
+  const tiles: number[][] = [];
+  for (let y = 0; y < h; y++) {
+    tiles[y] = [];
+    for (let x = 0; x < w; x++) {
+      tiles[y][x] = TILE.BUILDING_FLOOR;
+    }
+  }
+
+  // Walls
+  for (let x = 0; x < w; x++) { tiles[0][x] = TILE.BUILDING_WALL; }
+  for (let y = 0; y < h; y++) { tiles[y][0] = TILE.BUILDING_WALL; tiles[y][w - 1] = TILE.BUILDING_WALL; }
+
+  // Shelves at top
+  for (let x = 1; x <= 3; x++) tiles[1][x] = TILE.SHELF;
+  for (let x = 6; x <= 8; x++) tiles[1][x] = TILE.SHELF;
+
+  // Table with pokeballs (center)
+  tiles[4][4] = TILE.TABLE;
+  tiles[4][5] = TILE.TABLE;
+
+  // Entrance mat
+  tiles[h - 1][4] = TILE.MAT;
+  tiles[h - 1][5] = TILE.MAT;
+
+  // Machines on sides
+  tiles[3][1] = TILE.PC_MACHINE;
+  tiles[3][8] = TILE.PC_MACHINE;
+
+  return tiles;
+})();
+
+const oaksLabCollision: boolean[][] = oaksLabTiles.map(row =>
+  row.map(tile => ([TILE.BUILDING_WALL, TILE.SHELF, TILE.TABLE, TILE.PC_MACHINE] as number[]).includes(tile))
+);
+
+export const MAPS: Record<string, MapData> = {
+  palletTown: {
+    id: 'palletTown',
+    name: 'PALLET TOWN',
+    width: 20,
+    height: 18,
+    tiles: palletTownTiles,
+    collision: palletTownCollision,
+    connections: [
+      {
+        direction: 'north',
+        targetMap: 'route1',
+        targetX: 9,
+        targetY: 28,
+        fromXMin: 9,
+        fromXMax: 10,
+        fromY: 0,
+      },
     ],
-    encounterRate: 25,
-    npcs: [],
-    trainers: ['route3_youngster1', 'route3_lass1'],
-  };
-}
-
-// ===== CERULEAN CITY =====
-function createCeruleanCity(): GameMap {
-  const w = 25, h = 22;
-  const tiles = fillMap(w, h, 0);
-  
-  setRect(tiles, 0, 0, 2, h, 4);
-  setRect(tiles, w-2, 0, 2, h, 4);
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
-  setRow(tiles, 10, 2, w-3, 1);
-  setCol(tiles, 12, 2, h-3, 1);
-  
-  // Pokecenter
-  setRect(tiles, 4, 4, 5, 4, 5);
-  tiles[7][6] = 6;
-  
-  // Gym
-  setRect(tiles, 15, 4, 6, 5, 5);
-  tiles[8][18] = 6;
-  
-  // Mart
-  setRect(tiles, 4, 12, 5, 4, 5);
-  tiles[15][6] = 6;
-  
-  // Water
-  setRect(tiles, 15, 13, 6, 3, 3);
-  
-  // Exits
-  tiles[h-2][12] = 1; tiles[h-1][12] = 1;
-  tiles[10][w-2] = 1; tiles[10][w-1] = 1;
-  tiles[0][12] = 1; tiles[1][12] = 1;
-
-  return {
-    id: 'cerulean_city',
-    name: 'Cerulean City',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
+    signs: [
+      { x: 8, y: 7, text: 'PALLET TOWN\nShades of your journey await!' },
+    ],
     npcs: [
-      { id: 'cerulean_npc', name: 'Swimmer', x: 10, y: 8, direction: 'down',
-        dialog: ['Misty—I mean, the Gym Leader here uses Water-types!', 'Electric and Grass moves are super effective!'],
-        spriteType: 'lass' },
+      {
+        x: 6, y: 9, name: 'Girl',
+        dialog: ['Welcome to PALLET TOWN!', 'This is a small, quiet town.'],
+        direction: 'down',
+      },
     ],
-    trainers: [],
-  };
-}
-
-// ===== ROUTE 4 =====
-function createRoute4(): GameMap {
-  const w = 25, h = 15;
-  const tiles = fillMap(w, h, 0);
-  
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
-  setRow(tiles, 7, 0, w-1, 1);
-  
-  setRect(tiles, 4, 3, 4, 3, 2);
-  setRect(tiles, 14, 9, 5, 3, 2);
-  setRect(tiles, 20, 3, 3, 4, 2);
-  
-  tiles[7][0] = 1;
-  tiles[7][w-1] = 1;
-
-  return {
-    id: 'route4',
-    name: 'Route 4',
-    width: w, height: h,
-    tiles,
-    encounters: [
-      { speciesId: 'oddling', minLevel: 12, maxLevel: 15, weight: 25 },
-      { speciesId: 'psydux', minLevel: 12, maxLevel: 15, weight: 20 },
-      { speciesId: 'growlith', minLevel: 12, maxLevel: 14, weight: 20 },
-      { speciesId: 'zaprat', minLevel: 11, maxLevel: 14, weight: 20 },
-      { speciesId: 'foxflame', minLevel: 12, maxLevel: 14, weight: 15 },
+    doors: [
+      { x: 10, y: 14, targetMap: 'oaksLab', targetX: 4, targetY: 10 },
     ],
-    encounterRate: 25,
-    npcs: [],
-    trainers: ['route4_hiker1'],
-  };
-}
-
-// ===== VERMILION CITY =====
-function createVermilionCity(): GameMap {
-  const w = 25, h = 22;
-  const tiles = fillMap(w, h, 0);
-  
-  setRect(tiles, 0, 0, 2, h, 4);
-  setRect(tiles, w-2, 0, 2, h, 4);
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
-  setRow(tiles, 10, 2, w-3, 1);
-  setCol(tiles, 12, 2, h-3, 1);
-  
-  // Pokecenter
-  setRect(tiles, 4, 4, 5, 4, 5);
-  tiles[7][6] = 6;
-  
-  // Gym
-  setRect(tiles, 15, 4, 6, 5, 5);
-  tiles[8][18] = 6;
-  
-  // Mart
-  setRect(tiles, 4, 12, 5, 4, 5);
-  tiles[15][6] = 6;
-  
-  // Harbor water
-  setRect(tiles, 14, 14, 8, 4, 3);
-  
-  // Exits
-  tiles[0][12] = 1; tiles[1][12] = 1;
-
-  return {
-    id: 'vermilion_city',
-    name: 'Vermilion City',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
+  },
+  route1: {
+    id: 'route1',
+    name: 'ROUTE 1',
+    width: 20,
+    height: 30,
+    tiles: route1Tiles,
+    collision: route1Collision,
+    connections: [
+      {
+        direction: 'south',
+        targetMap: 'palletTown',
+        targetX: 9,
+        targetY: 1,
+        fromXMin: 9,
+        fromXMax: 10,
+        fromY: 29,
+      },
+      {
+        direction: 'north',
+        targetMap: 'viridianCity',
+        targetX: 12,
+        targetY: 20,
+        fromXMin: 9,
+        fromXMax: 10,
+        fromY: 0,
+      },
+    ],
+    signs: [
+      { x: 8, y: 2, text: 'ROUTE 1\nVIRIDIAN CITY ahead.' },
+    ],
     npcs: [
-      { id: 'vermilion_npc', name: 'Sailor', x: 14, y: 12, direction: 'left',
-        dialog: ['Lt. Surge runs the gym here!', 'His Electric-types will shock you!'],
-        spriteType: 'man' },
-      { id: 'hm_cut_npc', name: 'Captain', x: 10, y: 12, direction: 'down',
-        dialog: ['I\'m the S.S. Anne captain!', 'Here, take this HM for Cut!', 'Teach it to a Pokémon to chop down small trees!'],
-        spriteType: 'man' },
-      { id: 'bicycle_npc', name: 'Bike Shop Owner', x: 16, y: 12, direction: 'left',
-        dialog: ['I run the bike shop!', 'Here, take this Bicycle! It\'s a promotional giveaway!', 'Press B in the overworld to ride it!'],
-        spriteType: 'man' },
+      {
+        x: 11, y: 16, name: 'Youngster',
+        dialog: [
+          'If your POKéMON is hurt,',
+          'you should heal it at a',
+          'POKéMON CENTER.',
+        ],
+        direction: 'left',
+      },
     ],
-    trainers: [],
-  };
-}
-
-// ===== CELADON CITY =====
-// Large city with department store (expanded mart), Game Corner
-function createCeladonCity(): GameMap {
-  const w = 25, h = 22;
-  const tiles = fillMap(w, h, 0);
-  
-  // Border trees
-  setRect(tiles, 0, 0, 2, h, 4);
-  setRect(tiles, w-2, 0, 2, h, 4);
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
-  // Main roads - wider central boulevard
-  setRow(tiles, 10, 2, w-3, 1);
-  setRow(tiles, 11, 2, w-3, 1);
-  setCol(tiles, 12, 2, h-3, 1);
-  setCol(tiles, 13, 2, h-3, 1);
-  
-  // Pokécenter (top-left)
-  setRect(tiles, 3, 3, 5, 4, 5);
-  tiles[6][5] = 6; // door at 5,6
-  
-  // Gym (top-right)
-  setRect(tiles, 16, 3, 6, 5, 5);
-  tiles[7][19] = 6; // door at 19,7
-  
-  // Department Store (large building, bottom-left) - bigger than normal mart
-  setRect(tiles, 3, 13, 7, 5, 5);
-  tiles[17][6] = 6; // door at 6,17
-  
-  // Game Corner building (bottom-right)
-  setRect(tiles, 16, 13, 5, 4, 5);
-  tiles[16][18] = 6; // door (decorative - no interior)
-  
-  // Flower garden (center park)
-  setRect(tiles, 7, 5, 4, 3, 10);
-  tiles[6][8] = 0; tiles[6][9] = 0; // paths through garden
-  
-  // Decorative pond
-  setRect(tiles, 17, 9, 3, 2, 3);
-  
-  // Signs
-  tiles[10][4] = 9; // pokecenter sign
-  tiles[12][16] = 9; // game corner sign
-  
-  // Exits
-  tiles[h-2][12] = 1; tiles[h-1][12] = 1; tiles[h-2][13] = 1; tiles[h-1][13] = 1;
-  tiles[0][12] = 1; tiles[1][12] = 1; tiles[0][13] = 1; tiles[1][13] = 1;
-  // East exit
-  tiles[10][w-2] = 1; tiles[10][w-1] = 1; tiles[11][w-2] = 1; tiles[11][w-1] = 1;
-
-  return {
-    id: 'celadon_city',
-    name: 'Celadon City',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
+    doors: [],
+    encounterZone: 'route1',
+  },
+  viridianCity: {
+    id: 'viridianCity',
+    name: 'VIRIDIAN CITY',
+    width: 25,
+    height: 22,
+    tiles: viridianCityTiles,
+    collision: viridianCityCollision,
+    connections: [
+      {
+        direction: 'south',
+        targetMap: 'route1',
+        targetX: 9,
+        targetY: 1,
+        fromXMin: 12,
+        fromXMax: 13,
+        fromY: 21,
+      },
+    ],
+    signs: [
+      { x: 6, y: 9, text: 'VIRIDIAN CITY POKéMON CENTER\nHeal your POKéMON!' },
+      { x: 19, y: 9, text: 'VIRIDIAN CITY POKé MART' },
+    ],
     npcs: [
-      { id: 'celadon_nurse', name: 'Nurse Joy', x: 5, y: 5, direction: 'down',
-        dialog: ['Welcome to Celadon Pokémon Center!', 'Your Pokémon look tired from the journey.'],
-        spriteType: 'nurse', stationary: true },
-      { id: 'celadon_dept', name: 'Dept. Store Clerk', x: 8, y: 15, direction: 'right',
-        dialog: ['Welcome to the Celadon Department Store!', 'We have the largest selection of items in Kanto!', 'TMs, evolution stones, you name it!'],
-        spriteType: 'clerk' },
-      { id: 'celadon_gamecorner', name: 'Suspicious Man', x: 18, y: 12, direction: 'left',
-        dialog: ['Psst... the Game Corner has great prizes!', 'But watch out... Team Rocket runs it behind the scenes.', 'I didn\'t tell you that, though!'],
-        spriteType: 'man' },
-      { id: 'celadon_gardener', name: 'Gardener', x: 9, y: 8, direction: 'down',
-        dialog: ['I tend the flower gardens here in Celadon.', 'This city is known for its beautiful nature!'],
-        spriteType: 'woman' },
+      {
+        x: 14, y: 13, name: 'Old Man',
+        dialog: [
+          'Ah, VIRIDIAN CITY!',
+          'The GYM here is locked.',
+          'I wonder when the LEADER',
+          'will return...',
+        ],
+        direction: 'down',
+      },
     ],
-    trainers: [],
-  };
-}
-
-// ===== FUCHSIA CITY =====
-// Southern city, Safari Zone entrance, tropical feel
-function createFuchsiaCity(): GameMap {
-  const w = 25, h = 22;
-  const tiles = fillMap(w, h, 0);
-  
-  // Border trees (thicker on south for tropical feel)
-  setRect(tiles, 0, 0, 2, h, 4);
-  setRect(tiles, w-2, 0, 2, h, 4);
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-3, w, 3, 4);
-  
-  // Winding paths (not grid-like, more organic)
-  setRow(tiles, 9, 2, 10, 1);
-  setRow(tiles, 9, 14, w-3, 1);
-  setCol(tiles, 10, 2, 18, 1);
-  setRow(tiles, 14, 3, 8, 1);
-  setCol(tiles, 18, 5, 14, 1);
-  
-  // Pokécenter (left side)
-  setRect(tiles, 3, 4, 5, 4, 5);
-  tiles[7][5] = 6; // door at 5,7
-  
-  // Gym (right side, further back)
-  setRect(tiles, 14, 3, 6, 5, 5);
-  tiles[7][17] = 6; // door at 17,7
-  
-  // Pokémart (bottom area)
-  setRect(tiles, 3, 11, 5, 4, 5);
-  tiles[14][5] = 6; // door at 5,14
-  
-  // Safari Zone entrance (large fenced area, top-right)
-  setRect(tiles, 19, 3, 3, 4, 11); // fence
-  tiles[6][20] = 6; // gate door (decorative)
-  
-  // Tall grass patches (safari feel)
-  setRect(tiles, 12, 10, 3, 3, 2);
-  setRect(tiles, 6, 16, 3, 2, 2);
-  
-  // Small pond
-  setRect(tiles, 15, 14, 2, 2, 3);
-  
-  // Flowers
-  setRect(tiles, 11, 5, 2, 2, 10);
-  
-  // Exits - north
-  tiles[0][12] = 1; tiles[1][12] = 1;
-  // West exit (row 10 to match route connections)
-  tiles[10][0] = 1; tiles[10][1] = 1;
-
-  return {
-    id: 'fuchsia_city',
-    name: 'Fuchsia City',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
+    doors: [
+      { x: 6, y: 8, targetMap: 'pokemonCenter', targetX: 5, targetY: 8 },
+    ],
+  },
+  pokemonCenter: {
+    id: 'pokemonCenter',
+    name: 'POKéMON CENTER',
+    width: 12,
+    height: 10,
+    tiles: pokemonCenterTiles,
+    collision: pokemonCenterCollision,
+    connections: [],
+    signs: [],
     npcs: [
-      { id: 'fuchsia_nurse', name: 'Nurse Joy', x: 5, y: 5, direction: 'down',
-        dialog: ['Welcome to Fuchsia Pokémon Center!', 'Rest up after your Safari Zone adventure!'],
-        spriteType: 'nurse', stationary: true },
-      { id: 'hm_surf_npc', name: 'Warden', x: 12, y: 8, direction: 'down',
-        dialog: ['I\'m the Safari Zone Warden!', 'Here, take this HM for Surf!', 'Teach it to a Pokémon to cross water!'],
-        spriteType: 'man' },
-      { id: 'fuchsia_safari', name: 'Safari Guide', x: 20, y: 8, direction: 'left',
-        dialog: ['The Safari Zone is home to rare Pokémon!', 'Unfortunately, it\'s closed for renovations right now.', 'Come back another time!'],
-        spriteType: 'man' },
-      { id: 'fuchsia_fisher', name: 'Fisherman', x: 15, y: 16, direction: 'up',
-        dialog: ['I love fishing in this pond!', 'Fuchsia has the best spots in Kanto.', 'The Warden knows all about rare Pokémon here.'],
-        spriteType: 'man' },
+      {
+        x: 5, y: 3, name: 'Nurse Joy',
+        dialog: [
+          'Welcome to our POKéMON CENTER!',
+          'We heal your POKéMON back to',
+          'perfect health!',
+          'Shall I heal your POKéMON?',
+        ],
+        direction: 'down',
+      },
     ],
-    trainers: [],
-  };
-}
-
-// ===== SAFFRON CITY =====
-// Biggest city in Kanto, Silph Co headquarters
-function createSaffronCity(): GameMap {
-  const w = 25, h = 22;
-  const tiles = fillMap(w, h, 0);
-  
-  // Border trees
-  setRect(tiles, 0, 0, 2, h, 4);
-  setRect(tiles, w-2, 0, 2, h, 4);
-  setRect(tiles, 0, 0, w, 2, 4);
-  setRect(tiles, 0, h-2, w, 2, 4);
-  
-  // Grid-like road system (big city feel)
-  setRow(tiles, 7, 2, w-3, 1);
-  setRow(tiles, 14, 2, w-3, 1);
-  setCol(tiles, 7, 2, h-3, 1);
-  setCol(tiles, 12, 2, h-3, 1);
-  setCol(tiles, 17, 2, h-3, 1);
-  
-  // Pokécenter (top-left block)
-  setRect(tiles, 3, 3, 4, 3, 5);
-  tiles[5][5] = 6; // door at 5,5
-  
-  // Gym (top-right block)
-  setRect(tiles, 18, 3, 4, 3, 5);
-  tiles[5][20] = 6; // door at 20,5
-  
-  // Silph Co (large central building)
-  setRect(tiles, 8, 8, 9, 5, 5);
-  tiles[12][12] = 6; // main entrance (locked)
-  
-  // Pokémart (bottom-left)
-  setRect(tiles, 3, 15, 4, 3, 5);
-  tiles[17][5] = 6; // door at 5,17
-  
-  // Houses/buildings filling city blocks
-  setRect(tiles, 13, 3, 3, 3, 5);
-  setRect(tiles, 18, 9, 4, 4, 5);
-  setRect(tiles, 3, 9, 3, 4, 5);
-  setRect(tiles, 13, 15, 4, 3, 5);
-  setRect(tiles, 18, 15, 4, 3, 5);
-  
-  // Signs
-  tiles[7][10] = 9; // Silph Co sign
-  tiles[14][4] = 9;
-  
-  // Exits
-  tiles[h-2][12] = 1; tiles[h-1][12] = 1; // south
-  tiles[0][12] = 1; tiles[1][12] = 1; // north
-  // East exit (row 10 to match route connections)
-  tiles[10][w-2] = 1; tiles[10][w-1] = 1;
-  // Also make row 10 path connect to east
-  setRow(tiles, 10, 17, w-3, 1);
-
-  return {
-    id: 'saffron_city',
-    name: 'Saffron City',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
+    doors: [
+      { x: 5, y: 9, targetMap: 'viridianCity', targetX: 6, targetY: 9 },
+      { x: 6, y: 9, targetMap: 'viridianCity', targetX: 6, targetY: 9 },
+    ],
+  },
+  oaksLab: {
+    id: 'oaksLab',
+    name: "PROF. OAK'S LAB",
+    width: 10,
+    height: 12,
+    tiles: oaksLabTiles,
+    collision: oaksLabCollision,
+    connections: [],
+    signs: [],
     npcs: [
-      { id: 'saffron_nurse', name: 'Nurse Joy', x: 4, y: 4, direction: 'down',
-        dialog: ['Welcome to Saffron Pokémon Center!', 'Saffron is the biggest city in Kanto!'],
-        spriteType: 'nurse', stationary: true },
-      { id: 'saffron_silph', name: 'Silph Employee', x: 12, y: 13, direction: 'up',
-        dialog: ['Silph Co. is the biggest company in Kanto!', 'They develop Poké Balls and other items.', 'The building is closed to visitors right now...'],
-        spriteType: 'man' },
-      { id: 'saffron_psychic', name: 'Psychic', x: 15, y: 7, direction: 'left',
-        dialog: ['I sense great power in you...', 'The Gym Leader here uses Psychic-type Pokémon.', 'Dark and Ghost types resist psychic powers!'],
-        spriteType: 'woman' },
-      { id: 'saffron_guard', name: 'Guard', x: 11, y: 12, direction: 'down',
-        dialog: ['Silph Co. is on lockdown!', 'No one is allowed inside right now.'],
-        spriteType: 'man', stationary: true },
+      {
+        x: 5, y: 3, name: 'Prof. Oak',
+        dialog: [
+          'Welcome to the world of POKéMON!',
+          'My name is OAK!',
+          'People call me the POKéMON PROF!',
+        ],
+        direction: 'down',
+      },
     ],
-    trainers: [],
-  };
-}
-
-// ===== CINNABAR ISLAND =====
-// Island surrounded by water
-function createCinnabarIsland(): GameMap {
-  const w = 25, h = 22;
-  const tiles = fillMap(w, h, 3); // Start with all water!
-  
-  // Island landmass in the center
-  setRect(tiles, 4, 4, 17, 14, 0); // grass land
-  
-  // Beach/path border around island
-  setRow(tiles, 4, 4, 20, 1);
-  setRow(tiles, 17, 4, 20, 1);
-  setCol(tiles, 4, 4, 17, 1);
-  setCol(tiles, 20, 4, 17, 1);
-  
-  // Internal paths
-  setRow(tiles, 10, 5, 19, 1);
-  setCol(tiles, 12, 5, 16, 1);
-  
-  // Pokécenter (top area)
-  setRect(tiles, 6, 5, 5, 4, 5);
-  tiles[8][8] = 6; // door at 8,8
-  
-  // Gym (right area)
-  setRect(tiles, 14, 5, 5, 4, 5);
-  tiles[8][17] = 6; // door at 17,8
-  
-  // Pokémart (bottom area)
-  setRect(tiles, 6, 12, 5, 4, 5);
-  tiles[15][8] = 6; // door at 8,15
-  
-  // Lab/Research building
-  setRect(tiles, 14, 12, 5, 4, 5);
-  tiles[15][16] = 6; // decorative door
-  
-  // Volcano hint (rocky area)
-  setRect(tiles, 9, 6, 3, 2, 7);
-  
-  // Flowers
-  setRect(tiles, 10, 13, 3, 2, 10);
-  
-  // West exit - path through water for connection (player arrives at x:3,y:10)
-  tiles[10][0] = 1; tiles[10][1] = 1; tiles[10][2] = 1; tiles[10][3] = 1;
-  // North exit - path through water
-  tiles[0][12] = 1; tiles[1][12] = 1; tiles[2][12] = 1; tiles[3][12] = 1;
-
-  return {
-    id: 'cinnabar_island',
-    name: 'Cinnabar Island',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [
-      { id: 'cinnabar_nurse', name: 'Nurse Joy', x: 8, y: 6, direction: 'down',
-        dialog: ['Welcome to Cinnabar Pokémon Center!', 'You must be exhausted from crossing the sea!'],
-        spriteType: 'nurse', stationary: true },
-      { id: 'cinnabar_scientist', name: 'Scientist', x: 16, y: 14, direction: 'left',
-        dialog: ['We research fossil Pokémon here on Cinnabar!', 'The volcano on this island has been dormant for years.', 'But who knows when it might erupt again...'],
-        spriteType: 'man' },
-      { id: 'cinnabar_surfer', name: 'Surfer', x: 10, y: 9, direction: 'down',
-        dialog: ['Dude, the waves around Cinnabar are gnarly!', 'You need Surf to get here by sea.', 'The Gym Leader here is all about Fire-types!'],
-        spriteType: 'man' },
+    doors: [
+      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
+      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
     ],
-    trainers: [],
-  };
-}
-
-function createGenericRoute(id: string, name: string, encounters: WildEncounter[]): GameMap {
-  const w = 20, h = 20;
-  const tiles = fillMap(w, h, 0);
-  
-  setRect(tiles, 0, 0, 3, h, 4);
-  setRect(tiles, w-3, 0, 3, h, 4);
-  
-  setCol(tiles, 9, 0, h-1, 1);
-  setCol(tiles, 10, 0, h-1, 1);
-  
-  setRect(tiles, 4, 3, 4, 4, 2);
-  setRect(tiles, 13, 10, 3, 4, 2);
-  setRect(tiles, 5, 14, 3, 3, 2);
-  
-  tiles[0][9] = 1; tiles[0][10] = 1;
-  tiles[h-1][9] = 1; tiles[h-1][10] = 1;
-
-  return {
-    id, name, width: w, height: h, tiles,
-    encounters, encounterRate: 25,
-    npcs: [], trainers: [],
-  };
-}
-
-// ===== VICTORY ROAD =====
-function createVictoryRoad(): GameMap {
-  const w = 20, h = 25;
-  const tiles = fillMap(w, h, 7);
-  
-  // Carved path through cave
-  setCol(tiles, 10, 0, 8, 1);
-  setRow(tiles, 8, 5, 15, 1);
-  setCol(tiles, 5, 8, 16, 1);
-  setRow(tiles, 16, 5, 15, 1);
-  setCol(tiles, 15, 16, h-1, 1);
-  
-  // Widen paths
-  setCol(tiles, 9, 0, 8, 1);
-  setCol(tiles, 6, 8, 16, 1);
-  setCol(tiles, 14, 16, h-1, 1);
-  
-  // Encounters in open areas
-  setRect(tiles, 7, 4, 3, 3, 2);
-  setRect(tiles, 3, 10, 3, 4, 2);
-  setRect(tiles, 12, 18, 3, 3, 2);
-  
-  tiles[0][9] = 1; tiles[0][10] = 1;
-  tiles[h-1][14] = 1; tiles[h-1][15] = 1;
-
-  return {
-    id: 'victory_road',
-    name: 'Victory Road',
-    width: w, height: h,
-    tiles,
-    encounters: [
-      { speciesId: 'geodon', minLevel: 35, maxLevel: 42, weight: 20 },
-      { speciesId: 'boulderox', minLevel: 38, maxLevel: 45, weight: 15 },
-      { speciesId: 'champeon', minLevel: 38, maxLevel: 45, weight: 15 },
-      { speciesId: 'ghoulby', minLevel: 36, maxLevel: 43, weight: 20 },
-      { speciesId: 'drakelet', minLevel: 35, maxLevel: 42, weight: 10 },
-    ],
-    encounterRate: 30,
-    npcs: [],
-    trainers: ['vr_ace1', 'vr_ace2'],
-  };
-}
-
-// ===== ELITE 4 CHAMBER =====
-function createElite4(): GameMap {
-  const w = 12, h = 12;
-  const tiles = fillMap(w, h, 1);
-  
-  setRect(tiles, 0, 0, w, 1, 7);
-  setRect(tiles, 0, 0, 1, h, 7);
-  setRect(tiles, w-1, 0, 1, h, 7);
-  
-  // Battle area markings
-  setRect(tiles, 3, 3, 6, 1, 11);
-  setRect(tiles, 3, 7, 6, 1, 11);
-  
-  tiles[h-1][5] = 6; tiles[h-1][6] = 6;
-  tiles[0][5] = 6; tiles[0][6] = 6;
-
-  return {
-    id: 'elite4',
-    name: 'Pokémon League',
-    width: w, height: h,
-    tiles,
-    encounters: [],
-    encounterRate: 0,
-    npcs: [],
-    trainers: [],
-  };
-}
-
-// ===== MAP CONNECTIONS =====
-export interface MapConnection {
-  from: string;
-  fromEdge: 'north' | 'south' | 'east' | 'west';
-  to: string;
-  toX: number;
-  toY: number;
-}
-
-export const MAP_CONNECTIONS: MapConnection[] = [
-  // Pallet ↔ Route 1
-  { from: 'pallet_town', fromEdge: 'north', to: 'route1', toX: 10, toY: 28 },
-  { from: 'route1', fromEdge: 'south', to: 'pallet_town', toX: 10, toY: 1 },
-  
-  // Route 1 ↔ Viridian
-  { from: 'route1', fromEdge: 'north', to: 'viridian_city', toX: 12, toY: 17 },
-  { from: 'viridian_city', fromEdge: 'south', to: 'route1', toX: 10, toY: 1 },
-  
-  // Viridian ↔ Route 2
-  { from: 'viridian_city', fromEdge: 'north', to: 'route2', toX: 9, toY: 23 },
-  { from: 'route2', fromEdge: 'south', to: 'viridian_city', toX: 12, toY: 3 },
-  
-  // Route 2 ↔ Pewter
-  { from: 'route2', fromEdge: 'north', to: 'pewter_city', toX: 12, toY: 19 },
-  { from: 'pewter_city', fromEdge: 'south', to: 'route2', toX: 9, toY: 1 },
-  
-  // Pewter ↔ Route 3 (east)
-  { from: 'pewter_city', fromEdge: 'east', to: 'route3', toX: 1, toY: 7 },
-  { from: 'route3', fromEdge: 'west', to: 'pewter_city', toX: 22, toY: 10 },
-  
-  // Route 3 ↔ Cerulean (east) 
-  { from: 'route3', fromEdge: 'east', to: 'cerulean_city', toX: 3, toY: 10 },
-  { from: 'cerulean_city', fromEdge: 'west', to: 'route3', toX: 28, toY: 7 },
-  
-  // Cerulean ↔ Route 4 (east)
-  { from: 'cerulean_city', fromEdge: 'east', to: 'route4', toX: 1, toY: 7 },
-  { from: 'route4', fromEdge: 'west', to: 'cerulean_city', toX: 22, toY: 10 },
-  
-  // Route 4 ↔ Vermilion
-  { from: 'route4', fromEdge: 'east', to: 'vermilion_city', toX: 3, toY: 10 },
-  { from: 'vermilion_city', fromEdge: 'north', to: 'route4', toX: 12, toY: 13 },
-  
-  // Vermilion → Route 5 → Celadon
-  { from: 'vermilion_city', fromEdge: 'west', to: 'route5', toX: 18, toY: 10 },
-  { from: 'route5', fromEdge: 'north', to: 'celadon_city', toX: 12, toY: 19 },
-  { from: 'celadon_city', fromEdge: 'south', to: 'route5', toX: 9, toY: 1 },
-  { from: 'route5', fromEdge: 'south', to: 'vermilion_city', toX: 12, toY: 3 },
-  
-  // Celadon → Route 6 → Fuchsia
-  { from: 'celadon_city', fromEdge: 'east', to: 'route6', toX: 1, toY: 10 },
-  { from: 'route6', fromEdge: 'east', to: 'fuchsia_city', toX: 3, toY: 10 },
-  { from: 'fuchsia_city', fromEdge: 'west', to: 'route6', toX: 18, toY: 10 },
-  { from: 'route6', fromEdge: 'west', to: 'celadon_city', toX: 22, toY: 10 },
-  
-  // Fuchsia → Route 7 → Saffron
-  { from: 'fuchsia_city', fromEdge: 'north', to: 'route7', toX: 9, toY: 18 },
-  { from: 'route7', fromEdge: 'north', to: 'saffron_city', toX: 12, toY: 19 },
-  { from: 'saffron_city', fromEdge: 'south', to: 'route7', toX: 9, toY: 1 },
-  { from: 'route7', fromEdge: 'south', to: 'fuchsia_city', toX: 12, toY: 3 },
-  
-  // Saffron → Route 8 → Cinnabar
-  { from: 'saffron_city', fromEdge: 'east', to: 'route8', toX: 1, toY: 10 },
-  { from: 'route8', fromEdge: 'east', to: 'cinnabar_island', toX: 3, toY: 10 },
-  { from: 'cinnabar_island', fromEdge: 'west', to: 'route8', toX: 18, toY: 10 },
-  { from: 'route8', fromEdge: 'west', to: 'saffron_city', toX: 22, toY: 10 },
-  
-  // Cinnabar → Route 9 → back to Viridian (for gym)
-  { from: 'cinnabar_island', fromEdge: 'north', to: 'route9', toX: 9, toY: 18 },
-  { from: 'route9', fromEdge: 'north', to: 'viridian_city', toX: 12, toY: 17 },
-  
-  // Viridian north → Victory Road → Elite 4
-  { from: 'viridian_city', fromEdge: 'north', to: 'victory_road', toX: 9, toY: 23 },
-  { from: 'victory_road', fromEdge: 'south', to: 'viridian_city', toX: 12, toY: 3 },
-  { from: 'victory_road', fromEdge: 'north', to: 'elite4', toX: 5, toY: 10 },
-];
-
-// Door connections for interiors
-export interface DoorConnection {
-  fromMap: string;
-  fromX: number;
-  fromY: number;
-  toMap: string;
-  toX: number;
-  toY: number;
-}
-
-export const DOOR_CONNECTIONS: DoorConnection[] = [
-  // Pallet Town
-  { fromMap: 'pallet_town', fromX: 5, fromY: 5, toMap: 'player_house', toX: 3, toY: 6 },
-  { fromMap: 'player_house', fromX: 3, fromY: 7, toMap: 'pallet_town', toX: 5, toY: 6 },
-  { fromMap: 'player_house', fromX: 4, fromY: 7, toMap: 'pallet_town', toX: 5, toY: 6 },
-  { fromMap: 'pallet_town', fromX: 15, fromY: 16, toMap: 'oak_lab', toX: 5, toY: 8 },
-  { fromMap: 'oak_lab', fromX: 5, fromY: 9, toMap: 'pallet_town', toX: 15, toY: 17 },
-  { fromMap: 'oak_lab', fromX: 6, fromY: 9, toMap: 'pallet_town', toX: 15, toY: 17 },
-  
-  // Viridian Pokecenter/Mart
-  { fromMap: 'viridian_city', fromX: 6, fromY: 7, toMap: 'pokecenter', toX: 4, toY: 6 },
-  { fromMap: 'pokecenter', fromX: 4, fromY: 7, toMap: 'viridian_city', toX: 6, toY: 8 },
-  { fromMap: 'pokecenter', fromX: 5, fromY: 7, toMap: 'viridian_city', toX: 6, toY: 8 },
-  { fromMap: 'viridian_city', fromX: 18, fromY: 7, toMap: 'pokemart', toX: 3, toY: 6 },
-  { fromMap: 'pokemart', fromX: 3, fromY: 7, toMap: 'viridian_city', toX: 18, toY: 8 },
-  { fromMap: 'pokemart', fromX: 4, fromY: 7, toMap: 'viridian_city', toX: 18, toY: 8 },
-  
-  // Gym doors - all cities use same gym interior but different states
-  { fromMap: 'pewter_city', fromX: 18, fromY: 8, toMap: 'gym_pewter', toX: 5, toY: 12 },
-  { fromMap: 'gym_pewter', fromX: 5, fromY: 13, toMap: 'pewter_city', toX: 18, toY: 9 },
-  { fromMap: 'gym_pewter', fromX: 6, fromY: 13, toMap: 'pewter_city', toX: 18, toY: 9 },
-  
-  { fromMap: 'cerulean_city', fromX: 18, fromY: 8, toMap: 'gym_cerulean', toX: 5, toY: 12 },
-  { fromMap: 'gym_cerulean', fromX: 5, fromY: 13, toMap: 'cerulean_city', toX: 18, toY: 9 },
-  { fromMap: 'gym_cerulean', fromX: 6, fromY: 13, toMap: 'cerulean_city', toX: 18, toY: 9 },
-  
-  { fromMap: 'vermilion_city', fromX: 18, fromY: 8, toMap: 'gym_vermilion', toX: 5, toY: 12 },
-  { fromMap: 'gym_vermilion', fromX: 5, fromY: 13, toMap: 'vermilion_city', toX: 18, toY: 9 },
-  { fromMap: 'gym_vermilion', fromX: 6, fromY: 13, toMap: 'vermilion_city', toX: 18, toY: 9 },
-
-  // Pewter/Cerulean pokecenter/mart doors
-  { fromMap: 'pewter_city', fromX: 6, fromY: 7, toMap: 'pokecenter', toX: 4, toY: 6 },
-  { fromMap: 'pewter_city', fromX: 6, fromY: 15, toMap: 'pokemart', toX: 3, toY: 6 },
-  { fromMap: 'cerulean_city', fromX: 6, fromY: 7, toMap: 'pokecenter', toX: 4, toY: 6 },
-  { fromMap: 'cerulean_city', fromX: 6, fromY: 15, toMap: 'pokemart', toX: 3, toY: 6 },
-  { fromMap: 'vermilion_city', fromX: 6, fromY: 7, toMap: 'pokecenter', toX: 4, toY: 6 },
-  { fromMap: 'vermilion_city', fromX: 6, fromY: 15, toMap: 'pokemart', toX: 3, toY: 6 },
-];
-
-// All maps
-export function getAllMaps(): Record<string, GameMap> {
-  const maps: Record<string, GameMap> = {
-    pallet_town: createPalletTown(),
-    player_house: createPlayerHouse(),
-    oak_lab: createOakLab(),
-    route1: createRoute1(),
-    viridian_city: createViridianCity(),
-    pokecenter: createPokecenter(),
-    pokemart: createPokemart(),
-    route2: createRoute2(),
-    pewter_city: createPewterCity(),
-    gym_pewter: createGymInterior('gym_pewter'),
-    route3: createRoute3(),
-    cerulean_city: createCeruleanCity(),
-    gym_cerulean: createGymInterior('gym_cerulean'),
-    route4: createRoute4(),
-    vermilion_city: createVermilionCity(),
-    gym_vermilion: createGymInterior('gym_vermilion'),
-    route5: createGenericRoute('route5', 'Route 5', [
-      { speciesId: 'oddling', minLevel: 18, maxLevel: 22, weight: 25 },
-      { speciesId: 'growlith', minLevel: 18, maxLevel: 22, weight: 20 },
-      { speciesId: 'meowzy', minLevel: 18, maxLevel: 22, weight: 20 },
-      { speciesId: 'psydux', minLevel: 19, maxLevel: 22, weight: 20 },
-      { speciesId: 'magnolt', minLevel: 19, maxLevel: 22, weight: 15 },
-    ]),
-    celadon_city: createCeladonCity(),
-    gym_celadon: createGymInterior('gym_celadon'),
-    route6: createGenericRoute('route6', 'Route 6', [
-      { speciesId: 'foxflame', minLevel: 22, maxLevel: 26, weight: 20 },
-      { speciesId: 'slowpox', minLevel: 23, maxLevel: 27, weight: 20 },
-      { speciesId: 'stingbee', minLevel: 22, maxLevel: 26, weight: 20 },
-      { speciesId: 'frostkit', minLevel: 23, maxLevel: 27, weight: 20 },
-      { speciesId: 'ghoulby', minLevel: 24, maxLevel: 27, weight: 20 },
-    ]),
-    fuchsia_city: createFuchsiaCity(),
-    gym_fuchsia: createGymInterior('gym_fuchsia'),
-    route7: createGenericRoute('route7', 'Route 7', [
-      { speciesId: 'cobrix', minLevel: 28, maxLevel: 32, weight: 20 },
-      { speciesId: 'psyclops', minLevel: 28, maxLevel: 32, weight: 15 },
-      { speciesId: 'spectrox', minLevel: 28, maxLevel: 32, weight: 15 },
-      { speciesId: 'glacirex', minLevel: 28, maxLevel: 32, weight: 15 },
-      { speciesId: 'snorlord', minLevel: 30, maxLevel: 32, weight: 5 },
-      { speciesId: 'drakelet', minLevel: 28, maxLevel: 32, weight: 10 },
-    ]),
-    saffron_city: createSaffronCity(),
-    gym_saffron: createGymInterior('gym_saffron'),
-    route8: createGenericRoute('route8', 'Route 8', [
-      { speciesId: 'fossilon', minLevel: 30, maxLevel: 35, weight: 15 },
-      { speciesId: 'jinxia', minLevel: 30, maxLevel: 35, weight: 15 },
-      { speciesId: 'draconix', minLevel: 32, maxLevel: 36, weight: 5 },
-      { speciesId: 'boulderox', minLevel: 30, maxLevel: 35, weight: 20 },
-      { speciesId: 'champeon', minLevel: 30, maxLevel: 35, weight: 20 },
-    ]),
-    cinnabar_island: createCinnabarIsland(),
-    gym_cinnabar: createGymInterior('gym_cinnabar'),
-    route9: createGenericRoute('route9', 'Route 9', [
-      { speciesId: 'draconix', minLevel: 35, maxLevel: 40, weight: 10 },
-      { speciesId: 'spectrox', minLevel: 34, maxLevel: 38, weight: 20 },
-      { speciesId: 'champeon', minLevel: 34, maxLevel: 38, weight: 20 },
-      { speciesId: 'glacirex', minLevel: 34, maxLevel: 38, weight: 20 },
-    ]),
-    gym_viridian: createGymInterior('gym_viridian'),
-    victory_road: createVictoryRoad(),
-    elite4: createElite4(),
-  };
-
-  // Celadon doors: pokecenter door at 5,6; gym door at 19,7; dept store (mart) at 6,17
-  DOOR_CONNECTIONS.push(
-    { fromMap: 'celadon_city', fromX: 5, fromY: 6, toMap: 'pokecenter', toX: 4, toY: 6 },
-    { fromMap: 'celadon_city', fromX: 19, fromY: 7, toMap: 'gym_celadon', toX: 5, toY: 12 },
-    { fromMap: 'gym_celadon', fromX: 5, fromY: 13, toMap: 'celadon_city', toX: 19, toY: 8 },
-    { fromMap: 'gym_celadon', fromX: 6, fromY: 13, toMap: 'celadon_city', toX: 19, toY: 8 },
-    { fromMap: 'celadon_city', fromX: 6, fromY: 17, toMap: 'pokemart', toX: 3, toY: 6 },
-  );
-
-  // Fuchsia doors: pokecenter door at 5,7; gym door at 17,7; mart at 5,14
-  DOOR_CONNECTIONS.push(
-    { fromMap: 'fuchsia_city', fromX: 5, fromY: 7, toMap: 'pokecenter', toX: 4, toY: 6 },
-    { fromMap: 'fuchsia_city', fromX: 17, fromY: 7, toMap: 'gym_fuchsia', toX: 5, toY: 12 },
-    { fromMap: 'gym_fuchsia', fromX: 5, fromY: 13, toMap: 'fuchsia_city', toX: 17, toY: 8 },
-    { fromMap: 'gym_fuchsia', fromX: 6, fromY: 13, toMap: 'fuchsia_city', toX: 17, toY: 8 },
-    { fromMap: 'fuchsia_city', fromX: 5, fromY: 14, toMap: 'pokemart', toX: 3, toY: 6 },
-  );
-
-  // Saffron doors: pokecenter door at 5,5; gym door at 20,5; mart at 5,17
-  DOOR_CONNECTIONS.push(
-    { fromMap: 'saffron_city', fromX: 5, fromY: 5, toMap: 'pokecenter', toX: 4, toY: 6 },
-    { fromMap: 'saffron_city', fromX: 20, fromY: 5, toMap: 'gym_saffron', toX: 5, toY: 12 },
-    { fromMap: 'gym_saffron', fromX: 5, fromY: 13, toMap: 'saffron_city', toX: 20, toY: 6 },
-    { fromMap: 'gym_saffron', fromX: 6, fromY: 13, toMap: 'saffron_city', toX: 20, toY: 6 },
-    { fromMap: 'saffron_city', fromX: 5, fromY: 17, toMap: 'pokemart', toX: 3, toY: 6 },
-  );
-
-  // Cinnabar doors: pokecenter door at 8,8; gym door at 17,8; mart at 8,15
-  DOOR_CONNECTIONS.push(
-    { fromMap: 'cinnabar_island', fromX: 8, fromY: 8, toMap: 'pokecenter', toX: 4, toY: 6 },
-    { fromMap: 'cinnabar_island', fromX: 17, fromY: 8, toMap: 'gym_cinnabar', toX: 5, toY: 12 },
-    { fromMap: 'gym_cinnabar', fromX: 5, fromY: 13, toMap: 'cinnabar_island', toX: 17, toY: 9 },
-    { fromMap: 'gym_cinnabar', fromX: 6, fromY: 13, toMap: 'cinnabar_island', toX: 17, toY: 9 },
-    { fromMap: 'cinnabar_island', fromX: 8, fromY: 15, toMap: 'pokemart', toX: 3, toY: 6 },
-  );
-
-  return maps;
-}
+  },
+};
