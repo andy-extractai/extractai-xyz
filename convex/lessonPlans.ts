@@ -46,3 +46,13 @@ export const updatePlan = mutation({
     await ctx.db.patch(id, patch);
   },
 });
+
+export const resetToPending = mutation({
+  args: { id: v.id("lessonPlans") },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      status: "pending",
+      generatedPlan: undefined,
+    });
+  },
+});

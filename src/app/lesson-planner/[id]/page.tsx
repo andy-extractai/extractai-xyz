@@ -1,7 +1,7 @@
 "use client";
 
 import { use, useState } from "react";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type AnyId = any;
@@ -508,8 +508,22 @@ export default function LessonPlanDetailPage({ params }: { params: Promise<{ id:
   const { theme } = useTheme();
   const d = theme === "dark";
   const plan = useQuery(api.lessonPlans.get, { id: id as AnyId }) as LessonPlan | undefined | null;
+  const resetToPending = useMutation(api.lessonPlans.resetToPending);
   const [pptxLoading, setPptxLoading] = useState(false);
   const [docxLoading, setDocxLoading] = useState(false);
+  const [regenerating, setRegenerating] = useState(false);
+
+  async function handleRegenerate() {
+    if (!plan || regenerating) return;
+    setRegenerating(true);
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await resetToPending({ id: plan._id as any });
+    } finally {
+      // Keep spinner until Convex real-time update flips status to "pending"
+      setTimeout(() => setRegenerating(false), 1500);
+    }
+  }
 
   async function handlePptx(plan: LessonPlan, sections: Section[]) {
     setPptxLoading(true);
@@ -566,28 +580,39 @@ export default function LessonPlanDetailPage({ params }: { params: Promise<{ id:
                 {plan.title}
               </h1>
             </div>
-            {/* Action buttons — only when plan is done */}
-            {plan.status === "done" && sections.length > 0 && (
-              <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Action buttons */}
+            {(plan.status === "done" || plan.status === "error") && (
+              <div className="flex items-center gap-2 flex-shrink-0 flex-wrap">
+                {plan.status === "done" && sections.length > 0 && (
+                  <>
+                    <button
+                      onClick={() => handleDocx(plan, sections)}
+                      disabled={docxLoading}
+                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-40", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 disabled:opacity-40")}`}
+                    >
+                      {docxLoading ? "⏳" : "📄"} {docxLoading ? "Generating…" : "Word"}
+                    </button>
+                    <button
+                      onClick={() => handlePptx(plan, sections)}
+                      disabled={pptxLoading}
+                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-40", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 disabled:opacity-40")}`}
+                    >
+                      {pptxLoading ? "⏳" : "📊"} {pptxLoading ? "Generating…" : "PowerPoint"}
+                    </button>
+                    <button
+                      onClick={() => window.print()}
+                      className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400")}`}
+                    >
+                      🖨 Print
+                    </button>
+                  </>
+                )}
                 <button
-                  onClick={() => handleDocx(plan, sections)}
-                  disabled={docxLoading}
-                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-40", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 disabled:opacity-40")}`}
+                  onClick={handleRegenerate}
+                  disabled={regenerating}
+                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-indigo-500/50 text-indigo-400 hover:border-indigo-400 hover:text-indigo-300 disabled:opacity-40", "border-indigo-300 text-indigo-600 hover:border-indigo-400 hover:text-indigo-700 disabled:opacity-40")}`}
                 >
-                  {docxLoading ? "⏳" : "📄"} {docxLoading ? "Generating…" : "Word"}
-                </button>
-                <button
-                  onClick={() => handlePptx(plan, sections)}
-                  disabled={pptxLoading}
-                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500 disabled:opacity-40", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400 disabled:opacity-40")}`}
-                >
-                  {pptxLoading ? "⏳" : "📊"} {pptxLoading ? "Generating…" : "PowerPoint"}
-                </button>
-                <button
-                  onClick={() => window.print()}
-                  className={`flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all ${t(d, "border-zinc-700 text-zinc-400 hover:text-white hover:border-zinc-500", "border-zinc-200 text-zinc-500 hover:text-zinc-900 hover:border-zinc-400")}`}
-                >
-                  🖨 Print
+                  {regenerating ? "⏳" : "↺"} {regenerating ? "Queuing…" : "Regenerate"}
                 </button>
               </div>
             )}
@@ -665,11 +690,21 @@ export default function LessonPlanDetailPage({ params }: { params: Promise<{ id:
 
         {/* Error */}
         {plan.status === "error" && (
-          <div className={`rounded-xl border border-dashed py-12 text-center ${t(d, "border-red-500/30", "border-red-200")}`}>
+          <div className={`rounded-xl border border-dashed py-12 text-center space-y-4 ${t(d, "border-red-500/30", "border-red-200")}`}>
+            <p className="text-2xl">⚠️</p>
             <p className={`text-sm font-medium ${t(d, "text-red-400", "text-red-600")}`}>Generation failed.</p>
-            <Link href="/lesson-planner" className="inline-block mt-4 text-xs font-bold px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white transition">
-              ← Back
-            </Link>
+            <div className="flex items-center justify-center gap-3">
+              <button
+                onClick={handleRegenerate}
+                disabled={regenerating}
+                className="text-xs font-bold px-4 py-2 rounded-lg bg-indigo-500 hover:bg-indigo-600 disabled:opacity-50 text-white transition"
+              >
+                {regenerating ? "Queuing…" : "↺ Try Again"}
+              </button>
+              <Link href="/lesson-planner" className={`text-xs ${t(d, "text-zinc-500 hover:text-white", "text-zinc-400 hover:text-zinc-900")}`}>
+                ← Back
+              </Link>
+            </div>
           </div>
         )}
       </div>
