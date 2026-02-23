@@ -33,16 +33,18 @@ export default function Game() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const P = Phaser as any;
+      const gameWidth = window.innerWidth;
+      const gameHeight = window.innerHeight;
       const config = {
         type: P.AUTO,
         parent: containerRef.current!,
         pixelArt: true,
         backgroundColor: '#000000',
+        width: gameWidth,
+        height: gameHeight,
         scale: {
-          mode: P.Scale.FIT,
+          mode: P.Scale.RESIZE,
           autoCenter: P.Scale.CENTER_BOTH,
-          width: GAME_WIDTH,
-          height: GAME_HEIGHT,
         },
         scene: [BootScene, TitleScene, StarterSelectScene, OverworldScene, BattleScene, PokemonCenterScene],
       };

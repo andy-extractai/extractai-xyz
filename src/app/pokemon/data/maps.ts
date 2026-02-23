@@ -111,7 +111,8 @@ const palletTownTiles: number[][] = (() => {
   // Oak's Lab (bottom center, rows 10-14, cols 7-13)
   for (let y = 10; y <= 11; y++) for (let x = 7; x <= 13; x++) tiles[y][x] = TILE.BUILDING_ROOF;
   for (let y = 12; y <= 14; y++) for (let x = 7; x <= 13; x++) tiles[y][x] = TILE.BUILDING_WALL;
-  tiles[14][10] = TILE.DOOR;
+  tiles[14][10] = TILE.BUILDING_WALL;
+  tiles[10][10] = TILE.DOOR;
 
   // Flowers near houses
   tiles[7][4] = TILE.FLOWER;
@@ -490,7 +491,7 @@ export const MAPS: Record<string, MapData> = {
       },
     ],
     doors: [
-      { x: 10, y: 14, targetMap: 'oaksLab', targetX: 4, targetY: 10 },
+      { x: 10, y: 10, targetMap: 'oaksLab', targetX: 4, targetY: 10 },
       { x: 5, y: 6, targetMap: 'playerHouse', targetX: 4, targetY: 8 },
       { x: 14, y: 6, targetMap: 'rivalHouse', targetX: 4, targetY: 8 },
     ],
@@ -625,8 +626,8 @@ export const MAPS: Record<string, MapData> = {
       },
     ],
     doors: [
-      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
-      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 15 },
+      { x: 4, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 9 },
+      { x: 5, y: 11, targetMap: 'palletTown', targetX: 10, targetY: 9 },
     ],
   },
   playerHouse: {

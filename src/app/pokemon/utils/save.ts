@@ -1,6 +1,6 @@
 import { GamePokemon } from '../data/pokemon';
 
-const SAVE_KEY = 'pokemon-save-v2';
+const SAVE_KEY = 'pokemon-save-v3';
 
 export interface SaveData {
   playerName: string;
