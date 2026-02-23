@@ -5,16 +5,29 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useTheme } from "./ThemeProvider";
 
-const NAV_ITEMS = [
+interface NavItem {
+  href: string;
+  label: string;
+  emoji: string;
+  children?: { href: string; label: string; emoji: string }[];
+}
+
+const NAV_ITEMS: NavItem[] = [
   { href: "/tasks",    label: "Tasks",    emoji: "📋" },
   { href: "/calendar", label: "Calendar", emoji: "📅" },
-  { href: "/projects", label: "Projects", emoji: "🚀" },
+  {
+    href: "/projects",
+    label: "Projects",
+    emoji: "🚀",
+    children: [
+      { href: "/lesson-planner", label: "Lesson Planner", emoji: "📚" },
+      { href: "/consensus",      label: "Consensus",       emoji: "📡" },
+    ],
+  },
   { href: "/memory",   label: "Memory",   emoji: "🧠" },
   { href: "/team",     label: "Team",     emoji: "👥" },
-  { href: "/people",          label: "People",         emoji: "📇" },
-  { href: "/lesson-planner", label: "Lesson Planner",  emoji: "📚" },
-  { href: "/chat",            label: "Chat",            emoji: "💬" },
-  { href: "/consensus",      label: "Signals",         emoji: "📡" },
+  { href: "/people",   label: "People",   emoji: "📇" },
+  { href: "/chat",     label: "Chat",     emoji: "💬" },
 ];
 
 export default function Sidebar() {
@@ -109,29 +122,73 @@ export default function Sidebar() {
         <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
           {NAV_ITEMS.map((item) => {
             const active = pathname === item.href;
+            const childActive = item.children?.some(c => pathname === c.href || pathname.startsWith(c.href + "/"));
+            const expanded = active || childActive;
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setOpen(false)}
-                className={`
-                  flex items-center gap-3 px-3 rounded-lg text-sm
-                  min-h-[44px]
-                  transition-colors duration-150
-                  ${active
-                    ? d
-                      ? "bg-zinc-800 text-white font-medium"
-                      : "bg-emerald-50 text-emerald-700 font-medium"
-                    : d
-                    ? "text-zinc-400 hover:text-white hover:bg-zinc-800/50 active:bg-zinc-800"
-                    : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200"
-                  }
-                `}
-              >
-                {/* emoji: slightly larger for mobile readability */}
-                <span className="text-lg leading-none">{item.emoji}</span>
-                <span>{item.label}</span>
-              </Link>
+              <div key={item.href}>
+                <Link
+                  href={item.href}
+                  onClick={() => setOpen(false)}
+                  className={`
+                    flex items-center gap-3 px-3 rounded-lg text-sm
+                    min-h-[44px]
+                    transition-colors duration-150
+                    ${active
+                      ? d
+                        ? "bg-zinc-800 text-white font-medium"
+                        : "bg-emerald-50 text-emerald-700 font-medium"
+                      : childActive
+                      ? d
+                        ? "text-zinc-300 font-medium"
+                        : "text-zinc-800 font-medium"
+                      : d
+                      ? "text-zinc-400 hover:text-white hover:bg-zinc-800/50 active:bg-zinc-800"
+                      : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 active:bg-zinc-200"
+                    }
+                  `}
+                >
+                  <span className="text-lg leading-none">{item.emoji}</span>
+                  <span className="flex-1">{item.label}</span>
+                  {item.children && (
+                    <span className={`text-[10px] transition-transform duration-150 ${expanded ? "rotate-90" : ""} ${d ? "text-zinc-600" : "text-zinc-400"}`}>
+                      ▶
+                    </span>
+                  )}
+                </Link>
+
+                {/* Sub-items */}
+                {item.children && expanded && (
+                  <div className={`ml-3 mt-0.5 mb-1 pl-3 space-y-0.5 border-l ${d ? "border-zinc-800" : "border-zinc-200"}`}>
+                    {item.children.map((child) => {
+                      const childIsActive = pathname === child.href || pathname.startsWith(child.href + "/");
+                      return (
+                        <Link
+                          key={child.href}
+                          href={child.href}
+                          onClick={() => setOpen(false)}
+                          className={`
+                            flex items-center gap-2.5 px-2.5 rounded-lg text-sm
+                            min-h-[40px]
+                            transition-colors duration-150
+                            ${childIsActive
+                              ? d
+                                ? "bg-zinc-800 text-white font-medium"
+                                : "bg-emerald-50 text-emerald-700 font-medium"
+                              : d
+                              ? "text-zinc-500 hover:text-white hover:bg-zinc-800/50"
+                              : "text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100"
+                            }
+                          `}
+                        >
+                          <span className="text-base leading-none">{child.emoji}</span>
+                          <span>{child.label}</span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             );
           })}
         </nav>
