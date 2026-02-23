@@ -60,49 +60,66 @@ export class BootScene extends Phaser.Scene {
   generateTileTextures() {
     const size = 16;
 
-    // Grass tile
+    // ─── Grass tile — bright green with subtle darker crosshatch ───
     const grassGfx = this.make.graphics({ x: 0, y: 0 });
     grassGfx.fillStyle(0x78c840, 1);
     grassGfx.fillRect(0, 0, size, size);
-    grassGfx.fillStyle(0x5ea832, 1);
+    // Crosshatch pattern
+    grassGfx.fillStyle(0x68b838, 1);
     grassGfx.fillRect(0, 0, 1, size);
     grassGfx.fillRect(0, 0, size, 1);
-    // Small grass detail
-    grassGfx.fillStyle(0x68b838, 1);
-    grassGfx.fillRect(4, 4, 2, 2);
-    grassGfx.fillRect(10, 10, 2, 2);
-    grassGfx.fillRect(12, 4, 2, 2);
+    grassGfx.fillRect(8, 0, 1, size);
+    grassGfx.fillRect(0, 8, size, 1);
+    // Small detail spots
+    grassGfx.fillStyle(0x88d850, 1);
+    grassGfx.fillRect(3, 3, 2, 2);
+    grassGfx.fillRect(11, 11, 2, 2);
+    grassGfx.fillRect(3, 11, 1, 1);
+    grassGfx.fillRect(12, 4, 1, 1);
     grassGfx.generateTexture('tile-grass', size, size);
     grassGfx.destroy();
 
-    // Path tile
+    // ─── Path tile — sandy tan (#d4b896) ───
     const pathGfx = this.make.graphics({ x: 0, y: 0 });
-    pathGfx.fillStyle(0xe8d8a0, 1);
+    pathGfx.fillStyle(0xd4b896, 1);
     pathGfx.fillRect(0, 0, size, size);
-    pathGfx.fillStyle(0xd8c890, 1);
+    pathGfx.fillStyle(0xc8ac88, 1);
     pathGfx.fillRect(0, 0, 1, size);
     pathGfx.fillRect(0, 0, size, 1);
-    pathGfx.fillStyle(0xdcd098, 1);
+    // Sandy speckle
+    pathGfx.fillStyle(0xdcc4a0, 1);
     pathGfx.fillRect(3, 7, 1, 1);
     pathGfx.fillRect(11, 3, 1, 1);
     pathGfx.fillRect(8, 12, 1, 1);
+    pathGfx.fillRect(6, 5, 1, 1);
     pathGfx.generateTexture('tile-path', size, size);
     pathGfx.destroy();
 
-    // Tree tile
+    // ─── Tree tile — distinct trunk and foliage ───
     const treeGfx = this.make.graphics({ x: 0, y: 0 });
-    treeGfx.fillStyle(0x2d6b30, 1);
+    // Dark base (shadow)
+    treeGfx.fillStyle(0x1a4a1d, 1);
     treeGfx.fillRect(0, 0, size, size);
+    // Foliage — lush canopy
+    treeGfx.fillStyle(0x2d6b30, 1);
+    treeGfx.fillRect(1, 0, 14, 11);
     treeGfx.fillStyle(0x3d8b40, 1);
-    treeGfx.fillRect(2, 2, 12, 10);
+    treeGfx.fillRect(2, 1, 12, 8);
     treeGfx.fillStyle(0x4da850, 1);
-    treeGfx.fillRect(4, 3, 8, 6);
+    treeGfx.fillRect(4, 2, 8, 5);
+    // Highlight spots on foliage
+    treeGfx.fillStyle(0x58c060, 1);
+    treeGfx.fillRect(5, 3, 2, 2);
+    treeGfx.fillRect(10, 4, 2, 1);
+    // Trunk — brown
     treeGfx.fillStyle(0x5a3a20, 1);
-    treeGfx.fillRect(6, 12, 4, 4);
+    treeGfx.fillRect(6, 11, 4, 5);
+    treeGfx.fillStyle(0x7a5030, 1);
+    treeGfx.fillRect(7, 11, 2, 5);
     treeGfx.generateTexture('tile-tree', size, size);
     treeGfx.destroy();
 
-    // Building wall
+    // ─── Building wall — gray with window ───
     const wallGfx = this.make.graphics({ x: 0, y: 0 });
     wallGfx.fillStyle(0xb8b8b8, 1);
     wallGfx.fillRect(0, 0, size, size);
@@ -111,49 +128,79 @@ export class BootScene extends Phaser.Scene {
     wallGfx.fillRect(0, size - 1, size, 1);
     wallGfx.fillStyle(0xd0d0d0, 1);
     wallGfx.fillRect(1, 0, size - 1, 1);
+    // Window with light color
+    wallGfx.fillStyle(0x70a0c8, 1);
+    wallGfx.fillRect(4, 3, 8, 6);
+    wallGfx.fillStyle(0x90c8e8, 1);
+    wallGfx.fillRect(5, 4, 3, 2);
+    wallGfx.fillStyle(0x505050, 1);
+    wallGfx.fillRect(4, 3, 8, 1);
+    wallGfx.fillRect(4, 3, 1, 6);
+    wallGfx.fillRect(4, 6, 8, 1);
     wallGfx.generateTexture('tile-wall', size, size);
     wallGfx.destroy();
 
-    // Building roof
+    // ─── Building roof — colored ───
     const roofGfx = this.make.graphics({ x: 0, y: 0 });
     roofGfx.fillStyle(0xd03030, 1);
     roofGfx.fillRect(0, 0, size, size);
-    roofGfx.fillStyle(0xe04040, 1);
-    roofGfx.fillRect(2, 2, size - 4, size - 4);
+    roofGfx.fillStyle(0xe04848, 1);
+    roofGfx.fillRect(1, 1, size - 2, size - 3);
     roofGfx.fillStyle(0xb02020, 1);
     roofGfx.fillRect(0, size - 2, size, 2);
+    // Roof ridge lines
+    roofGfx.fillStyle(0xc83838, 1);
+    roofGfx.fillRect(0, 4, size, 1);
+    roofGfx.fillRect(0, 8, size, 1);
     roofGfx.generateTexture('tile-roof', size, size);
     roofGfx.destroy();
 
-    // Water tile
+    // ─── Water tile — animated blue with lighter shimmer ───
     const waterGfx = this.make.graphics({ x: 0, y: 0 });
     waterGfx.fillStyle(0x4888d4, 1);
     waterGfx.fillRect(0, 0, size, size);
-    waterGfx.fillStyle(0x5898e4, 1);
-    waterGfx.fillRect(2, 4, 4, 2);
-    waterGfx.fillRect(10, 8, 4, 2);
+    // Wave details — lighter blue ripples
+    waterGfx.fillStyle(0x68a8e8, 1);
+    waterGfx.fillRect(1, 3, 5, 2);
+    waterGfx.fillRect(9, 7, 5, 2);
+    waterGfx.fillRect(3, 11, 4, 2);
+    // Shimmer highlights
+    waterGfx.fillStyle(0x88c8f8, 1);
+    waterGfx.fillRect(2, 4, 2, 1);
+    waterGfx.fillRect(10, 8, 2, 1);
+    // Dark wave troughs
     waterGfx.fillStyle(0x3878c4, 1);
-    waterGfx.fillRect(6, 10, 4, 2);
+    waterGfx.fillRect(6, 5, 3, 1);
+    waterGfx.fillRect(0, 9, 3, 1);
+    waterGfx.fillRect(12, 13, 3, 1);
     waterGfx.generateTexture('tile-water', size, size);
     waterGfx.destroy();
 
-    // Tall grass
+    // ─── Tall grass — darker with vertical grass blades ───
     const tallGrassGfx = this.make.graphics({ x: 0, y: 0 });
     tallGrassGfx.fillStyle(0x48a028, 1);
     tallGrassGfx.fillRect(0, 0, size, size);
+    // Grass blade stalks (vertical lines)
     tallGrassGfx.fillStyle(0x58b838, 1);
-    tallGrassGfx.fillRect(2, 0, 2, 12);
-    tallGrassGfx.fillRect(6, 2, 2, 10);
-    tallGrassGfx.fillRect(10, 0, 2, 14);
-    tallGrassGfx.fillRect(14, 4, 2, 8);
+    tallGrassGfx.fillRect(1, 0, 2, 13);
+    tallGrassGfx.fillRect(5, 2, 2, 11);
+    tallGrassGfx.fillRect(9, 0, 2, 14);
+    tallGrassGfx.fillRect(13, 3, 2, 10);
+    // Darker blade edges
     tallGrassGfx.fillStyle(0x388818, 1);
-    tallGrassGfx.fillRect(4, 0, 1, 10);
-    tallGrassGfx.fillRect(8, 2, 1, 8);
-    tallGrassGfx.fillRect(12, 0, 1, 12);
+    tallGrassGfx.fillRect(3, 0, 1, 11);
+    tallGrassGfx.fillRect(7, 1, 1, 9);
+    tallGrassGfx.fillRect(11, 0, 1, 12);
+    // Blade tips — lighter
+    tallGrassGfx.fillStyle(0x68c848, 1);
+    tallGrassGfx.fillRect(1, 0, 1, 2);
+    tallGrassGfx.fillRect(9, 0, 1, 2);
+    tallGrassGfx.fillRect(5, 2, 1, 2);
+    tallGrassGfx.fillRect(13, 3, 1, 2);
     tallGrassGfx.generateTexture('tile-tallgrass', size, size);
     tallGrassGfx.destroy();
 
-    // Door tile
+    // ─── Door tile ───
     const doorGfx = this.make.graphics({ x: 0, y: 0 });
     doorGfx.fillStyle(0x8b6914, 1);
     doorGfx.fillRect(0, 0, size, size);
@@ -164,20 +211,20 @@ export class BootScene extends Phaser.Scene {
     doorGfx.generateTexture('tile-door', size, size);
     doorGfx.destroy();
 
-    // Sign tile
+    // ─── Sign tile ───
     const signGfx = this.make.graphics({ x: 0, y: 0 });
     signGfx.fillStyle(0x78c840, 1);
     signGfx.fillRect(0, 0, size, size);
     signGfx.fillStyle(0x8b6914, 1);
     signGfx.fillRect(3, 3, 10, 8);
-    signGfx.fillStyle(0xa07828, 1);
+    signGfx.fillStyle(0xc0a040, 1);
     signGfx.fillRect(4, 4, 8, 6);
     signGfx.fillStyle(0x5a3a20, 1);
     signGfx.fillRect(7, 11, 2, 5);
     signGfx.generateTexture('tile-sign', size, size);
     signGfx.destroy();
 
-    // Ledge tile
+    // ─── Ledge tile ───
     const ledgeGfx = this.make.graphics({ x: 0, y: 0 });
     ledgeGfx.fillStyle(0x78c840, 1);
     ledgeGfx.fillRect(0, 0, size, size);
@@ -188,7 +235,7 @@ export class BootScene extends Phaser.Scene {
     ledgeGfx.generateTexture('tile-ledge', size, size);
     ledgeGfx.destroy();
 
-    // Fence
+    // ─── Fence ───
     const fenceGfx = this.make.graphics({ x: 0, y: 0 });
     fenceGfx.fillStyle(0x78c840, 1);
     fenceGfx.fillRect(0, 0, size, size);
@@ -201,7 +248,7 @@ export class BootScene extends Phaser.Scene {
     fenceGfx.generateTexture('tile-fence', size, size);
     fenceGfx.destroy();
 
-    // Flower
+    // ─── Flower ───
     const flowerGfx = this.make.graphics({ x: 0, y: 0 });
     flowerGfx.fillStyle(0x78c840, 1);
     flowerGfx.fillRect(0, 0, size, size);
@@ -214,7 +261,7 @@ export class BootScene extends Phaser.Scene {
     flowerGfx.generateTexture('tile-flower', size, size);
     flowerGfx.destroy();
 
-    // Building floor
+    // ─── Building floor ───
     const floorGfx = this.make.graphics({ x: 0, y: 0 });
     floorGfx.fillStyle(0xf0e8d0, 1);
     floorGfx.fillRect(0, 0, size, size);
@@ -224,7 +271,7 @@ export class BootScene extends Phaser.Scene {
     floorGfx.generateTexture('tile-floor', size, size);
     floorGfx.destroy();
 
-    // Counter
+    // ─── Counter ───
     const counterGfx = this.make.graphics({ x: 0, y: 0 });
     counterGfx.fillStyle(0xc07020, 1);
     counterGfx.fillRect(0, 0, size, size);
@@ -235,7 +282,7 @@ export class BootScene extends Phaser.Scene {
     counterGfx.generateTexture('tile-counter', size, size);
     counterGfx.destroy();
 
-    // Heal machine
+    // ─── Heal machine ───
     const healGfx = this.make.graphics({ x: 0, y: 0 });
     healGfx.fillStyle(0xf0e8d0, 1);
     healGfx.fillRect(0, 0, size, size);
@@ -247,7 +294,7 @@ export class BootScene extends Phaser.Scene {
     healGfx.generateTexture('tile-heal', size, size);
     healGfx.destroy();
 
-    // PC machine
+    // ─── PC machine ───
     const pcGfx = this.make.graphics({ x: 0, y: 0 });
     pcGfx.fillStyle(0xf0e8d0, 1);
     pcGfx.fillRect(0, 0, size, size);
@@ -258,7 +305,7 @@ export class BootScene extends Phaser.Scene {
     pcGfx.generateTexture('tile-pc', size, size);
     pcGfx.destroy();
 
-    // Shelf
+    // ─── Shelf ───
     const shelfGfx = this.make.graphics({ x: 0, y: 0 });
     shelfGfx.fillStyle(0xf0e8d0, 1);
     shelfGfx.fillRect(0, 0, size, size);
@@ -270,7 +317,7 @@ export class BootScene extends Phaser.Scene {
     shelfGfx.generateTexture('tile-shelf', size, size);
     shelfGfx.destroy();
 
-    // Table
+    // ─── Table ───
     const tableGfx = this.make.graphics({ x: 0, y: 0 });
     tableGfx.fillStyle(0xf0e8d0, 1);
     tableGfx.fillRect(0, 0, size, size);
@@ -281,7 +328,7 @@ export class BootScene extends Phaser.Scene {
     tableGfx.generateTexture('tile-table', size, size);
     tableGfx.destroy();
 
-    // Mat
+    // ─── Mat ───
     const matGfx = this.make.graphics({ x: 0, y: 0 });
     matGfx.fillStyle(0xf0e8d0, 1);
     matGfx.fillRect(0, 0, size, size);
@@ -296,13 +343,19 @@ export class BootScene extends Phaser.Scene {
   generatePlayerSprite() {
     const s = 16;
 
+    // ─── Player: red jacket, dark pants, white/red cap ───
+
     // Down-facing frame 1
     const g1 = this.make.graphics({ x: 0, y: 0 });
-    // Cap
+    // Cap — red with white front
     g1.fillStyle(0xd03030, 1);
     g1.fillRect(4, 0, 8, 4);
     g1.fillStyle(0xffffff, 1);
-    g1.fillRect(5, 0, 2, 2);
+    g1.fillRect(5, 0, 3, 2);
+    // Hair peeking out
+    g1.fillStyle(0x402010, 1);
+    g1.fillRect(4, 3, 1, 2);
+    g1.fillRect(11, 3, 1, 2);
     // Face
     g1.fillStyle(0xf8c090, 1);
     g1.fillRect(4, 4, 8, 4);
@@ -313,23 +366,29 @@ export class BootScene extends Phaser.Scene {
     // Body (red jacket)
     g1.fillStyle(0xd03030, 1);
     g1.fillRect(3, 8, 10, 4);
-    // Blue pants
-    g1.fillStyle(0x3050a0, 1);
+    // Jacket detail — zipper
+    g1.fillStyle(0xb02020, 1);
+    g1.fillRect(7, 8, 2, 4);
+    // Dark pants
+    g1.fillStyle(0x283060, 1);
     g1.fillRect(4, 12, 3, 3);
     g1.fillRect(9, 12, 3, 3);
     // Shoes
-    g1.fillStyle(0x404040, 1);
+    g1.fillStyle(0x303030, 1);
     g1.fillRect(4, 15, 3, 1);
     g1.fillRect(9, 15, 3, 1);
     g1.generateTexture('player-down-1', s, s);
     g1.destroy();
 
-    // Down-facing frame 2 (slight leg shift)
+    // Down-facing frame 2 (leg shift)
     const g2 = this.make.graphics({ x: 0, y: 0 });
     g2.fillStyle(0xd03030, 1);
     g2.fillRect(4, 0, 8, 4);
     g2.fillStyle(0xffffff, 1);
-    g2.fillRect(5, 0, 2, 2);
+    g2.fillRect(5, 0, 3, 2);
+    g2.fillStyle(0x402010, 1);
+    g2.fillRect(4, 3, 1, 2);
+    g2.fillRect(11, 3, 1, 2);
     g2.fillStyle(0xf8c090, 1);
     g2.fillRect(4, 4, 8, 4);
     g2.fillStyle(0x202020, 1);
@@ -337,10 +396,12 @@ export class BootScene extends Phaser.Scene {
     g2.fillRect(9, 5, 2, 2);
     g2.fillStyle(0xd03030, 1);
     g2.fillRect(3, 8, 10, 4);
-    g2.fillStyle(0x3050a0, 1);
+    g2.fillStyle(0xb02020, 1);
+    g2.fillRect(7, 8, 2, 4);
+    g2.fillStyle(0x283060, 1);
     g2.fillRect(3, 12, 3, 3);
     g2.fillRect(10, 12, 3, 3);
-    g2.fillStyle(0x404040, 1);
+    g2.fillStyle(0x303030, 1);
     g2.fillRect(3, 15, 3, 1);
     g2.fillRect(10, 15, 3, 1);
     g2.generateTexture('player-down-2', s, s);
@@ -350,14 +411,22 @@ export class BootScene extends Phaser.Scene {
     const gu1 = this.make.graphics({ x: 0, y: 0 });
     gu1.fillStyle(0xd03030, 1);
     gu1.fillRect(4, 0, 8, 5);
-    gu1.fillStyle(0x202020, 1);
+    // Back of cap
+    gu1.fillStyle(0xb02020, 1);
+    gu1.fillRect(5, 1, 6, 3);
+    // Hair
+    gu1.fillStyle(0x402010, 1);
     gu1.fillRect(4, 5, 8, 3);
+    // Body
     gu1.fillStyle(0xd03030, 1);
     gu1.fillRect(3, 8, 10, 4);
-    gu1.fillStyle(0x3050a0, 1);
+    gu1.fillStyle(0xb02020, 1);
+    gu1.fillRect(7, 8, 2, 4);
+    // Pants
+    gu1.fillStyle(0x283060, 1);
     gu1.fillRect(4, 12, 3, 3);
     gu1.fillRect(9, 12, 3, 3);
-    gu1.fillStyle(0x404040, 1);
+    gu1.fillStyle(0x303030, 1);
     gu1.fillRect(4, 15, 3, 1);
     gu1.fillRect(9, 15, 3, 1);
     gu1.generateTexture('player-up-1', s, s);
@@ -367,14 +436,18 @@ export class BootScene extends Phaser.Scene {
     const gu2 = this.make.graphics({ x: 0, y: 0 });
     gu2.fillStyle(0xd03030, 1);
     gu2.fillRect(4, 0, 8, 5);
-    gu2.fillStyle(0x202020, 1);
+    gu2.fillStyle(0xb02020, 1);
+    gu2.fillRect(5, 1, 6, 3);
+    gu2.fillStyle(0x402010, 1);
     gu2.fillRect(4, 5, 8, 3);
     gu2.fillStyle(0xd03030, 1);
     gu2.fillRect(3, 8, 10, 4);
-    gu2.fillStyle(0x3050a0, 1);
+    gu2.fillStyle(0xb02020, 1);
+    gu2.fillRect(7, 8, 2, 4);
+    gu2.fillStyle(0x283060, 1);
     gu2.fillRect(3, 12, 3, 3);
     gu2.fillRect(10, 12, 3, 3);
-    gu2.fillStyle(0x404040, 1);
+    gu2.fillStyle(0x303030, 1);
     gu2.fillRect(3, 15, 3, 1);
     gu2.fillRect(10, 15, 3, 1);
     gu2.generateTexture('player-up-2', s, s);
@@ -384,16 +457,20 @@ export class BootScene extends Phaser.Scene {
     const gl1 = this.make.graphics({ x: 0, y: 0 });
     gl1.fillStyle(0xd03030, 1);
     gl1.fillRect(4, 0, 8, 4);
+    gl1.fillStyle(0xffffff, 1);
+    gl1.fillRect(4, 0, 3, 2);
     gl1.fillStyle(0xf8c090, 1);
     gl1.fillRect(4, 4, 7, 4);
     gl1.fillStyle(0x202020, 1);
     gl1.fillRect(5, 5, 2, 2);
     gl1.fillStyle(0xd03030, 1);
     gl1.fillRect(3, 8, 9, 4);
-    gl1.fillStyle(0x3050a0, 1);
+    gl1.fillStyle(0xb02020, 1);
+    gl1.fillRect(7, 8, 1, 4);
+    gl1.fillStyle(0x283060, 1);
     gl1.fillRect(4, 12, 3, 3);
     gl1.fillRect(8, 12, 3, 3);
-    gl1.fillStyle(0x404040, 1);
+    gl1.fillStyle(0x303030, 1);
     gl1.fillRect(4, 15, 3, 1);
     gl1.fillRect(8, 15, 3, 1);
     gl1.generateTexture('player-left-1', s, s);
@@ -403,16 +480,20 @@ export class BootScene extends Phaser.Scene {
     const gl2 = this.make.graphics({ x: 0, y: 0 });
     gl2.fillStyle(0xd03030, 1);
     gl2.fillRect(4, 0, 8, 4);
+    gl2.fillStyle(0xffffff, 1);
+    gl2.fillRect(4, 0, 3, 2);
     gl2.fillStyle(0xf8c090, 1);
     gl2.fillRect(4, 4, 7, 4);
     gl2.fillStyle(0x202020, 1);
     gl2.fillRect(5, 5, 2, 2);
     gl2.fillStyle(0xd03030, 1);
     gl2.fillRect(3, 8, 9, 4);
-    gl2.fillStyle(0x3050a0, 1);
+    gl2.fillStyle(0xb02020, 1);
+    gl2.fillRect(7, 8, 1, 4);
+    gl2.fillStyle(0x283060, 1);
     gl2.fillRect(3, 12, 3, 3);
     gl2.fillRect(9, 12, 3, 3);
-    gl2.fillStyle(0x404040, 1);
+    gl2.fillStyle(0x303030, 1);
     gl2.fillRect(3, 15, 3, 1);
     gl2.fillRect(9, 15, 3, 1);
     gl2.generateTexture('player-left-2', s, s);
@@ -422,16 +503,20 @@ export class BootScene extends Phaser.Scene {
     const gr1 = this.make.graphics({ x: 0, y: 0 });
     gr1.fillStyle(0xd03030, 1);
     gr1.fillRect(4, 0, 8, 4);
+    gr1.fillStyle(0xffffff, 1);
+    gr1.fillRect(9, 0, 3, 2);
     gr1.fillStyle(0xf8c090, 1);
     gr1.fillRect(5, 4, 7, 4);
     gr1.fillStyle(0x202020, 1);
     gr1.fillRect(9, 5, 2, 2);
     gr1.fillStyle(0xd03030, 1);
     gr1.fillRect(4, 8, 9, 4);
-    gr1.fillStyle(0x3050a0, 1);
+    gr1.fillStyle(0xb02020, 1);
+    gr1.fillRect(8, 8, 1, 4);
+    gr1.fillStyle(0x283060, 1);
     gr1.fillRect(5, 12, 3, 3);
     gr1.fillRect(9, 12, 3, 3);
-    gr1.fillStyle(0x404040, 1);
+    gr1.fillStyle(0x303030, 1);
     gr1.fillRect(5, 15, 3, 1);
     gr1.fillRect(9, 15, 3, 1);
     gr1.generateTexture('player-right-1', s, s);
@@ -441,22 +526,26 @@ export class BootScene extends Phaser.Scene {
     const gr2 = this.make.graphics({ x: 0, y: 0 });
     gr2.fillStyle(0xd03030, 1);
     gr2.fillRect(4, 0, 8, 4);
+    gr2.fillStyle(0xffffff, 1);
+    gr2.fillRect(9, 0, 3, 2);
     gr2.fillStyle(0xf8c090, 1);
     gr2.fillRect(5, 4, 7, 4);
     gr2.fillStyle(0x202020, 1);
     gr2.fillRect(9, 5, 2, 2);
     gr2.fillStyle(0xd03030, 1);
     gr2.fillRect(4, 8, 9, 4);
-    gr2.fillStyle(0x3050a0, 1);
+    gr2.fillStyle(0xb02020, 1);
+    gr2.fillRect(8, 8, 1, 4);
+    gr2.fillStyle(0x283060, 1);
     gr2.fillRect(4, 12, 3, 3);
     gr2.fillRect(10, 12, 3, 3);
-    gr2.fillStyle(0x404040, 1);
+    gr2.fillStyle(0x303030, 1);
     gr2.fillRect(4, 15, 3, 1);
     gr2.fillRect(10, 15, 3, 1);
     gr2.generateTexture('player-right-2', s, s);
     gr2.destroy();
 
-    // NPC sprite (simple)
+    // ─── NPC sprite ───
     const npc = this.make.graphics({ x: 0, y: 0 });
     npc.fillStyle(0x6080c0, 1);
     npc.fillRect(4, 0, 8, 4);
@@ -467,13 +556,13 @@ export class BootScene extends Phaser.Scene {
     npc.fillRect(9, 5, 2, 2);
     npc.fillStyle(0x4060a0, 1);
     npc.fillRect(3, 8, 10, 4);
-    npc.fillStyle(0x3050a0, 1);
+    npc.fillStyle(0x283060, 1);
     npc.fillRect(4, 12, 3, 4);
     npc.fillRect(9, 12, 3, 4);
     npc.generateTexture('npc-sprite', s, s);
     npc.destroy();
 
-    // Nurse Joy sprite
+    // ─── Nurse Joy sprite ───
     const nurse = this.make.graphics({ x: 0, y: 0 });
     nurse.fillStyle(0xf0a0b0, 1);
     nurse.fillRect(4, 0, 8, 4);
@@ -492,7 +581,7 @@ export class BootScene extends Phaser.Scene {
     nurse.generateTexture('nurse-sprite', s, s);
     nurse.destroy();
 
-    // Prof Oak sprite
+    // ─── Prof Oak sprite ───
     const oak = this.make.graphics({ x: 0, y: 0 });
     oak.fillStyle(0x808080, 1);
     oak.fillRect(4, 0, 8, 4);

@@ -6,12 +6,12 @@ export const PLAYER_SPEED = 150; // ms per tile movement tween
 export const TEXT_SPEED = 30; // ms per character for typewriter
 export const FADE_DURATION = 300;
 
-// Colors
+// Colors — Authentic FireRed palette
 export const COLORS = {
   // Tiles
   GRASS: 0x78c840,
   GRASS_DARK: 0x5ea832,
-  PATH: 0xe8d8a0,
+  PATH: 0xd4b896,
   TREE_GREEN: 0x2d6b30,
   TREE_DARK: 0x1a4a1d,
   BUILDING_WALL: 0xb8b8b8,
@@ -21,21 +21,29 @@ export const COLORS = {
   TALL_GRASS: 0x48a028,
   TALL_GRASS_DARK: 0x388818,
 
-  // UI
+  // UI — FireRed authentic
   WHITE: 0xffffff,
   BLACK: 0x000000,
   DARK_GRAY: 0x303030,
   LIGHT_GRAY: 0xc0c0c0,
   DIALOG_BG: 0xf8f8f8,
-  DIALOG_BORDER: 0x404040,
-  PANEL_BG: 0xf8f0e0,
+  DIALOG_BORDER: 0x181818,
+  PANEL_BG: 0xe8e8e8,
+  HP_BAR_BG: 0x383838,
 
   // HP Bar
   HP_GREEN: 0x20d820,
   HP_YELLOW: 0xf8d020,
   HP_RED: 0xf82020,
 
-  // Types
+  // Status condition pill colors
+  STATUS_PSN: 0xa040a0,
+  STATUS_SLP: 0x808080,
+  STATUS_PAR: 0xf8d030,
+  STATUS_BRN: 0xf08030,
+  STATUS_FRZ: 0x98d8d8,
+
+  // Types — full authentic map
   FIRE: 0xf08030,
   WATER_TYPE: 0x6890f0,
   GRASS_TYPE: 0x78c850,
@@ -51,11 +59,24 @@ export const COLORS = {
   BUG: 0xa8b820,
   GHOST: 0x705898,
   DRAGON: 0x7038f8,
+  DARK: 0x705848,
+  STEEL: 0xb8b8d0,
+  FAIRY: 0xee99ac,
 
   // Title
   POKEMON_YELLOW: 0xffcb05,
   POKEMON_BLUE: 0x3b4cca,
   TITLE_BG: 0x1a1a2e,
+
+  // Battle
+  BATTLE_SKY: 0x88c8e8,
+  BATTLE_GROUND: 0x98d868,
+  BATTLE_PLATFORM: 0x90c858,
+  BATTLE_PLATFORM_DARK: 0x78b848,
+  BATTLE_UI_BG: 0xf8f0e0,
+
+  // EXP bar
+  EXP_BLUE: 0x40a0f0,
 };
 
 // Type effectiveness chart (Gen 1)
@@ -104,6 +125,9 @@ export const TYPE_COLORS: Record<string, number> = {
   Rock: COLORS.ROCK,
   Ghost: COLORS.GHOST,
   Dragon: COLORS.DRAGON,
+  Dark: COLORS.DARK,
+  Steel: COLORS.STEEL,
+  Fairy: COLORS.FAIRY,
 };
 
 // Font

@@ -234,10 +234,12 @@ export class OverworldScene extends Phaser.Scene {
   showMapName() {
     const name = this.currentMap.name;
 
-    // Background bar
+    // Background bar — authentic style
     this.mapNameBg = this.add.graphics();
-    this.mapNameBg.fillStyle(0x000000, 0.75);
+    this.mapNameBg.fillStyle(0x000000, 0.8);
     this.mapNameBg.fillRoundedRect(GAME_WIDTH / 2 - 120, 20, 240, 36, 4);
+    this.mapNameBg.lineStyle(2, 0xf8f8f8, 0.6);
+    this.mapNameBg.strokeRoundedRect(GAME_WIDTH / 2 - 120, 20, 240, 36, 4);
     this.mapNameBg.setAlpha(0);
     this.mapNameBg.setDepth(100);
 
@@ -487,17 +489,18 @@ export class OverworldScene extends Phaser.Scene {
 
     this.dialogBox = this.add.graphics();
     this.dialogBox.setDepth(200);
-    this.dialogBox.fillStyle(0xf8f8f8, 1);
+    // Authentic dialog box: off-white bg, dark border, inner inset
+    this.dialogBox.fillStyle(COLORS.DIALOG_BG, 1);
     this.dialogBox.fillRoundedRect(20, boxY, GAME_WIDTH - 40, boxH, 4);
-    this.dialogBox.lineStyle(3, 0x404040, 1);
+    this.dialogBox.lineStyle(3, COLORS.DIALOG_BORDER, 1);
     this.dialogBox.strokeRoundedRect(20, boxY, GAME_WIDTH - 40, boxH, 4);
-    this.dialogBox.lineStyle(1, 0xd0d0d0, 1);
-    this.dialogBox.strokeRoundedRect(23, boxY + 3, GAME_WIDTH - 46, boxH - 6, 3);
+    this.dialogBox.lineStyle(2, 0xd8d8d8, 1);
+    this.dialogBox.strokeRoundedRect(24, boxY + 4, GAME_WIDTH - 48, boxH - 8, 3);
 
     this.dialogText = this.add.text(40, boxY + 16, '', {
       fontFamily: FONT_FAMILY,
       fontSize: '11px',
-      color: '#303030',
+      color: '#181818',
       wordWrap: { width: GAME_WIDTH - 80 },
       lineSpacing: 8,
     }).setDepth(201);
@@ -520,13 +523,16 @@ export class OverworldScene extends Phaser.Scene {
   }
 
   healParty() {
+    // Brief flash effect
+    this.cameras.main.flash(400, 255, 255, 255);
+
     this.party.forEach(p => {
       p.currentHp = p.maxHp;
       p.status = undefined;
       p.moves.forEach(m => { m.pp = m.maxPp; });
     });
 
-    // Show healing animation
+    // Show healing dialog
     this.showDialogSequence([
       'OK, I\'ll take your POKéMON\nfor a few seconds.',
       '...',
@@ -541,6 +547,7 @@ export class OverworldScene extends Phaser.Scene {
   transitionToMap(mapId: string, targetX: number, targetY: number) {
     this.doSave();
 
+    // Fade to black transition
     this.cameras.main.fadeOut(FADE_DURATION, 0, 0, 0);
     this.cameras.main.once('camerafadeoutcomplete', () => {
       this.currentMap = MAPS[mapId];
@@ -583,25 +590,52 @@ export class OverworldScene extends Phaser.Scene {
       this.pokedexSeen.push(selected.id);
     }
 
-    // Flash effect then transition
-    this.cameras.main.flash(300, 255, 255, 255);
-    this.time.delayedCall(300, () => {
-      this.cameras.main.fadeOut(FADE_DURATION, 0, 0, 0);
-      this.cameras.main.once('camerafadeoutcomplete', () => {
-        this.scene.start('BattleScene', {
-          wildPokemon,
-          party: this.party,
-          items: this.items,
-          returnData: {
-            currentMap: this.currentMap.id,
-            playerX: this.playerGridX,
-            playerY: this.playerGridY,
-            money: this.money,
-            badges: this.badges,
-            visitedMaps: this.visitedMaps,
-            pokedexSeen: this.pokedexSeen,
-            pokedexCaught: this.pokedexCaught,
-          },
+    // Battle transition: flash then horizontal wipe effect
+    this.cameras.main.flash(200, 255, 255, 255);
+
+    // Create horizontal wipe overlay
+    const wipe = this.add.graphics();
+    wipe.setDepth(999);
+
+    this.time.delayedCall(200, () => {
+      // Horizontal bars wipe effect
+      let progress = 0;
+      const wipeTimer = this.time.addEvent({
+        delay: 20,
+        repeat: 15,
+        callback: () => {
+          progress++;
+          wipe.clear();
+          wipe.fillStyle(0x000000, 1);
+          // Draw alternating horizontal bars expanding from center
+          for (let i = 0; i < 12; i++) {
+            const barH = GAME_HEIGHT / 12;
+            const barW = (GAME_WIDTH / 16) * progress;
+            const x = i % 2 === 0 ? 0 : GAME_WIDTH - barW;
+            wipe.fillRect(x, i * barH, barW, barH);
+          }
+        },
+      });
+
+      this.time.delayedCall(500, () => {
+        this.cameras.main.fadeOut(FADE_DURATION, 0, 0, 0);
+        this.cameras.main.once('camerafadeoutcomplete', () => {
+          wipe.destroy();
+          this.scene.start('BattleScene', {
+            wildPokemon,
+            party: this.party,
+            items: this.items,
+            returnData: {
+              currentMap: this.currentMap.id,
+              playerX: this.playerGridX,
+              playerY: this.playerGridY,
+              money: this.money,
+              badges: this.badges,
+              visitedMaps: this.visitedMaps,
+              pokedexSeen: this.pokedexSeen,
+              pokedexCaught: this.pokedexCaught,
+            },
+          });
         });
       });
     });

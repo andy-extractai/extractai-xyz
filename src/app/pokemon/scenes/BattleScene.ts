@@ -26,6 +26,15 @@ interface BattleData {
   };
 }
 
+// Status condition display info
+const STATUS_DISPLAY: Record<string, { label: string; color: number }> = {
+  poison: { label: 'PSN', color: COLORS.STATUS_PSN },
+  burn: { label: 'BRN', color: COLORS.STATUS_BRN },
+  paralyze: { label: 'PAR', color: COLORS.STATUS_PAR },
+  freeze: { label: 'FRZ', color: COLORS.STATUS_FRZ },
+  sleep: { label: 'SLP', color: COLORS.STATUS_SLP },
+};
+
 export class BattleScene extends Phaser.Scene {
   private phase: BattlePhase = 'intro';
 
@@ -41,6 +50,10 @@ export class BattleScene extends Phaser.Scene {
   private playerSprite?: Phaser.GameObjects.Image;
   private enemySprite?: Phaser.GameObjects.Image;
 
+  // HP Bar tracking for animation
+  private playerDisplayHp = 0;
+  private enemyDisplayHp = 0;
+
   // HP Bars
   private playerHpBar?: Phaser.GameObjects.Graphics;
   private enemyHpBar?: Phaser.GameObjects.Graphics;
@@ -50,6 +63,7 @@ export class BattleScene extends Phaser.Scene {
   private enemyNameText?: Phaser.GameObjects.Text;
   private playerLevelText?: Phaser.GameObjects.Text;
   private enemyLevelText?: Phaser.GameObjects.Text;
+  private expBar?: Phaser.GameObjects.Graphics;
 
   // UI panels
   private actionPanel?: Phaser.GameObjects.Container;
@@ -68,7 +82,7 @@ export class BattleScene extends Phaser.Scene {
 
   // Cursor
   private cursorIndex = 0;
-  private cursorText?: Phaser.GameObjects.Text;
+  private actionButtons: Phaser.GameObjects.Container[] = [];
 
   // Stat stages (battle modifiers)
   private playerStatStages = { atk: 0, def: 0, spAtk: 0, spDef: 0, speed: 0 };
@@ -92,10 +106,15 @@ export class BattleScene extends Phaser.Scene {
     // Reset stat stages
     this.playerStatStages = { atk: 0, def: 0, spAtk: 0, spDef: 0, speed: 0 };
     this.enemyStatStages = { atk: 0, def: 0, spAtk: 0, spDef: 0, speed: 0 };
+
+    // Init display HP
+    this.playerDisplayHp = this.playerPokemon.currentHp;
+    this.enemyDisplayHp = this.enemyPokemon.currentHp;
   }
 
   create() {
     this.phase = 'intro';
+    this.actionButtons = [];
     this.cameras.main.fadeIn(FADE_DURATION, 0, 0, 0);
 
     // Battle background
@@ -151,33 +170,36 @@ export class BattleScene extends Phaser.Scene {
   }
 
   drawBattleBackground() {
-    // Sky gradient
     const bg = this.add.graphics();
-    bg.fillStyle(0x88c8e8, 1);
+
+    // Sky gradient
+    bg.fillStyle(COLORS.BATTLE_SKY, 1);
     bg.fillRect(0, 0, GAME_WIDTH, 360);
 
     // Ground area
-    bg.fillStyle(0x98d868, 1);
+    bg.fillStyle(COLORS.BATTLE_GROUND, 1);
     bg.fillRect(0, 300, GAME_WIDTH, 60);
 
     // Enemy platform
-    bg.fillStyle(0x90c858, 1);
+    bg.fillStyle(COLORS.BATTLE_PLATFORM, 1);
     bg.fillEllipse(560, 180, 220, 40);
-    bg.fillStyle(0x78b848, 1);
+    bg.fillStyle(COLORS.BATTLE_PLATFORM_DARK, 1);
     bg.fillEllipse(560, 185, 200, 20);
 
     // Player platform
-    bg.fillStyle(0x90c858, 1);
+    bg.fillStyle(COLORS.BATTLE_PLATFORM, 1);
     bg.fillEllipse(220, 350, 260, 50);
-    bg.fillStyle(0x78b848, 1);
+    bg.fillStyle(COLORS.BATTLE_PLATFORM_DARK, 1);
     bg.fillEllipse(220, 355, 240, 25);
 
-    // Bottom half (UI area)
-    bg.fillStyle(0xf8f0e0, 1);
+    // Bottom half (UI area) — authentic off-white
+    bg.fillStyle(COLORS.DIALOG_BG, 1);
     bg.fillRect(0, 370, GAME_WIDTH, GAME_HEIGHT - 370);
-    bg.lineStyle(3, 0x404040, 1);
+    bg.lineStyle(3, COLORS.DIALOG_BORDER, 1);
     bg.lineBetween(0, 370, GAME_WIDTH, 370);
   }
+
+  // ─── Enemy HP Panel (top-left) ───
 
   drawEnemyHpPanel() {
     const panelX = 30;
@@ -185,124 +207,155 @@ export class BattleScene extends Phaser.Scene {
     const panelW = 280;
     const panelH = 70;
 
-    // Panel background
     const panel = this.add.graphics();
-    panel.fillStyle(0xf8f0e0, 1);
-    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 6);
-    panel.lineStyle(2, 0x404040, 1);
-    panel.strokeRoundedRect(panelX, panelY, panelW, panelH, 6);
+    // White box with black border, slight rounded corner
+    panel.fillStyle(0xf8f8f8, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 4);
+    panel.lineStyle(2, COLORS.DIALOG_BORDER, 1);
+    panel.strokeRoundedRect(panelX, panelY, panelW, panelH, 4);
 
-    // Name
+    // Name (left-aligned, bold)
     this.enemyNameText = this.add.text(panelX + 12, panelY + 8, this.enemyPokemon.name.toUpperCase(), {
       fontFamily: FONT_FAMILY,
       fontSize: '11px',
-      color: '#303030',
+      color: '#181818',
     });
 
-    // Level
+    // Level (right-aligned with "Lv" prefix)
     this.enemyLevelText = this.add.text(panelX + panelW - 12, panelY + 8, `Lv${this.enemyPokemon.level}`, {
       fontFamily: FONT_FAMILY,
       fontSize: '10px',
-      color: '#303030',
+      color: '#181818',
     }).setOrigin(1, 0);
 
-    // HP label
-    this.add.text(panelX + 12, panelY + 30, 'HP', {
+    // Status condition badge
+    this.drawStatusBadge(panelX + 12, panelY + 24, this.enemyPokemon, 'enemy');
+
+    // "HP" label in small text
+    this.add.text(panelX + 12, panelY + 34, 'HP', {
       fontFamily: FONT_FAMILY,
-      fontSize: '8px',
+      fontSize: '7px',
       color: '#f89020',
     });
 
-    // HP bar background
-    this.add.graphics()
-      .fillStyle(0x404040, 1)
-      .fillRect(panelX + 40, panelY + 30, 200, 12)
-      .fillStyle(0x202020, 1)
-      .fillRect(panelX + 42, panelY + 32, 196, 8);
+    // HP bar background — thin 6px tall
+    const hpBarX = panelX + 42;
+    const hpBarY = panelY + 33;
+    const hpBarW = 196;
+    const hpBarH = 6;
 
-    // HP bar
+    const barBg = this.add.graphics();
+    barBg.fillStyle(COLORS.HP_BAR_BG, 1);
+    barBg.fillRoundedRect(hpBarX - 1, hpBarY - 1, hpBarW + 2, hpBarH + 2, 2);
+    barBg.fillStyle(0x101010, 1);
+    barBg.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+
+    // HP bar fill
     this.enemyHpBar = this.add.graphics();
-    this.updateHpBar(this.enemyHpBar, panelX + 42, panelY + 32, 196, 8, this.enemyPokemon.currentHp, this.enemyPokemon.maxHp);
+    this.updateHpBar(this.enemyHpBar, hpBarX, hpBarY, hpBarW, hpBarH, this.enemyPokemon.currentHp, this.enemyPokemon.maxHp);
 
-    // HP text
-    this.enemyHpText = this.add.text(panelX + panelW - 12, panelY + 48, `${this.enemyPokemon.currentHp}/${this.enemyPokemon.maxHp}`, {
+    // No HP numbers for enemy (authentic FireRed)
+    this.enemyHpText = this.add.text(panelX + panelW - 12, panelY + 48, '', {
       fontFamily: FONT_FAMILY,
       fontSize: '9px',
-      color: '#303030',
+      color: '#181818',
     }).setOrigin(1, 0);
   }
+
+  // ─── Player HP Panel (bottom-right) ───
 
   drawPlayerHpPanel() {
     const panelX = GAME_WIDTH - 310;
     const panelY = 260;
     const panelW = 280;
-    const panelH = 80;
+    const panelH = 90;
 
-    // Panel background
     const panel = this.add.graphics();
-    panel.fillStyle(0xf8f0e0, 1);
-    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 6);
-    panel.lineStyle(2, 0x404040, 1);
-    panel.strokeRoundedRect(panelX, panelY, panelW, panelH, 6);
+    panel.fillStyle(0xf8f8f8, 1);
+    panel.fillRoundedRect(panelX, panelY, panelW, panelH, 4);
+    panel.lineStyle(2, COLORS.DIALOG_BORDER, 1);
+    panel.strokeRoundedRect(panelX, panelY, panelW, panelH, 4);
 
     // Name
     this.playerNameText = this.add.text(panelX + 12, panelY + 8, this.playerPokemon.name.toUpperCase(), {
       fontFamily: FONT_FAMILY,
       fontSize: '11px',
-      color: '#303030',
+      color: '#181818',
     });
 
     // Level
     this.playerLevelText = this.add.text(panelX + panelW - 12, panelY + 8, `Lv${this.playerPokemon.level}`, {
       fontFamily: FONT_FAMILY,
       fontSize: '10px',
-      color: '#303030',
+      color: '#181818',
     }).setOrigin(1, 0);
 
-    // HP label
-    this.add.text(panelX + 12, panelY + 30, 'HP', {
+    // Status condition badge
+    this.drawStatusBadge(panelX + 12, panelY + 24, this.playerPokemon, 'player');
+
+    // "HP" label
+    this.add.text(panelX + 12, panelY + 34, 'HP', {
       fontFamily: FONT_FAMILY,
-      fontSize: '8px',
+      fontSize: '7px',
       color: '#f89020',
     });
 
-    // HP bar background
-    this.add.graphics()
-      .fillStyle(0x404040, 1)
-      .fillRect(panelX + 40, panelY + 30, 200, 12)
-      .fillStyle(0x202020, 1)
-      .fillRect(panelX + 42, panelY + 32, 196, 8);
+    // HP bar — thin 6px tall
+    const hpBarX = panelX + 42;
+    const hpBarY = panelY + 33;
+    const hpBarW = 196;
+    const hpBarH = 6;
 
-    // HP bar
+    const barBg = this.add.graphics();
+    barBg.fillStyle(COLORS.HP_BAR_BG, 1);
+    barBg.fillRoundedRect(hpBarX - 1, hpBarY - 1, hpBarW + 2, hpBarH + 2, 2);
+    barBg.fillStyle(0x101010, 1);
+    barBg.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+
     this.playerHpBar = this.add.graphics();
-    this.updateHpBar(this.playerHpBar, panelX + 42, panelY + 32, 196, 8, this.playerPokemon.currentHp, this.playerPokemon.maxHp);
+    this.updateHpBar(this.playerHpBar, hpBarX, hpBarY, hpBarW, hpBarH, this.playerPokemon.currentHp, this.playerPokemon.maxHp);
 
-    // HP text
-    this.playerHpText = this.add.text(panelX + panelW - 12, panelY + 52, `${this.playerPokemon.currentHp}/${this.playerPokemon.maxHp}`, {
+    // HP numbers below bar (player only, authentic)
+    this.playerHpText = this.add.text(panelX + panelW - 12, panelY + 44, `${this.playerPokemon.currentHp}/${this.playerPokemon.maxHp}`, {
       fontFamily: FONT_FAMILY,
       fontSize: '9px',
-      color: '#303030',
+      color: '#181818',
     }).setOrigin(1, 0);
 
-    // EXP bar
-    const expBarY = panelY + 66;
-    this.add.graphics()
-      .fillStyle(0x404040, 1)
-      .fillRect(panelX + 40, expBarY, 200, 6)
-      .fillStyle(0x202020, 1)
-      .fillRect(panelX + 42, expBarY + 1, 196, 4);
-
-    const expPct = (this.playerPokemon.exp - expForLevel(this.playerPokemon.level)) /
-                   (this.playerPokemon.expToNext - expForLevel(this.playerPokemon.level));
-    this.add.graphics()
-      .fillStyle(0x40a0f0, 1)
-      .fillRect(panelX + 42, expBarY + 1, Math.max(0, 196 * Math.min(1, expPct)), 4);
-
-    this.add.text(panelX + 12, expBarY - 2, 'EXP', {
+    // EXP bar at bottom of panel
+    const expBarY = panelY + 60;
+    this.add.text(panelX + 12, expBarY, 'EXP', {
       fontFamily: FONT_FAMILY,
       fontSize: '6px',
       color: '#4080c0',
     });
+
+    this.add.graphics()
+      .fillStyle(COLORS.HP_BAR_BG, 1)
+      .fillRoundedRect(panelX + 41, expBarY - 1, 198, 7, 2)
+      .fillStyle(0x101010, 1)
+      .fillRect(panelX + 42, expBarY, 196, 5);
+
+    const expPct = (this.playerPokemon.exp - expForLevel(this.playerPokemon.level)) /
+                   (this.playerPokemon.expToNext - expForLevel(this.playerPokemon.level));
+    this.expBar = this.add.graphics();
+    this.expBar.fillStyle(COLORS.EXP_BLUE, 1);
+    this.expBar.fillRect(panelX + 42, expBarY, Math.max(0, 196 * Math.min(1, expPct)), 5);
+  }
+
+  drawStatusBadge(x: number, y: number, pokemon: GamePokemon, _owner: string) {
+    if (!pokemon.status) return;
+    const info = STATUS_DISPLAY[pokemon.status];
+    if (!info) return;
+
+    const gfx = this.add.graphics();
+    gfx.fillStyle(info.color, 1);
+    gfx.fillRoundedRect(x, y, 30, 12, 3);
+    this.add.text(x + 15, y + 6, info.label, {
+      fontFamily: FONT_FAMILY,
+      fontSize: '6px',
+      color: '#ffffff',
+    }).setOrigin(0.5);
   }
 
   updateHpBar(bar: Phaser.GameObjects.Graphics, x: number, y: number, w: number, h: number, current: number, max: number) {
@@ -312,8 +365,12 @@ export class BattleScene extends Phaser.Scene {
     if (pct <= 0.2) color = COLORS.HP_RED;
     else if (pct <= 0.5) color = COLORS.HP_YELLOW;
     bar.fillStyle(color, 1);
-    bar.fillRect(x, y, w * pct, h);
+    if (pct > 0) {
+      bar.fillRoundedRect(x, y, Math.max(2, w * pct), h, 1);
+    }
   }
+
+  // ─── Dialog Box (bottom, full width left half) ───
 
   createDialogBox() {
     const boxH = 80;
@@ -321,17 +378,18 @@ export class BattleScene extends Phaser.Scene {
 
     this.dialogBox = this.add.graphics();
     this.dialogBox.setDepth(10);
-    this.dialogBox.fillStyle(0xf8f8f8, 1);
-    this.dialogBox.fillRoundedRect(20, boxY, GAME_WIDTH / 2 - 10, boxH, 6);
-    this.dialogBox.lineStyle(3, 0x404040, 1);
-    this.dialogBox.strokeRoundedRect(20, boxY, GAME_WIDTH / 2 - 10, boxH, 6);
-    this.dialogBox.lineStyle(1, 0xd0d0d0, 1);
-    this.dialogBox.strokeRoundedRect(23, boxY + 3, GAME_WIDTH / 2 - 16, boxH - 6, 5);
+    // Authentic Pokémon dialog box: white bg, black border, 3px border, inner 2px white inset
+    this.dialogBox.fillStyle(COLORS.DIALOG_BG, 1);
+    this.dialogBox.fillRoundedRect(20, boxY, GAME_WIDTH / 2 - 10, boxH, 4);
+    this.dialogBox.lineStyle(3, COLORS.DIALOG_BORDER, 1);
+    this.dialogBox.strokeRoundedRect(20, boxY, GAME_WIDTH / 2 - 10, boxH, 4);
+    this.dialogBox.lineStyle(2, 0xd8d8d8, 1);
+    this.dialogBox.strokeRoundedRect(24, boxY + 4, GAME_WIDTH / 2 - 18, boxH - 8, 3);
 
     this.dialogText = this.add.text(40, boxY + 16, '', {
       fontFamily: FONT_FAMILY,
-      fontSize: '11px',
-      color: '#303030',
+      fontSize: '10px',
+      color: '#181818',
       wordWrap: { width: GAME_WIDTH / 2 - 60 },
       lineSpacing: 6,
     }).setDepth(11);
@@ -381,12 +439,13 @@ export class BattleScene extends Phaser.Scene {
     this.isTyping = false;
   }
 
-  // ─── Action Menu ───
+  // ─── Action Menu — FIGHT / BAG / POKéMON / RUN ───
 
   showActionMenu() {
     this.phase = 'action';
     this.cursorIndex = 0;
     this.hideMenuPanels();
+    this.actionButtons = [];
 
     this.dialogText?.setText(`What will\n${this.playerPokemon.name} do?`);
 
@@ -398,38 +457,86 @@ export class BattleScene extends Phaser.Scene {
 
     this.actionPanel = this.add.container(0, 0);
 
+    // Panel background with authentic border
     const bg = this.add.graphics();
-    bg.fillStyle(0xf8f8f8, 1);
-    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 6);
-    bg.lineStyle(3, 0x404040, 1);
-    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 6);
+    bg.fillStyle(COLORS.DIALOG_BG, 1);
+    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 4);
+    bg.lineStyle(3, COLORS.DIALOG_BORDER, 1);
+    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 4);
     this.actionPanel.add(bg);
 
     const labels = ['FIGHT', 'BAG', 'POKéMON', 'RUN'];
+    const halfW = (panelW - 20) / 2;
+    const halfH = (panelH - 16) / 2;
     const positions = [
-      { x: panelX + 30, y: panelY + 16 },
-      { x: panelX + panelW / 2 + 20, y: panelY + 16 },
-      { x: panelX + 30, y: panelY + 46 },
-      { x: panelX + panelW / 2 + 20, y: panelY + 46 },
+      { x: panelX + 8, y: panelY + 6 },
+      { x: panelX + 8 + halfW + 4, y: panelY + 6 },
+      { x: panelX + 8, y: panelY + 6 + halfH + 4 },
+      { x: panelX + 8 + halfW + 4, y: panelY + 6 + halfH + 4 },
     ];
 
     labels.forEach((label, i) => {
-      const txt = this.add.text(positions[i].x, positions[i].y, label, {
-        fontFamily: FONT_FAMILY,
-        fontSize: '11px',
-        color: '#303030',
-      });
-      this.actionPanel!.add(txt);
+      const btn = this.createActionButton(positions[i].x, positions[i].y, halfW, halfH, label, i === 0);
+      this.actionPanel!.add(btn);
+      this.actionButtons.push(btn);
     });
 
-    // Cursor
-    this.cursorText = this.add.text(positions[0].x - 16, positions[0].y, '▶', {
-      fontFamily: FONT_FAMILY,
-      fontSize: '11px',
-      color: '#303030',
-    });
-    this.actionPanel.add(this.cursorText);
     this.actionPanel.setDepth(20);
+  }
+
+  createActionButton(x: number, y: number, w: number, h: number, label: string, selected: boolean): Phaser.GameObjects.Container {
+    const container = this.add.container(0, 0);
+    const gfx = this.add.graphics();
+
+    if (selected) {
+      // Selected: black bg, white text
+      gfx.fillStyle(COLORS.DIALOG_BORDER, 1);
+      gfx.fillRoundedRect(x, y, w, h, 3);
+    } else {
+      // Unselected: white bg, black text, bordered
+      gfx.fillStyle(0xf8f8f8, 1);
+      gfx.fillRoundedRect(x, y, w, h, 3);
+      gfx.lineStyle(2, COLORS.DIALOG_BORDER, 1);
+      gfx.strokeRoundedRect(x, y, w, h, 3);
+    }
+    container.add(gfx);
+
+    const txt = this.add.text(x + w / 2, y + h / 2, label, {
+      fontFamily: FONT_FAMILY,
+      fontSize: '10px',
+      color: selected ? '#f8f8f8' : '#181818',
+    }).setOrigin(0.5);
+    container.add(txt);
+
+    return container;
+  }
+
+  updateActionButtons() {
+    if (!this.actionPanel) return;
+
+    const panelX = GAME_WIDTH / 2 + 10;
+    const panelY = GAME_HEIGHT - 90;
+    const panelW = GAME_WIDTH / 2 - 30;
+    const panelH = 80;
+    const halfW = (panelW - 20) / 2;
+    const halfH = (panelH - 16) / 2;
+    const positions = [
+      { x: panelX + 8, y: panelY + 6 },
+      { x: panelX + 8 + halfW + 4, y: panelY + 6 },
+      { x: panelX + 8, y: panelY + 6 + halfH + 4 },
+      { x: panelX + 8 + halfW + 4, y: panelY + 6 + halfH + 4 },
+    ];
+    const labels = ['FIGHT', 'BAG', 'POKéMON', 'RUN'];
+
+    // Rebuild buttons
+    this.actionButtons.forEach(btn => btn.destroy());
+    this.actionButtons = [];
+
+    labels.forEach((label, i) => {
+      const btn = this.createActionButton(positions[i].x, positions[i].y, halfW, halfH, label, i === this.cursorIndex);
+      this.actionPanel!.add(btn);
+      this.actionButtons.push(btn);
+    });
   }
 
   // ─── Move Selection ───
@@ -444,42 +551,40 @@ export class BattleScene extends Phaser.Scene {
 
     this.movePanel = this.add.container(0, 0);
 
+    // Full-width move panel
     const bg = this.add.graphics();
-    bg.fillStyle(0xf8f8f8, 1);
-    bg.fillRoundedRect(20, panelY, GAME_WIDTH - 40, panelH, 6);
-    bg.lineStyle(3, 0x404040, 1);
-    bg.strokeRoundedRect(20, panelY, GAME_WIDTH - 40, panelH, 6);
+    bg.fillStyle(COLORS.DIALOG_BG, 1);
+    bg.fillRoundedRect(20, panelY, GAME_WIDTH - 40, panelH, 4);
+    bg.lineStyle(3, COLORS.DIALOG_BORDER, 1);
+    bg.strokeRoundedRect(20, panelY, GAME_WIDTH - 40, panelH, 4);
     this.movePanel.add(bg);
 
+    // Move names in 2x2 grid (left side)
     const moves = this.playerPokemon.moves;
     const positions = [
       { x: 50, y: panelY + 12 },
-      { x: 280, y: panelY + 12 },
-      { x: 50, y: panelY + 42 },
-      { x: 280, y: panelY + 42 },
+      { x: 260, y: panelY + 12 },
+      { x: 50, y: panelY + 44 },
+      { x: 260, y: panelY + 44 },
     ];
 
     for (let i = 0; i < 4; i++) {
       const move = moves[i];
       const name = move ? move.name : '-----';
-      const txt = this.add.text(positions[i].x, positions[i].y, name.toUpperCase(), {
+      const isSelected = i === 0;
+
+      const txt = this.add.text(positions[i].x, positions[i].y, (isSelected ? '▶ ' : '  ') + name.toUpperCase(), {
         fontFamily: FONT_FAMILY,
         fontSize: '10px',
-        color: '#303030',
+        color: '#181818',
       });
+      txt.name = `move-${i}`;
       this.movePanel.add(txt);
     }
 
-    // Move info on right
+    // Move info on right side
     this.updateMoveInfo(0);
 
-    // Cursor
-    this.cursorText = this.add.text(positions[0].x - 16, positions[0].y, '▶', {
-      fontFamily: FONT_FAMILY,
-      fontSize: '10px',
-      color: '#303030',
-    });
-    this.movePanel.add(this.cursorText);
     this.movePanel.setDepth(20);
   }
 
@@ -487,27 +592,59 @@ export class BattleScene extends Phaser.Scene {
     // Clear old info
     this.movePanel?.getAll().filter((o: any) => o.name === 'moveInfo').forEach((o: any) => o.destroy());
 
+    // Update cursor arrows on move names
+    const moves = this.playerPokemon.moves;
+    const positions = [
+      { x: 50, y: GAME_HEIGHT - 78 },
+      { x: 260, y: GAME_HEIGHT - 78 },
+      { x: 50, y: GAME_HEIGHT - 46 },
+      { x: 260, y: GAME_HEIGHT - 46 },
+    ];
+    for (let i = 0; i < 4; i++) {
+      const moveText = this.movePanel?.getAll().find((o: any) => o.name === `move-${i}`) as Phaser.GameObjects.Text | undefined;
+      if (moveText) {
+        const name = moves[i] ? moves[i].name : '-----';
+        moveText.setText((i === index ? '▶ ' : '  ') + name.toUpperCase());
+      }
+    }
+
     const move = this.playerPokemon.moves[index];
     if (!move) return;
 
     const moveData = MOVE_DATA[move.name];
     if (!moveData) return;
 
-    const infoX = 560;
-    const infoY = GAME_HEIGHT - 75;
+    const infoX = 520;
+    const infoY = GAME_HEIGHT - 78;
 
-    const typeText = this.add.text(infoX, infoY, `TYPE/${moveData.type.toUpperCase()}`, {
+    // Divider line
+    const divider = this.add.graphics();
+    divider.lineStyle(2, COLORS.DIALOG_BORDER, 0.3);
+    divider.lineBetween(490, GAME_HEIGHT - 84, 490, GAME_HEIGHT - 16);
+    divider.name = 'moveInfo';
+    this.movePanel?.add(divider);
+
+    // Type badge — colored pill
+    const typeColor = TYPE_COLORS[moveData.type] || COLORS.NORMAL;
+    const typeBadge = this.add.graphics();
+    typeBadge.fillStyle(typeColor, 1);
+    typeBadge.fillRoundedRect(infoX, infoY, 80, 16, 4);
+    typeBadge.name = 'moveInfo';
+    this.movePanel?.add(typeBadge);
+
+    const typeLabel = this.add.text(infoX + 40, infoY + 8, moveData.type.toUpperCase(), {
+      fontFamily: FONT_FAMILY,
+      fontSize: '8px',
+      color: '#ffffff',
+    }).setOrigin(0.5);
+    typeLabel.name = 'moveInfo';
+    this.movePanel?.add(typeLabel);
+
+    // PP display
+    const ppText = this.add.text(infoX, infoY + 26, `PP  ${move.pp}/${move.maxPp}`, {
       fontFamily: FONT_FAMILY,
       fontSize: '9px',
-      color: '#606060',
-    });
-    typeText.name = 'moveInfo';
-    this.movePanel?.add(typeText);
-
-    const ppText = this.add.text(infoX, infoY + 22, `PP  ${move.pp}/${move.maxPp}`, {
-      fontFamily: FONT_FAMILY,
-      fontSize: '9px',
-      color: '#606060',
+      color: '#181818',
     });
     ppText.name = 'moveInfo';
     this.movePanel?.add(ppText);
@@ -528,14 +665,16 @@ export class BattleScene extends Phaser.Scene {
     this.bagPanel = this.add.container(0, 0);
 
     const bg = this.add.graphics();
-    bg.fillStyle(0xf8f8f8, 1);
-    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 6);
-    bg.lineStyle(3, 0x404040, 1);
-    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 6);
+    bg.fillStyle(COLORS.DIALOG_BG, 1);
+    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 4);
+    bg.lineStyle(3, COLORS.DIALOG_BORDER, 1);
+    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 4);
+    bg.lineStyle(2, 0xd8d8d8, 1);
+    bg.strokeRoundedRect(panelX + 4, panelY + 4, panelW - 8, panelH - 8, 3);
     this.bagPanel.add(bg);
 
     const title = this.add.text(panelX + 20, panelY + 10, 'BAG', {
-      fontFamily: FONT_FAMILY, fontSize: '12px', color: '#303030',
+      fontFamily: FONT_FAMILY, fontSize: '12px', color: '#181818',
     });
     this.bagPanel.add(title);
 
@@ -549,25 +688,23 @@ export class BattleScene extends Phaser.Scene {
     } else {
       usableItems.forEach((item, i) => {
         const data = ITEM_DATA[item.id];
-        const txt = this.add.text(panelX + 40, panelY + 40 + i * 24, `${data?.name || item.id}  x${item.count}`, {
-          fontFamily: FONT_FAMILY, fontSize: '10px', color: '#303030',
+        const prefix = i === 0 ? '▶ ' : '  ';
+        const txt = this.add.text(panelX + 30, panelY + 40 + i * 24, `${prefix}${data?.name || item.id}  x${item.count}`, {
+          fontFamily: FONT_FAMILY, fontSize: '10px', color: '#181818',
         });
+        txt.name = `bag-item-${i}`;
         this.bagPanel!.add(txt);
       });
     }
 
     // Back option
-    const backText = this.add.text(panelX + 40, panelY + panelH - 30, 'BACK', {
-      fontFamily: FONT_FAMILY, fontSize: '10px', color: '#303030',
+    const backPrefix = usableItems.length === 0 ? '▶ ' : '  ';
+    const backText = this.add.text(panelX + 30, panelY + panelH - 30, `${backPrefix}BACK`, {
+      fontFamily: FONT_FAMILY, fontSize: '10px', color: '#181818',
     });
+    backText.name = 'bag-back';
     this.bagPanel.add(backText);
 
-    // Cursor
-    const firstY = usableItems.length > 0 ? panelY + 40 : panelY + panelH - 30;
-    this.cursorText = this.add.text(panelX + 22, firstY, '▶', {
-      fontFamily: FONT_FAMILY, fontSize: '10px', color: '#303030',
-    });
-    this.bagPanel.add(this.cursorText);
     this.bagPanel.setDepth(30);
   }
 
@@ -586,14 +723,16 @@ export class BattleScene extends Phaser.Scene {
     this.pokemonPanel = this.add.container(0, 0);
 
     const bg = this.add.graphics();
-    bg.fillStyle(0xf8f8f8, 1);
-    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 6);
-    bg.lineStyle(3, 0x404040, 1);
-    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 6);
+    bg.fillStyle(COLORS.DIALOG_BG, 1);
+    bg.fillRoundedRect(panelX, panelY, panelW, panelH, 4);
+    bg.lineStyle(3, COLORS.DIALOG_BORDER, 1);
+    bg.strokeRoundedRect(panelX, panelY, panelW, panelH, 4);
+    bg.lineStyle(2, 0xd8d8d8, 1);
+    bg.strokeRoundedRect(panelX + 4, panelY + 4, panelW - 8, panelH - 8, 3);
     this.pokemonPanel.add(bg);
 
     const title = this.add.text(panelX + 20, panelY + 10, 'POKéMON', {
-      fontFamily: FONT_FAMILY, fontSize: '12px', color: '#303030',
+      fontFamily: FONT_FAMILY, fontSize: '12px', color: '#181818',
     });
     this.pokemonPanel.add(title);
 
@@ -601,26 +740,25 @@ export class BattleScene extends Phaser.Scene {
       const y = panelY + 38 + i * 30;
       const fainted = poke.currentHp <= 0;
       const active = i === this.activePartyIndex;
+      const selected = i === 0;
 
-      const nameStr = `${active ? '★ ' : '  '}${poke.name}  Lv${poke.level}  HP:${poke.currentHp}/${poke.maxHp}`;
-      const txt = this.add.text(panelX + 40, y, nameStr, {
+      const prefix = selected ? '▶ ' : '  ';
+      const nameStr = `${prefix}${active ? '★ ' : ''}${poke.name}  Lv${poke.level}  HP:${poke.currentHp}/${poke.maxHp}`;
+      const txt = this.add.text(panelX + 24, y, nameStr, {
         fontFamily: FONT_FAMILY, fontSize: '9px',
-        color: fainted ? '#c04040' : '#303030',
+        color: fainted ? '#c04040' : '#181818',
       });
+      txt.name = `poke-${i}`;
       this.pokemonPanel!.add(txt);
     });
 
     // Back option
-    const backText = this.add.text(panelX + 40, panelY + panelH - 30, 'BACK', {
-      fontFamily: FONT_FAMILY, fontSize: '10px', color: '#303030',
+    const backText = this.add.text(panelX + 24, panelY + panelH - 30, '  BACK', {
+      fontFamily: FONT_FAMILY, fontSize: '10px', color: '#181818',
     });
+    backText.name = 'poke-back';
     this.pokemonPanel.add(backText);
 
-    // Cursor
-    this.cursorText = this.add.text(panelX + 22, panelY + 38, '▶', {
-      fontFamily: FONT_FAMILY, fontSize: '9px', color: '#303030',
-    });
-    this.pokemonPanel.add(this.cursorText);
     this.pokemonPanel.setDepth(30);
   }
 
@@ -633,6 +771,7 @@ export class BattleScene extends Phaser.Scene {
     this.bagPanel = undefined;
     this.pokemonPanel?.destroy();
     this.pokemonPanel = undefined;
+    this.actionButtons = [];
   }
 
   // ─── Input Handling ───
@@ -669,21 +808,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   handleActionInput(event: KeyboardEvent) {
-    const positions = [
-      { x: GAME_WIDTH / 2 + 40 - 16, y: GAME_HEIGHT - 74 },
-      { x: GAME_WIDTH / 2 + 40 + (GAME_WIDTH / 2 - 30) / 2 - 6, y: GAME_HEIGHT - 74 },
-      { x: GAME_WIDTH / 2 + 40 - 16, y: GAME_HEIGHT - 44 },
-      { x: GAME_WIDTH / 2 + 40 + (GAME_WIDTH / 2 - 30) / 2 - 6, y: GAME_HEIGHT - 44 },
-    ];
+    let changed = false;
 
     if (event.code === 'ArrowUp' || event.code === 'KeyW') {
-      if (this.cursorIndex >= 2) this.cursorIndex -= 2;
+      if (this.cursorIndex >= 2) { this.cursorIndex -= 2; changed = true; }
     } else if (event.code === 'ArrowDown' || event.code === 'KeyS') {
-      if (this.cursorIndex < 2) this.cursorIndex += 2;
+      if (this.cursorIndex < 2) { this.cursorIndex += 2; changed = true; }
     } else if (event.code === 'ArrowLeft' || event.code === 'KeyA') {
-      if (this.cursorIndex % 2 === 1) this.cursorIndex--;
+      if (this.cursorIndex % 2 === 1) { this.cursorIndex--; changed = true; }
     } else if (event.code === 'ArrowRight' || event.code === 'KeyD') {
-      if (this.cursorIndex % 2 === 0) this.cursorIndex++;
+      if (this.cursorIndex % 2 === 0) { this.cursorIndex++; changed = true; }
     } else if (event.code === 'Space' || event.code === 'Enter') {
       switch (this.cursorIndex) {
         case 0: this.showMoveMenu(); return;
@@ -693,19 +827,12 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    if (this.cursorText && positions[this.cursorIndex]) {
-      this.cursorText.setPosition(positions[this.cursorIndex].x, positions[this.cursorIndex].y);
+    if (changed) {
+      this.updateActionButtons();
     }
   }
 
   handleFightInput(event: KeyboardEvent) {
-    const positions = [
-      { x: 34, y: GAME_HEIGHT - 78 },
-      { x: 264, y: GAME_HEIGHT - 78 },
-      { x: 34, y: GAME_HEIGHT - 48 },
-      { x: 264, y: GAME_HEIGHT - 48 },
-    ];
-
     const maxMoves = this.playerPokemon.moves.length;
 
     if (event.code === 'ArrowUp' || event.code === 'KeyW') {
@@ -724,15 +851,11 @@ export class BattleScene extends Phaser.Scene {
       if (move && move.pp > 0) {
         this.executeTurn(move.name);
       } else if (move && move.pp <= 0) {
-        // No PP left message
         this.dialogText?.setText('No PP left for this move!');
       }
       return;
     }
 
-    if (this.cursorText && positions[this.cursorIndex]) {
-      this.cursorText.setPosition(positions[this.cursorIndex].x, positions[this.cursorIndex].y);
-    }
     this.updateMoveInfo(this.cursorIndex);
   }
 
@@ -758,13 +881,22 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    // Update cursor position
-    if (this.cursorText) {
-      const panelY = GAME_HEIGHT - 250;
-      const y = this.cursorIndex < usableItems.length
-        ? panelY + 40 + this.cursorIndex * 24
-        : panelY + 210;
-      this.cursorText.setY(y);
+    // Update cursor arrows in bag
+    this.updateBagCursor(usableItems);
+  }
+
+  updateBagCursor(usableItems: { id: string; count: number }[]) {
+    usableItems.forEach((item, i) => {
+      const txt = this.bagPanel?.getAll().find((o: any) => o.name === `bag-item-${i}`) as Phaser.GameObjects.Text | undefined;
+      if (txt) {
+        const data = ITEM_DATA[item.id];
+        const prefix = i === this.cursorIndex ? '▶ ' : '  ';
+        txt.setText(`${prefix}${data?.name || item.id}  x${item.count}`);
+      }
+    });
+    const back = this.bagPanel?.getAll().find((o: any) => o.name === 'bag-back') as Phaser.GameObjects.Text | undefined;
+    if (back) {
+      back.setText(this.cursorIndex >= usableItems.length ? '▶ BACK' : '  BACK');
     }
   }
 
@@ -798,13 +930,24 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    // Update cursor position
-    if (this.cursorText) {
-      const panelY = GAME_HEIGHT - 280;
-      const y = this.cursorIndex < this.party.length
-        ? panelY + 38 + this.cursorIndex * 30
-        : panelY + 240;
-      this.cursorText.setY(y);
+    // Update cursor arrows in pokemon list
+    this.updatePokemonCursor();
+  }
+
+  updatePokemonCursor() {
+    this.party.forEach((poke, i) => {
+      const txt = this.pokemonPanel?.getAll().find((o: any) => o.name === `poke-${i}`) as Phaser.GameObjects.Text | undefined;
+      if (txt) {
+        const fainted = poke.currentHp <= 0;
+        const active = i === this.activePartyIndex;
+        const prefix = i === this.cursorIndex ? '▶ ' : '  ';
+        txt.setText(`${prefix}${active ? '★ ' : ''}${poke.name}  Lv${poke.level}  HP:${poke.currentHp}/${poke.maxHp}`);
+        txt.setColor(fainted ? '#c04040' : '#181818');
+      }
+    });
+    const back = this.pokemonPanel?.getAll().find((o: any) => o.name === 'poke-back') as Phaser.GameObjects.Text | undefined;
+    if (back) {
+      back.setText(this.cursorIndex >= this.party.length ? '▶ BACK' : '  BACK');
     }
   }
 
@@ -896,11 +1039,13 @@ export class BattleScene extends Phaser.Scene {
 
     defender.currentHp = Math.max(0, defender.currentHp - damage);
 
-    // Update HP bars
+    // Update HP bars with smooth animation + hit flash
     if (isPlayer) {
       this.animateHpBar(false, defender);
+      this.flashSprite(this.enemySprite);
     } else {
       this.animateHpBar(true, defender);
+      this.flashSprite(this.playerSprite);
     }
 
     if (effectiveness > 1) {
@@ -924,6 +1069,34 @@ export class BattleScene extends Phaser.Scene {
         }
       }
     }
+  }
+
+  flashSprite(sprite?: Phaser.GameObjects.Image) {
+    if (!sprite) return;
+
+    // Brief flash white then shake
+    const origX = sprite.x;
+    this.tweens.add({
+      targets: sprite,
+      alpha: 0.2,
+      duration: 80,
+      yoyo: true,
+      repeat: 2,
+      ease: 'Linear',
+    });
+
+    // Shake effect
+    this.tweens.add({
+      targets: sprite,
+      x: origX - 4,
+      duration: 40,
+      yoyo: true,
+      repeat: 3,
+      ease: 'Linear',
+      onComplete: () => {
+        sprite.setX(origX);
+      },
+    });
   }
 
   applyStatusMove(messages: string[], move: MoveData, attacker: GamePokemon, defender: GamePokemon, isPlayer: boolean) {
@@ -1015,15 +1188,31 @@ export class BattleScene extends Phaser.Scene {
     if (!bar) return;
 
     const panelX = isEnemy ? 72 : GAME_WIDTH - 268;
-    const panelY = isEnemy ? 72 : 292;
+    const panelY = isEnemy ? 73 : 293;
+    const hpBarH = 6;
 
+    const startHp = isEnemy ? this.enemyDisplayHp : this.playerDisplayHp;
+    const endHp = pokemon.currentHp;
+
+    // Smooth HP tween over 800ms
     this.tweens.addCounter({
-      from: 0,
-      to: 1,
-      duration: 400,
-      onUpdate: () => {
-        this.updateHpBar(bar, panelX, panelY, 196, 8, pokemon.currentHp, pokemon.maxHp);
-        hpText?.setText(`${Math.max(0, pokemon.currentHp)}/${pokemon.maxHp}`);
+      from: startHp,
+      to: endHp,
+      duration: 800,
+      ease: 'Linear',
+      onUpdate: (tween) => {
+        const currentDisplayHp = Math.round(tween.getValue() ?? endHp);
+        this.updateHpBar(bar, panelX, panelY, 196, hpBarH, currentDisplayHp, pokemon.maxHp);
+        if (!isEnemy) {
+          hpText?.setText(`${Math.max(0, currentDisplayHp)}/${pokemon.maxHp}`);
+        }
+      },
+      onComplete: () => {
+        if (isEnemy) {
+          this.enemyDisplayHp = endHp;
+        } else {
+          this.playerDisplayHp = endHp;
+        }
       },
     });
   }
