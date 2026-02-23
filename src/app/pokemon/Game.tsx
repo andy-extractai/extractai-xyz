@@ -33,23 +33,37 @@ export default function Game() {
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const P = Phaser as any;
-      const gameWidth = window.innerWidth;
-      const gameHeight = window.innerHeight;
       const config = {
         type: P.AUTO,
         parent: containerRef.current!,
         pixelArt: true,
         backgroundColor: '#000000',
-        width: gameWidth,
-        height: gameHeight,
+        width: GAME_WIDTH,
+        height: GAME_HEIGHT,
         scale: {
-          mode: P.Scale.RESIZE,
-          autoCenter: P.Scale.CENTER_BOTH,
+          mode: P.Scale.NONE,
         },
         scene: [BootScene, TitleScene, StarterSelectScene, OverworldScene, BattleScene, PokemonCenterScene],
       };
 
       gameRef.current = new P.Game(config);
+
+      // CSS-scale the canvas to fill the viewport after Phaser creates it.
+      // All game logic uses fixed 800x600 coords; the browser handles upscaling.
+      const scaleCanvas = (attempts: number) => {
+        const canvas = containerRef.current?.querySelector('canvas') as HTMLElement | null;
+        if (canvas) {
+          canvas.style.position = 'absolute';
+          canvas.style.top = '0';
+          canvas.style.left = '0';
+          canvas.style.width = '100vw';
+          canvas.style.height = '100vh';
+          canvas.style.imageRendering = 'pixelated';
+        } else if (attempts > 0) {
+          setTimeout(() => scaleCanvas(attempts - 1), 200);
+        }
+      };
+      setTimeout(() => scaleCanvas(5), 100);
     };
 
     initGame();

@@ -1,7 +1,7 @@
 // Game constants
 export const TILE_SIZE = 16;
-export const GAME_WIDTH = typeof window !== 'undefined' ? window.innerWidth : 800;
-export const GAME_HEIGHT = typeof window !== 'undefined' ? window.innerHeight : 600;
+export const GAME_WIDTH = 800;
+export const GAME_HEIGHT = 600;
 export const PLAYER_SPEED = 150; // ms per tile movement tween
 export const TEXT_SPEED = 30; // ms per character for typewriter
 export const FADE_DURATION = 300;
